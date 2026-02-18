@@ -299,8 +299,18 @@
     <div class="card">
         <div class="page-title">Biodata Peserta</div>
         <p class="page-sub">Lengkapi data diri sebelum memulai tes.</p>
-        <div id="bioFormFields"></div>
-        <button class="btn btn-primary" id="btnBio" onclick="saveBiodata()">Simpan &amp; Lanjutkan</button>
+        <div class="form-group"><label>Nama Lengkap</label><input type="text" id="bioNama" placeholder="Nama Lengkap"></div>
+        <div class="form-group"><label>Usia</label><input type="number" id="bioUsia" placeholder="Usia"></div>
+        <div class="form-group"><label>Pendidikan Terakhir</label><input type="text" id="bioPend" placeholder="S1, SMA, dll"></div>
+        <div class="form-group">
+            <label>Jenis Kelamin</label>
+            <select id="bioGender" style="width:100%;padding:11px 14px;border:2px solid var(--border);border-radius:10px;font-size:0.95em;background:var(--bg)">
+                <option value="">Pilih...</option>
+                <option value="L">Laki-laki</option>
+                <option value="P">Perempuan</option>
+            </select>
+        </div>
+        <button class="btn btn-primary" id="btnBio" onclick="saveBiodata()">Simpan & Lanjutkan</button>
     </div>
 </div>
 
@@ -402,45 +412,6 @@
    │ kolom       │ Khusus type "ranking": nomor kolom di JSON (1–8)  │
    └─────────────┴────────────────────────────────────────────────────┘
 */
-/* ╔═══════════════════════════════════════════════════════════════════╗
-   ║  BIODATA CONFIG — Atur field biodata peserta di sini            ║
-   ╚═══════════════════════════════════════════════════════════════════╝
-
-   FIELD per item:
-   ┌──────────┬──────────────────────────────────────────────────────────┐
-   │ id       │ ID unik elemen HTML                                      │
-   │ label    │ Label yang tampil di form                                │
-   │ type     │ "text" | "number" | "select"                             │
-   │ placeholder │ Teks placeholder (untuk text/number)                 │
-   │ options  │ Array {value, label} — hanya untuk type "select"        │
-   │ index    │ Posisi penyimpanan di x_02 (pipe-separated), mulai 0    │
-   │ required │ true = wajib diisi                                       │
-   └──────────┴──────────────────────────────────────────────────────────┘
-*/
-const BIODATA_CONFIG = [
-    {
-        id: 'bioNama', label: 'Nama Lengkap', type: 'text',
-        placeholder: 'Nama Lengkap', index: 0, required: true
-    },
-    {
-        id: 'bioUsia', label: 'Usia', type: 'number',
-        placeholder: 'Usia', index: 1, required: true
-    },
-    {
-        id: 'bioPend', label: 'Pendidikan Terakhir', type: 'text',
-        placeholder: 'S1, SMA, dll', index: 2, required: true
-    },
-    {
-        id: 'bioGender', label: 'Jenis Kelamin', type: 'select',
-        index: 3, required: true,
-        options: [
-            { value: 'L', label: 'Laki-laki' },
-            { value: 'P', label: 'Perempuan' }
-        ]
-    }
-    /* ── Tambah field baru di sini ──────────────────────────────── */
-];
-
 const CONFIG = [
     {
         id: "cfit1",
@@ -582,8 +553,6 @@ let timerInterval= null;
 let rowSelections= [];
 let usedNumbers  = [];
 let rankingKolom = 1;      // kolom ranking aktif saat ini
-let skippedIndices = [];   // indeks soal yang dilewati (urutan antrian)
-let answeredIndices = [];  // indeks soal yang sudah dijawab (permanen)
 
 /* ══════════════════════════════════════════════════════════════════
    BOOT
@@ -609,9 +578,8 @@ async function fetchAndRoute(token) {
         currentUser = result.data[0];
         localStorage.setItem('db_id', currentUser.id_x);
 
-        const bioIncomplete = BIODATA_CONFIG.some(f => f.required && !getBio(f.id).trim());
-        if (bioIncomplete) {
-            renderBioForm();
+        const bio = currentUser.x_02 ? currentUser.x_02.split('|') : [];
+        if (bio.length < 4 || bio.some(v => !v || v.trim() === '')) {
             showScreen('screenBio');
         } else {
             goToCurrentTest();
@@ -635,12 +603,11 @@ async function handleLogin() {
             localStorage.setItem('token', token);
             localStorage.setItem('db_id', result.data[0].id_x);
             currentUser = result.data[0];
-            const bioIncomplete = BIODATA_CONFIG.some(f => f.required && !getBio(f.id).trim());
-            if (bioIncomplete) {
-                renderBioForm();
+            const bio = currentUser.x_02 ? currentUser.x_02.split('|') : [];
+            if (bio.length < 3 || bio.some(v => !v || v.trim() === '')) {
                 showScreen('screenBio');
             } else {
-                goToCurrentTest();
+                renderDashboard();
             }
         } else {
             alert('Token salah atau tidak terdaftar.');
@@ -652,64 +619,12 @@ async function handleLogin() {
 /* ══════════════════════════════════════════════════════════════════
    BIODATA
 ══════════════════════════════════════════════════════════════════ */
-/* ── Biodata helper: baca nilai field dari x_02 pipe[0] + semicolon ── */
-function getBio(fieldId) {
-    const f = BIODATA_CONFIG.find(c => c.id === fieldId);
-    if (!f) return '';
-    const pipe0   = currentUser.x_02 ? currentUser.x_02.split('|')[0] : '';
-    const semiArr = pipe0 ? pipe0.split(';') : [];
-    return semiArr[f.index] || '';
-}
-function getAllBio() {
-    // Kembalikan object { id: value } untuk semua field
-    const result = {};
-    for (const f of BIODATA_CONFIG) result[f.id] = getBio(f.id);
-    return result;
-}
-
-function renderBioForm() {
-    const container = document.getElementById('bioFormFields');
-    container.innerHTML = '';
-    const sorted = [...BIODATA_CONFIG].sort((a, b) => a.index - b.index);
-    for (const f of sorted) {
-        const div = document.createElement('div');
-        div.className = 'form-group';
-        let input = '';
-        if (f.type === 'select') {
-            const opts = f.options.map(o => `<option value="${o.value}">${o.label}</option>`).join('');
-            input = `<select id="${f.id}" style="width:100%;padding:11px 14px;border:2px solid var(--border);border-radius:10px;font-size:0.95em;background:var(--bg)">
-                        <option value="">Pilih...</option>${opts}
-                     </select>`;
-        } else {
-            input = `<input type="${f.type}" id="${f.id}" placeholder="${f.placeholder||''}">`;
-        }
-        div.innerHTML = `<label>${f.label}</label>${input}`;
-        container.appendChild(div);
-    }
-}
-
 async function saveBiodata() {
-    // Baca x_02 existing, ambil pipe-nya
-    const pipes = currentUser.x_02 ? currentUser.x_02.split('|') : [];
-    // Pastikan minimal 4 pipe tersedia
-    while (pipes.length < 4) pipes.push('');
-
-    // Baca semicolon array dari pipe[0] yang sudah ada
-    const semiArr = pipes[0] ? pipes[0].split(';') : [];
-    const maxIndex = Math.max(...BIODATA_CONFIG.map(f => f.index));
-    while (semiArr.length <= maxIndex) semiArr.push('');
-
-    // Isi nilai dari form ke posisi index masing-masing
-    for (const f of BIODATA_CONFIG) {
-        const el  = document.getElementById(f.id);
-        const val = el ? el.value.trim() : '';
-        if (f.required && !val) return alert(`Mohon lengkapi field: ${f.label}`);
-        semiArr[f.index] = val;
-    }
-
-    // Tulis kembali ke pipe[0]
-    pipes[0] = semiArr.join(';');
-
+    const nama   = document.getElementById('bioNama').value.trim();
+    const usia   = document.getElementById('bioUsia').value.trim();
+    const pend   = document.getElementById('bioPend').value.trim();
+    const gender = document.getElementById('bioGender').value.trim();
+    if (!nama || !usia || !pend || !gender) return alert('Mohon lengkapi semua field.');
     const btn = document.getElementById('btnBio');
     setLoading(btn, true);
     try {
@@ -717,8 +632,9 @@ async function saveBiodata() {
         await apiFetch(`${API_URL}?table=${TABLE_NAME}&id_x=${idX}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json', 'X-Custom-Auth': AUTH_KEY },
-            body: JSON.stringify({ x_02: pipes.join('|') })
+            body: JSON.stringify({ x_02: `${nama}|${usia}|${pend}|${gender}` })
         });
+        // Refresh user data
         await fetchAndRoute(localStorage.getItem('token'));
     } catch(e) { alert('Gagal menyimpan data.'); }
     finally { setLoading(btn, false); }
@@ -777,7 +693,8 @@ function showDoneAll() {
 
 function renderDashboard() {
     showScreen('screenDash');
-    document.getElementById('welcomeName').innerText = 'Halo, ' + (getBio('bioNama') || 'Peserta') + '!';
+    const bio  = currentUser.x_02 ? currentUser.x_02.split('|') : [];
+    document.getElementById('welcomeName').innerText = 'Halo, ' + (bio[0] || 'Peserta') + '!';
 
     const tasks = buildTaskList();
     let firstPending = null;
@@ -883,14 +800,10 @@ async function startTest() {
             correctScore = s.correctScore || 0; timeLeft = s.timeLeft || cfg.timer;
             rowSelections = s.rowSelections || Array(12).fill(null);
             usedNumbers   = s.usedNumbers   || [];
-            skippedIndices  = s.skippedIndices  || [];
-            answeredIndices = s.answeredIndices || [];
         } else {
             qIndex = 0; userAnswers = []; correctScore = 0;
             timeLeft = cfg.timer || 0;
             rowSelections = Array(12).fill(null); usedNumbers = [];
-            skippedIndices  = [];
-            answeredIndices = [];
         }
 
         document.getElementById('testTitle').innerText = cfg.title;
@@ -916,7 +829,8 @@ async function loadQuestions() {
     // Pilih URL berdasarkan gender untuk ranking
     let url = cfg.dataUrl;
     if (cfg.type === 'ranking' && cfg.dataUrlP) {
-        const gender = getBio('bioGender') || 'L';
+        const bio = currentUser.x_02 ? currentUser.x_02.split('|') : [];
+        const gender = bio[3] || 'L';
         if (gender === 'P') url = cfg.dataUrlP;
         console.log('[RMIB] Gender: ' + gender + ' | URL: ' + (gender==='P' ? 'Perempuan' : 'Laki-laki'));
     }
@@ -960,77 +874,17 @@ function updateTimerDisplay() {
 ══════════════════════════════════════════════════════════════════ */
 function saveState() {
     localStorage.setItem('_st_' + cfg._taskId, JSON.stringify(
-        { qIndex, userAnswers, correctScore, timeLeft, rowSelections, usedNumbers, skippedIndices, answeredIndices }
+        { qIndex, userAnswers, correctScore, timeLeft, rowSelections, usedNumbers }
     ));
 }
 
 /* ══════════════════════════════════════════════════════════════════
    RENDER DISPATCHER
 ══════════════════════════════════════════════════════════════════ */
-
-function dbg(label) {
-    console.log(
-        `[SKIP DEBUG] ${label}` +
-        ` | qIndex=${qIndex}` +
-        ` | answered=[${answeredIndices.join(',')}]` +
-        ` | skipped=[${skippedIndices.join(',')}]` +
-        ` | total=${questions.length}`
-    );
-}
-
-// Setelah menjawab soal, cari soal berikutnya yang belum dijawab.
-// Urutan pencarian: lanjut maju dari posisi sekarang, jika mentok akhir
-// ambil dari antrian skippedIndices (soal yang dilewati).
-function goNext() {
-    dbg('goNext MASUK');
-
-    // Cari soal berikutnya yang belum dijawab, mulai dari qIndex+1 maju ke depan
-    let found = -1;
-    for (let i = qIndex + 1; i < questions.length; i++) {
-        if (!answeredIndices.includes(i) && !skippedIndices.includes(i)) {
-            found = i;
-            break;
-        }
-    }
-
-    if (found !== -1) {
-        // Ada soal normal yang belum dijawab di depan
-        qIndex = found;
-        dbg(`goNext → soal normal index ${qIndex}`);
-    } else if (skippedIndices.length > 0) {
-        // Tidak ada soal normal tersisa → ambil soal pertama yang dilewati
-        qIndex = skippedIndices.shift();
-        dbg(`goNext → kembali ke soal dilewati index ${qIndex}`);
-    } else {
-        // Semua soal sudah dijawab
-        dbg('goNext → SEMUA SELESAI, endTest');
-        saveState();
-        endTest(false);
-        return;
-    }
-
-    saveState();
-    renderQuestion();
-}
-
 function renderQuestion() {
     updateProgress();
     if (cfg.type === 'ranking') { renderRanking(); return; }
-
-    dbg('renderQuestion');
-
-    // Safety net
-    if (qIndex < 0 || qIndex >= questions.length) {
-        console.error('[SKIP DEBUG] qIndex di luar range!', qIndex);
-        if (skippedIndices.length > 0) {
-            qIndex = skippedIndices.shift();
-            saveState();
-        } else {
-            endTest(false);
-            return;
-        }
-    }
-
+    if (qIndex >= questions.length) { endTest(false); return; }
     const q = questions[qIndex];
     const map = {
         image_single: renderImageSingle,
@@ -1047,21 +901,17 @@ function updateProgress() {
     const curr  = cfg.type === 'ranking' ? (cfg.kolom||1) : qIndex + 1;
     const pct   = total ? Math.round(((curr-1)/total)*100) : 0;
     document.getElementById('progressBar').style.width = pct + '%';
-    let infoText = cfg.type === 'ranking'
-        ? `Kolom ${cfg.kolom} / ${cfg.totalKolom||8}`
-        : `Soal ${qIndex+1} / ${questions.length}`;
-    if (skippedIndices.length > 0 && cfg.type !== 'ranking') {
-        infoText += ` · ⟳ ${skippedIndices.length} soal dilewati`;
-    }
-    document.getElementById('progressInfo').innerText = infoText;
+    document.getElementById('progressInfo').innerText  =
+        cfg.type === 'ranking'
+            ? `Kolom ${cfg.kolom} / ${cfg.totalKolom||8}`
+            : `Soal ${qIndex+1} / ${questions.length}`;
 }
 
 /* ── image_single ────────────────────────────────────────────── */
 function renderImageSingle(q) {
     const parts = q.question.split(' ');
-    const skippedBadge = skippedIndices.includes(qIndex) ? ' <span style="background:#fef3c7;color:#92400e;font-size:0.75em;padding:2px 8px;border-radius:99px;font-weight:600;">⟳ Dilewati</span>' : '';
     document.getElementById('questionContent').innerHTML =
-        `<div class="q-label">Soal ${parts[0]}${skippedBadge}</div>
+        `<div class="q-label">Soal ${parts[0]}</div>
          <img class="q-image" src="${parts[1]}" alt="soal">
          <div class="options-img" id="optArea"></div>`;
     document.getElementById('actionBar').innerHTML =
@@ -1070,7 +920,7 @@ function renderImageSingle(q) {
     for (const k in q.options) {
         if (!q.options[k]) continue;
         const img = Object.assign(document.createElement('img'), { src: q.options[k], title: k });
-        img.onclick = () => { markAnswered(qIndex); userAnswers.push(`${qIndex+1}${k}${k===q.answer?'v':'x'}`); if(k===q.answer)correctScore++; saveState(); goNext(); };
+        img.onclick = () => { userAnswers.push(`${qIndex+1}${k}${k===q.answer?'v':'x'}`); if(k===q.answer)correctScore++; qIndex++; saveState(); renderQuestion(); };
         div.appendChild(img);
     }
 }
@@ -1099,10 +949,9 @@ function submitImageMulti() {
     const q   = questions[qIndex];
     const sel = [...document.querySelectorAll('#optArea input:checked')].map(c => c.value);
     const ok  = sel.length===2 && sel.every(v => q.correctAnswers.includes(v));
-    markAnswered(qIndex);
     userAnswers.push(`${qIndex+1}SEL${ok?'v':'x'}`);
     if(ok) correctScore++;
-    saveState(); goNext();
+    qIndex++; saveState(); renderQuestion();
 }
 
 /* ── text_choice ─────────────────────────────────────────────── */
@@ -1112,26 +961,23 @@ function renderTextChoice(q) {
         if (!q.options[k]) continue;
         opts += `<button class="opt-text" onclick="submitTextChoice('${k}','${q.answer}')"><strong>${k}.</strong> ${q.options[k]}</button>`;
     }
-    const skippedBadgeTC = skippedIndices.includes(qIndex) ? ' <span style="background:#fef3c7;color:#92400e;font-size:0.75em;padding:2px 8px;border-radius:99px;font-weight:600;">⟳ Dilewati</span>' : '';
     document.getElementById('questionContent').innerHTML =
-        `<div class="q-label">Soal No. ${qIndex+1}${skippedBadgeTC}</div>
+        `<div class="q-label">Soal No. ${qIndex+1}</div>
          <div class="q-text">${q.question}</div>
          <div class="options-text">${opts}</div>`;
     document.getElementById('actionBar').innerHTML =
         `<button class="btn btn-outline btn-sm" onclick="skipQ()">Lewati</button>`;
 }
 function submitTextChoice(k, ans) {
-    markAnswered(qIndex);
     userAnswers.push(`${qIndex+1}${k}${k===ans?'v':'x'}`);
     if(k===ans) correctScore++;
-    saveState(); goNext();
+    qIndex++; saveState(); renderQuestion();
 }
 
 /* ── text_input ──────────────────────────────────────────────── */
 function renderTextInput(q) {
-    const skippedBadgeTI = skippedIndices.includes(qIndex) ? ' <span style="background:#fef3c7;color:#92400e;font-size:0.75em;padding:2px 8px;border-radius:99px;font-weight:600;">⟳ Dilewati</span>' : '';
     document.getElementById('questionContent').innerHTML =
-        `<div class="q-label">Soal No. ${qIndex+1}${skippedBadgeTI}</div>
+        `<div class="q-label">Soal No. ${qIndex+1}</div>
          <div class="q-text">${q.question}</div>
          <div class="input-wrap">
              <input type="text" id="userAnswer" placeholder="Jawaban..."
@@ -1151,10 +997,9 @@ function submitTextInput() {
     for (const ca of (q.correctAnswers||[])) {
         if (ans.toLowerCase() === ca.answer.replace(/,/g,' ').trim().toLowerCase()) { ok=true; break; }
     }
-    markAnswered(qIndex);
     userAnswers.push(`${qIndex+1}${ans}${ok?'v':'x'}`);
     if(ok) correctScore++;
-    saveState(); goNext();
+    qIndex++; saveState(); renderQuestion();
 }
 
 /* ── ab_choice ───────────────────────────────────────────────── */
@@ -1169,7 +1014,7 @@ function renderAbChoice(q) {
          </div>`;
     document.getElementById('actionBar').innerHTML = '';
 }
-function submitAb(c) { userAnswers.push(c); saveState(); goNext(); }
+function submitAb(c) { userAnswers.push(c); qIndex++; renderQuestion(); }
 
 /* ── ranking ─────────────────────────────────────────────────── */
 function renderRanking() {
@@ -1234,58 +1079,7 @@ async function saveRanking(dataStr) {
 }
 
 /* ── skip ────────────────────────────────────────────────────── */
-function skipQ() {
-    dbg('skipQ MASUK');
-
-    // Tambahkan ke antrian skip jika belum ada
-    if (!skippedIndices.includes(qIndex) && !answeredIndices.includes(qIndex)) {
-        skippedIndices.push(qIndex);
-        userAnswers.push(`${qIndex+1}SKIPx`);
-    }
-
-    // Cari soal berikutnya yang belum dijawab dan bukan di antrian skip, mulai dari qIndex+1
-    let found = -1;
-    for (let i = qIndex + 1; i < questions.length; i++) {
-        if (!answeredIndices.includes(i) && !skippedIndices.includes(i)) {
-            found = i;
-            break;
-        }
-    }
-
-    if (found !== -1) {
-        qIndex = found;
-        dbg(`skipQ → soal normal index ${qIndex}`);
-    } else if (skippedIndices.length > 0) {
-        // Semua soal normal habis → kerjakan soal dilewati pertama
-        qIndex = skippedIndices.shift();
-        dbg(`skipQ → kembali ke soal dilewati index ${qIndex}`);
-    } else {
-        dbg('skipQ → SEMUA SELESAI, endTest');
-        saveState();
-        endTest(false);
-        return;
-    }
-
-    saveState();
-    renderQuestion();
-}
-
-// Tandai soal sebagai sudah dijawab (permanen)
-function markAnswered(idx) {
-    if (!answeredIndices.includes(idx)) {
-        answeredIndices.push(idx);
-    }
-    // Hapus dari antrian skipped jika ada
-    const pos = skippedIndices.indexOf(idx);
-    if (pos !== -1) {
-        skippedIndices.splice(pos, 1);
-        // Hapus entri SKIPx dari userAnswers
-        const skipTag = `${idx+1}SKIPx`;
-        const ua = userAnswers.indexOf(skipTag);
-        if (ua !== -1) userAnswers.splice(ua, 1);
-    }
-    dbg(`markAnswered idx=${idx}`);
-}
+function skipQ() { userAnswers.push(`${qIndex+1}SKIPx`); qIndex++; saveState(); renderQuestion(); }
 
 /* ══════════════════════════════════════════════════════════════════
    END TEST

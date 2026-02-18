@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kuesioner - Form 18</title>
+    <style>
+        :root { --primary: #4a90e2; --bg: #f0f2f5; --text: #2d3436; }
+        body { font-family: 'Segoe UI', Roboto, sans-serif; background-color: var(--bg); margin: 0; padding: 15px; display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; }
+        
+        .quiz-card { width: 100%; max-width: 700px; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); margin-top: 20px; }
+        .hidden { display: none; }
+
+        h1 { font-size: 1.5rem; color: var(--text); text-align: center; margin-bottom: 5px; }
+        #question { font-size: 1.2rem; font-weight: 500; line-height: 1.5; color: #444; margin: 30px 0; min-height: 60px; text-align: left; border-left: 5px solid var(--primary); padding-left: 15px; }
+
+        /* Pilihan Modern */
+        .options-grid { display: flex; flex-direction: column; gap: 12px; }
+        .option-btn {
+            background: #fff; border: 2px solid #e1e8ed; padding: 18px 20px; border-radius: 12px;
+            text-align: left; font-size: 1rem; cursor: pointer; transition: 0.2s all;
+            display: flex; align-items: center; color: #555; outline: none;
+        }
+        .option-btn:hover { border-color: var(--primary); background-color: #f8fbff; transform: translateX(5px); }
+        .option-btn:active { transform: scale(0.98); }
+        .option-prefix { font-weight: bold; margin-right: 15px; color: var(--primary); background: #ebf3ff; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: 50%; flex-shrink: 0; }
+
+        .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+        .progress { font-size: 0.9rem; color: #888; }
+        
+        #startButton { background: var(--primary); color: white; border: none; padding: 15px 45px; border-radius: 30px; font-size: 1.1rem; cursor: pointer; transition: 0.3s; display: block; margin: 20px auto; }
+        
+        .result-box { background: #2d3436; color: #fab1a0; padding: 20px; border-radius: 10px; text-align: left; font-family: 'Courier New', monospace; word-wrap: break-word; line-height: 1.6; }
+    </style>
+</head>
+<body>
+
+<div class="quiz-card">
+    <div id="intro">
+        <h1>Kuesioner Minat</h1>
+        <p style="text-align: center; color: #636e72;">Pilih jawaban yang paling menggambarkan diri Anda.</p>
+        <button id="startButton">Mulai</button>
+    </div>
+
+    <div id="quiz-content" class="hidden">
+        <div id="question"></div>
+        <div class="options-grid" id="optionsContainer"></div>
+
+        <div class="footer">
+            <span id="progressDisplay" class="progress"></span>
+            <span style="color: #b2bec3; font-size: 0.8rem;">Pilihan otomatis tersimpan</span>
+        </div>
+    </div>
+
+    <div id="final-result" class="hidden">
+        <h2 style="text-align: center;">Terima Kasih</h2>
+        <p style="text-align: center;">Jawaban Anda telah terekam:</p>
+        <div class="result-box">
+            <code id="logJawaban"></code>
+        </div>
+        <button onclick="location.reload()" style="display: block; margin: 20px auto; background: none; border: 1px solid #dfe6e9; padding: 8px 20px; border-radius: 20px; cursor: pointer;">Isi Ulang</button>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Menggunakan URL yang Anda berikan
+        const DATA_URL = 'https://cipta.my.id/psikotest/wwq.txt';
+        
+        let questions = [];
+        let currentQuestionIndex = 0;
+        let selectedAnswers = []; // Hanya menyimpan huruf pilihan (a, b, c...)
+
+        const intro = document.getElementById("intro");
+        const quizContent = document.getElementById("quiz-content");
+        const finalResult = document.getElementById("final-result");
+
+        // Fetch Data
+        fetch(DATA_URL + '?v=' + Date.now())
+            .then(res => res.json())
+            .then(data => { questions = data; })
+            .catch(err => {
+                console.error("Gagal muat soal:", err);
+                document.getElementById("question").innerText = "Koneksi gagal. Silakan muat ulang halaman.";
+            });
+
+        document.getElementById("startButton").onclick = () => {
+            intro.classList.add("hidden");
+            quizContent.classList.remove("hidden");
+            renderQuestion();
+        };
+
+        function renderQuestion() {
+            if (currentQuestionIndex >= questions.length) {
+                showResults();
+                return;
+            }
+
+            const q = questions[currentQuestionIndex];
+            // Tampilkan pertanyaan tanpa nomor jika ada
+            const qText = q.question.includes('.') ? q.question.split('.').slice(1).join('.') : q.question;
+            document.getElementById("question").innerText = qText.trim();
+            document.getElementById("progressDisplay").innerText = `Progress: ${currentQuestionIndex + 1} / ${questions.length}`;
+
+            const container = document.getElementById("optionsContainer");
+            container.innerHTML = "";
+
+            // Render opsi A-E
+            ['A', 'B', 'C', 'D', 'E'].forEach(key => {
+                if (q.options[key]) {
+                    const btn = document.createElement("button");
+                    btn.className = "option-btn";
+                    btn.innerHTML = `<span class="option-prefix">${key}</span> <span>${q.options[key]}</span>`;
+                    
+                    // ONCLICK: Catat pilihan & lanjut
+                    btn.onclick = () => {
+                        // Simpan hanya pilihan huruf saja (dalam huruf kecil sesuai permintaan misal: a, b, a)
+                        selectedAnswers.push(key.toLowerCase());
+                        currentQuestionIndex++;
+                        renderQuestion();
+                    };
+                    container.appendChild(btn);
+                }
+            });
+        }
+
+        function showResults() {
+            quizContent.classList.add("hidden");
+            finalResult.classList.remove("hidden");
+            
+            // Format output: a, b, a, a (menggunakan join dengan koma)
+            const finalString = selectedAnswers.join(', ');
+            document.getElementById("logJawaban").innerText = finalString;
+            
+            // Tampilkan di konsol sesuai permintaan
+            console.log("Pilihan Pengguna:", finalString);
+        }
+    });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Soal Psikotest - TKD</title>
+    <link rel="stylesheet" href="css_tes.css">
+    <style>
+        .hidden { display: none !important; }
+        #loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; }
+        .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        .quiz-container { text-align: center; max-width: 800px; margin: auto; padding: 20px; }
+        .options { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 20px; }
+        .options button { width: 100%; max-width: 400px; padding: 12px; cursor: pointer; border: 1px solid #ccc; border-radius: 5px; background-color: #fff; transition: 0.2s; text-align: left; }
+        .options button:hover { background-color: #f0f0f0; border-color: #007bff; }
+        #timer { margin-top: 20px; font-weight: bold; color: #d9534f; }
+    </style>
+</head>
+<body>
+
+    <div id="loader" class="hidden">
+        <div class="spinner"></div>
+        <p id="loader-text">Mohon Tunggu...</p>
+    </div>
+
+    <h1 id="mainTitle" style="text-align: center;">Psikotest - Subtes 5</h1>
+
+    <div class="quiz-container">
+        <button id="startButton" onclick="startGame()" class="hidden">Mulai Tes</button>
+        <div id="questionArea" class="hidden">
+            <div id="question"></div>
+            <div class="options"></div>
+            <button id="skipButton" onclick="skipQuestion()" style="margin-top:20px; padding: 10px 20px; cursor: pointer;">Lewati Soal</button>
+        </div>
+        <div id="timer" class="hidden">Waktu Tersisa: 360 detik</div>
+    </div>
+
+    <script>
+        const API_URL = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis6';
+        const TABLE_NAME = 'nilai1';
+        const AUTH_KEY = 'admin';
+
+        let correctScore = 0;
+        let timeLeft = 360;
+        let currentQuestionIndex = 0;
+        let questions = [];
+        let userAnswers = []; 
+        let timerInterval;
+
+        // --- VALIDASI AWAL: CEK INDEKS KE-4 ---
+        window.onload = async () => {
+            const token = localStorage.getItem('token');
+            const idX = localStorage.getItem('db_id');
+
+            if (!token || !idX) {
+                location.href = 'index1.html';
+                return;
+            }
+
+            toggleLoader(true, "Memvalidasi Data...");
+
+            try {
+                const resp = await fetch(`${API_URL}?table=${TABLE_NAME}&id_x=${idX}`, {
+                    headers: { 'X-Custom-Auth': AUTH_KEY }
+                });
+                const result = await resp.json();
+                
+                if (!result.success) throw new Error("User tidak ditemukan");
+
+                // Cek x_05 bagian kelima (Indeks ke-4)
+                // Format: index0|index1|index2|index3|index4
+                const statusData = result.data.x_05 ? result.data.x_05.split('|') : ["", "", "", "", ""];
+                
+                if (statusData[4] && statusData[4].trim() !== "") {
+                    alert("Anda sudah mengerjakan soal ini.");
+                    location.href = 'index1.html';
+                    return;
+                }
+
+                await fetchQuestions();
+                document.getElementById("startButton").classList.remove("hidden");
+
+            } catch (err) {
+                console.error(err);
+                location.href = 'index1.html';
+            } finally {
+                toggleLoader(false);
+            }
+        };
+
+        async function fetchQuestions() {
+            try {
+                const response = await fetch('https://cipta.my.id/psikotest/tkd3.txt?v=' + new Date().getTime());
+                questions = await response.json();
+                loadGameState();
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        function toggleLoader(show, text = "Menyimpan Data...") {
+            const loader = document.getElementById('loader');
+            document.getElementById('loader-text').innerText = text;
+            loader.classList.toggle('hidden', !show);
+        }
+
+        function loadGameState() {
+            const savedState = localStorage.getItem('gameState4');
+            if (savedState) {
+                const state = JSON.parse(savedState);
+                correctScore = state.correctScore || 0;
+                currentQuestionIndex = state.currentQuestionIndex || 0;
+                userAnswers = state.userAnswers || [];
+                timeLeft = state.timeLeft || 360;
+            }
+        }
+
+        function saveGameState() {
+            const gameState = { correctScore, currentQuestionIndex, userAnswers, timeLeft };
+            localStorage.setItem('gameState4', JSON.stringify(gameState));
+        }
+
+        function startGame() {
+            document.getElementById("startButton").classList.add("hidden");
+            document.getElementById("mainTitle").classList.add("hidden");
+            document.getElementById("questionArea").classList.remove("hidden");
+            document.getElementById("timer").classList.remove("hidden");
+            startTimer();
+            newQuestion();
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                document.getElementById("timer").innerText = `Waktu Tersisa: ${timeLeft} detik`;
+                if (timeLeft <= 0) { clearInterval(timerInterval); endGame(true); }
+                else { saveGameState(); }
+            }, 1000);
+        }
+
+        function newQuestion() {
+            if (currentQuestionIndex >= questions.length) { endGame(false); return; }
+            
+            let currentQuestion = questions[currentQuestionIndex];
+            document.getElementById("question").innerHTML = `<h3>Soal No. ${currentQuestionIndex + 1}</h3>` + currentQuestion.question;
+            
+            const optionsDiv = document.querySelector(".options");
+            optionsDiv.innerHTML = "";
+            
+            for (const option in currentQuestion.options) {
+                if (currentQuestion.options[option]) {
+                    const button = document.createElement("button");
+                    button.innerHTML = `<strong>${option}.</strong> ${currentQuestion.options[option]}`;
+                    button.onclick = () => submitAnswer(option, currentQuestion.answer);
+                    optionsDiv.appendChild(button);
+                }
+            }
+        }
+
+        function submitAnswer(option, correctAnswer) {
+            const resultIndicator = (option === correctAnswer) ? 'v' : 'x';
+            userAnswers.push(`${currentQuestionIndex + 1}${option}${resultIndicator}`);
+            
+            if (option === correctAnswer) correctScore++;
+            
+            currentQuestionIndex++;
+            saveGameState();
+            newQuestion();
+        }
+
+        function skipQuestion() { 
+            userAnswers.push(`${currentQuestionIndex + 1}SKIPx`);
+            currentQuestionIndex++; 
+            saveGameState();
+            newQuestion(); 
+        }
+
+        async function endGame(timeout) {
+            clearInterval(timerInterval);
+            toggleLoader(true, "Menyimpan Data...");
+            const idX = localStorage.getItem('db_id');
+
+            try {
+                const resp = await fetch(`${API_URL}?table=${TABLE_NAME}&id_x=${idX}`, {
+                    headers: { 'X-Custom-Auth': AUTH_KEY }
+                });
+                const result = await resp.json();
+
+                // Simpan Skor ke Indeks 4
+                let x05_parts = result.data.x_05 ? result.data.x_05.split('|') : ["", "", "", "", ""];
+                x05_parts[4] = correctScore.toString(); 
+
+                // Simpan Log ke Indeks 4
+                let x08_parts = result.data.x_08 ? result.data.x_08.split('|') : ["", "", "", "", ""];
+                x08_parts[4] = `['${userAnswers.join("', '")}']`; 
+
+                await fetch(`${API_URL}?table=${TABLE_NAME}&id_x=${idX}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'X-Custom-Auth': AUTH_KEY },
+                    body: JSON.stringify({ 
+                        x_05: x05_parts.join('|'), 
+                        x_08: x08_parts.join('|') 
+                    })
+                });
+
+                localStorage.removeItem('gameState4');
+                alert("Subtes 5 Selesai! Semua data telah tersimpan.");
+                window.location.href = 'index1.html';
+            } catch (error) {
+                console.error(error);
+                alert("Gagal menyimpan data ke server.");
+                toggleLoader(false);
+            }
+        }
+    </script>
+</body>
+</html>

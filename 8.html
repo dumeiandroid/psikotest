@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Soal Psikotest - EPPS</title>
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f4f4f4; text-align: center; padding: 20px; margin: 0; }
+        .quiz-container { max-width: 800px; margin: 20px auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .hidden { display: none !important; }
+        
+        /* Loader */
+        #loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; }
+        .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        #question-title { font-size: 1.4em; font-weight: bold; margin-bottom: 25px; color: #333; }
+        .options { display: flex; flex-direction: column; gap: 15px; }
+        .option-btn { 
+            padding: 18px; font-size: 16px; cursor: pointer; background: #fff; 
+            border: 2px solid #ddd; border-radius: 10px; transition: 0.3s; text-align: left;
+            line-height: 1.5;
+        }
+        .option-btn:hover { border-color: #3498db; background: #f0f7ff; transform: translateY(-2px); }
+        .option-btn:active { transform: scale(0.98); }
+        
+        #startButton { padding: 15px 50px; font-size: 18px; cursor: pointer; background: #28a745; color: white; border: none; border-radius: 8px; transition: 0.3s; }
+        #startButton:hover { background: #218838; }
+        .progress { margin-top: 30px; font-size: 0.9em; color: #888; border-top: 1px solid #eee; padding-top: 15px; }
+    </style>
+</head>
+<body>
+
+<div id="loader" class="hidden">
+    <div class="spinner"></div>
+    <p id="loader-text">Memproses...</p>
+</div>
+
+<div class="quiz-container">
+    <h1>Tes Kepribadian (EPPS)</h1>
+    
+    <div id="setup-area">
+        <p style="color: #666; margin-bottom: 30px;">Pilihlah satu pernyataan dari setiap pasangan yang paling menggambarkan diri Anda.</p>
+        <button id="startButton">Mulai Tes</button>
+    </div>
+
+    <div id="quiz-content" class="hidden">
+        <div id="question-title"></div>
+        <div class="options">
+            <button id="optionA" class="option-btn"></button>
+            <button id="optionB" class="option-btn"></button>
+        </div>
+        <div class="progress">Progress: <span id="progressDisplay">0 / 0</span></div>
+    </div>
+</div>
+
+<script>
+    const API_URL = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis6';
+    const TABLE_NAME = 'nilai1';
+    const AUTH_KEY = 'admin';
+    const DATA_URL = 'https://cipta.my.id/psikotest/epps.txt';
+    const TARGET_INDEX = 0; // Menggunakan indeks ke-0 sesuai permintaan
+
+    let questions = [];
+    let currentQuestionIndex = 0;
+    let userAnswers = [];
+
+    function toggleLoader(show, text = "") {
+        const loader = document.getElementById('loader');
+        if(text) document.getElementById('loader-text').innerText = text;
+        loader.classList.toggle('hidden', !show);
+    }
+
+    window.onload = async () => {
+        const idX = localStorage.getItem('db_id');
+        if (!idX) { window.location.href = 'index1.html'; return; }
+
+        toggleLoader(true, "Memuat soal EPPS...");
+        try {
+            const qResp = await fetch(DATA_URL + '?v=' + new Date().getTime());
+            questions = await qResp.json();
+
+            // Cek status pengerjaan
+            const resp = await fetch(`${API_URL}?table=${TABLE_NAME}&id_x=${idX}`, {
+                headers: { 'X-Custom-Auth': AUTH_KEY }
+            });
+            const result = await resp.json();
+            
+            if (result.success) {
+                const x06 = result.data.x_06 ? result.data.x_06.split('|') : [];
+                if (x06[TARGET_INDEX] && x06[TARGET_INDEX].trim() !== "") {
+                    alert("Anda sudah menyelesaikan tes ini.");
+                    window.location.href = 'index1.html';
+                    return;
+                }
+            }
+            document.getElementById("startButton").onclick = startGame;
+        } catch (err) {
+            alert("Gagal memuat data. Periksa koneksi internet.");
+        } finally {
+            toggleLoader(false);
+        }
+    };
+
+    function startGame() {
+        document.getElementById("setup-area").classList.add("hidden");
+        document.getElementById("quiz-content").classList.remove("hidden");
+        renderQuestion();
+    }
+
+    function renderQuestion() {
+        if (currentQuestionIndex >= questions.length) {
+            saveAndExit();
+            return;
+        }
+
+        const q = questions[currentQuestionIndex];
+        document.getElementById("question-title").innerText = `Pasangan Soal No. ${currentQuestionIndex + 1}`;
+        
+        // Logika Adaptif: Mengambil dari q.A atau q.options.A untuk mencegah undefined
+        const textA = q.A || (q.options && q.options.A);
+        const textB = q.B || (q.options && q.options.B);
+
+        document.getElementById("optionA").innerText = "A. " + (textA || "Data tidak tersedia");
+        document.getElementById("optionB").innerText = "B. " + (textB || "Data tidak tersedia");
+        
+        document.getElementById("optionA").onclick = () => handleAnswer('A');
+        document.getElementById("optionB").onclick = () => handleAnswer('B');
+        
+        document.getElementById("progressDisplay").innerText = `${currentQuestionIndex + 1} / ${questions.length}`;
+    }
+
+    function handleAnswer(choice) {
+        userAnswers.push(choice);
+        currentQuestionIndex++;
+        renderQuestion();
+    }
+
+    async function saveAndExit() {
+        toggleLoader(true, "Menyimpan hasil...");
+        const idX = localStorage.getItem('db_id');
+
+        try {
+            // 1. Ambil data saat ini untuk menjaga struktur pipa data
+            const resp = await fetch(`${API_URL}?table=${TABLE_NAME}&id_x=${idX}`, {
+                headers: { 'X-Custom-Auth': AUTH_KEY }
+            });
+            const result = await resp.json();
+
+            // 2. Olah kolom x_06
+            let x06_parts = result.data.x_06 ? result.data.x_06.split('|') : [];
+            
+            // Pastikan array cukup panjang untuk TARGET_INDEX
+            while(x06_parts.length <= TARGET_INDEX) x06_parts.push("");
+
+            // 3. Simpan log jawaban (A;B;A;A...) di indeks ke-0
+            x06_parts[TARGET_INDEX] = userAnswers.join(';');
+
+            // 4. Update kembali ke database Cloudflare
+            await fetch(`${API_URL}?table=${TABLE_NAME}&id_x=${idX}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'X-Custom-Auth': AUTH_KEY },
+                body: JSON.stringify({ 
+                    x_06: x06_parts.join('|') 
+                })
+            });
+
+            window.location.href = 'index1.html';
+        } catch (error) {
+            alert("Gagal menyimpan hasil ke server.");
+            toggleLoader(false);
+        }
+    }
+</script>
+</body>
+</html>

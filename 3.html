@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Soal Psikotest - Subtes 3</title>
+    <link rel="stylesheet" href="css_tes.css">
+    <style>
+        .hidden { display: none !important; }
+        #loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; }
+        .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        .options { display: flex; flex-wrap: nowrap; justify-content: center; gap: 10px; margin-top: 20px; overflow-x: auto; }
+        .options img { max-width: 120px; cursor: pointer; border: 2px solid #ccc; border-radius: 5px; transition: transform 0.2s; }
+        .options img:hover { transform: scale(1.05); border-color: #007bff; }
+        .question-image { display: block; margin: 0 auto 20px auto; max-width: 300px; }
+    </style>
+</head>
+<body>
+    <div id="loader" class="hidden">
+        <div class="spinner"></div>
+        <p id="loader-text">Mohon Tunggu...</p>
+    </div>
+
+    <div class="quiz-container">
+        <h1 id="mainTitle" style="text-align: center;">Psikotest - Subtes 3</h1>
+        <div style="text-align: center;">
+            <button id="startButton" onclick="startGame()" class="hidden">Mulai Tes</button>
+        </div>
+        
+        <div id="questionArea" class="hidden">
+            <div id="question"></div>
+            <div class="options"></div>
+            <button id="skipButton" onclick="skipQuestion()" style="margin-top:20px; padding: 10px 20px; cursor: pointer;">Lewati Soal</button>
+        </div>
+        <div id="timer" class="hidden" style="margin-top:20px; font-weight:bold; color:red; text-align: center;">Waktu Tersisa: 180 detik</div>
+    </div>
+
+    <script>
+        const API_URL = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis6';
+        const TABLE_NAME = 'nilai1';
+        const AUTH_KEY = 'admin';
+
+        let correctScore = 0;
+        let timeLeft = 180; 
+        let currentQuestionIndex = 0;
+        let questions = [];
+        let userAnswers = []; 
+        let timerInterval;
+
+        // --- VALIDASI KEAMANAN & PEMERIKSAAN INDEKS 2 ---
+        window.onload = async () => {
+            const token = localStorage.getItem('token');
+            const idX = localStorage.getItem('db_id');
+
+            if (!token || !idX) {
+                location.href = 'index1.html';
+                return;
+            }
+
+            toggleLoader(true, "Memvalidasi Akses...");
+
+            try {
+                const resp = await fetch(`${API_URL}?table=${TABLE_NAME}&id_x=${idX}`, {
+                    headers: { 'X-Custom-Auth': AUTH_KEY }
+                });
+                const result = await resp.json();
+                
+                if (!result.success) throw new Error("User tidak ditemukan");
+
+                const user = result.data;
+                // Pecah data x_05 untuk cek apakah Subtes 3 (Indeks 2) sudah diisi
+                const soalStatus = user.x_05 ? user.x_05.split('|') : ["", "", "", ""];
+
+                if (soalStatus[2] && soalStatus[2].trim() !== "") {
+                    alert("Anda sudah mengerjakan soal ini.");
+                    location.href = 'index1.html';
+                    return;
+                }
+
+                // Ambil soal jika validasi lolos
+                await fetchQuestions();
+                document.getElementById("startButton").classList.remove("hidden");
+            } catch (err) {
+                console.error(err);
+                location.href = 'index1.html';
+            } finally {
+                toggleLoader(false);
+            }
+        };
+
+        async function fetchQuestions() {
+            try {
+                const response = await fetch('https://cipta.my.id/psikotest/cfit3.txt');
+                questions = await response.json();
+                loadGameState();
+            } catch (error) {
+                console.error('Error loading questions:', error);
+            }
+        }
+
+        function toggleLoader(show, text = "Mohon Tunggu...") {
+            const loader = document.getElementById('loader');
+            document.getElementById('loader-text').innerText = text;
+            loader.classList.toggle('hidden', !show);
+        }
+
+        function loadGameState() {
+            const savedState = localStorage.getItem('gameState2'); 
+            if (savedState) {
+                const state = JSON.parse(savedState);
+                correctScore = state.correctScore || 0;
+                currentQuestionIndex = state.currentQuestionIndex || 0;
+                userAnswers = state.userAnswers || [];
+                timeLeft = state.timeLeft || 180;
+            }
+        }
+
+        function saveGameState() {
+            const gameState = { correctScore, currentQuestionIndex, userAnswers, timeLeft };
+            localStorage.setItem('gameState2', JSON.stringify(gameState));
+        }
+
+        function startGame() {
+            document.getElementById("startButton").classList.add("hidden");
+            document.getElementById("mainTitle").classList.add("hidden");
+            document.getElementById("questionArea").classList.remove("hidden");
+            document.getElementById("timer").classList.remove("hidden");
+            startTimer();
+            newQuestion();
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                document.getElementById("timer").innerText = `Waktu Tersisa: ${timeLeft} detik`;
+                if (timeLeft <= 0) { 
+                    clearInterval(timerInterval); 
+                    endGame(true); 
+                } else { 
+                    saveGameState(); 
+                }
+            }, 1000);
+        }
+
+        function newQuestion() {
+            if (currentQuestionIndex >= questions.length) { 
+                endGame(false); 
+                return; 
+            }
+            
+            let currentQuestion = questions[currentQuestionIndex];
+            const questionParts = currentQuestion.question.split(' '); 
+            
+            document.getElementById("question").innerHTML = `<h3>Soal ${questionParts[0]}</h3><img class="question-image" src="${questionParts[1]}" alt="Soal">`;
+            
+            const optionsDiv = document.querySelector(".options");
+            optionsDiv.innerHTML = "";
+            
+            for (const option in currentQuestion.options) {
+                if (currentQuestion.options[option]) {
+                    const img = document.createElement("img");
+                    img.src = currentQuestion.options[option];
+                    img.onclick = () => submitAnswer(option, currentQuestion.answer);
+                    optionsDiv.appendChild(img);
+                }
+            }
+        }
+
+        function submitAnswer(option, correctAnswer) {
+            const questionNumber = questions[currentQuestionIndex].question.split('.')[0];
+            const resultIndicator = (option === correctAnswer) ? 'v' : 'x';
+            
+            userAnswers.push(`${questionNumber}${option}${resultIndicator}`);
+            if (option === correctAnswer) correctScore++;
+            
+            currentQuestionIndex++;
+            saveGameState();
+            newQuestion();
+        }
+
+        function skipQuestion() { 
+            const questionNumber = questions[currentQuestionIndex].question.split('.')[0];
+            userAnswers.push(`${questionNumber}SKIPx`);
+            currentQuestionIndex++; 
+            saveGameState();
+            newQuestion(); 
+        }
+
+        async function endGame(timeout) {
+            clearInterval(timerInterval);
+            toggleLoader(true, "Menyimpan Data...");
+            
+            const idX = localStorage.getItem('db_id');
+
+            try {
+                const resp = await fetch(`${API_URL}?table=${TABLE_NAME}&id_x=${idX}`, {
+                    headers: { 'X-Custom-Auth': AUTH_KEY }
+                });
+                const result = await resp.json();
+
+                // Olah x_05 (Skor) - Masuk ke Indeks 2
+                let x05_parts = result.data.x_05 ? result.data.x_05.split('|') : ["", "", "", ""];
+                x05_parts[2] = correctScore.toString();
+
+                // Olah x_08 (Log Jawaban) - Masuk ke Indeks 2
+                let x08_parts = result.data.x_08 ? result.data.x_08.split('|') : ["", "", "", ""];
+                x08_parts[2] = `['${userAnswers.join("', '")}']`;
+
+                await fetch(`${API_URL}?table=${TABLE_NAME}&id_x=${idX}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'X-Custom-Auth': AUTH_KEY },
+                    body: JSON.stringify({ 
+                        x_05: x05_parts.join('|'), 
+                        x_08: x08_parts.join('|') 
+                    })
+                });
+
+                localStorage.removeItem('gameState2');
+                alert(timeout ? "Waktu Habis! Data berhasil disimpan." : "Subtes 3 Selesai! Data berhasil disimpan.");
+                window.location.href = 'index1.html';
+            } catch (error) {
+                console.error(error);
+                alert("Terjadi kesalahan saat menyimpan data.");
+                toggleLoader(false);
+            }
+        }
+    </script>
+</body>
+</html>

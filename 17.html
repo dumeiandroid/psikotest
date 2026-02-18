@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Soal Psikotest - IST 9</title>
+    <style>
+        :root { --primary: #007bff; --success: #28a745; --bg: #f8f9fa; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: var(--bg); margin: 0; padding: 15px; text-align: center; }
+        .quiz-card { width: 100%; max-width: 700px; background: white; padding: 30px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); margin: auto; }
+        .hidden { display: none !important; }
+
+        #loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; }
+        .spinner { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        #question { font-size: 1.25rem; font-weight: 600; color: #222; margin: 30px 0; min-height: 60px; }
+        .options-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+        
+        .option-btn { 
+            padding: 15px; border: 2px solid #eee; border-radius: 12px; background: white;
+            cursor: pointer; transition: 0.2s; font-size: 1rem; text-align: left; display: flex; align-items: center;
+        }
+        .option-btn:hover { border-color: var(--primary); background: #f0f7ff; }
+        .option-prefix { 
+            background: var(--primary); color: white; width: 30px; height: 30px; 
+            border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px; flex-shrink: 0;
+        }
+
+        .btn-main { padding: 15px 40px; font-size: 18px; border: none; border-radius: 8px; cursor: pointer; background: var(--success); color: white; transition: 0.3s; }
+        .btn-main:hover { opacity: 0.9; transform: translateY(-2px); }
+        .skip-btn { margin-top: 25px; background: none; border: none; color: #888; cursor: pointer; text-decoration: underline; }
+    </style>
+</head>
+<body>
+
+<div id="loader" class="hidden"><div class="spinner"></div><p id="loader-text">Memproses...</p></div>
+
+<div class="quiz-card">
+    <h1>Subtes IST 9</h1>
+    
+    <div id="instruction-area">
+        <p style="text-align: left; line-height: 1.6; color: #555;">
+            Pada subtes ini, Anda diminta untuk mengingat kata-kata yang telah dipelajari sebelumnya. 
+            Pilihlah kategori yang sesuai untuk setiap kata yang muncul.
+        </p>
+        <button id="startTestBtn" class="btn-main">Mulai Tes SEKARANG</button>
+    </div>
+
+    <div id="quiz-content" class="hidden">
+        <div id="question"></div>
+        <div class="options-grid" id="optionsContainer"></div>
+        <button class="skip-btn" id="skipBtn">Lewati Soal</button>
+        <div style="margin-top: 20px; font-size: 0.85em; color: #999;">
+            Progres: <span id="progressDisplay">0 / 0</span>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API_URL = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis6';
+    const TABLE_NAME = 'nilai1';
+    const AUTH_KEY = 'admin';
+    const DATA_URL = 'https://cipta.my.id/psikotest/ist9.txt';
+    const TARGET_INDEX = 16; // IST 9 di indeks ke-16
+
+    let questions = [];
+    let currentQuestionIndex = 0;
+    let correctScore = 0;
+    let userAnswers = [];
+    let timeLeft = 360; // 6 Menit
+    let timerInterval;
+
+    function toggleLoader(show, text = "") {
+        const loader = document.getElementById('loader');
+        if(text) document.getElementById('loader-text').innerText = text;
+        loader.classList.toggle('hidden', !show);
+    }
+
+    window.onload = async () => {
+        const idX = localStorage.getItem('db_id');
+        if (!idX) { window.location.href = 'index1.html'; return; }
+
+        toggleLoader(true, "Memuat data...");
+        try {
+            const qResp = await fetch(DATA_URL + '?v=' + new Date().getTime());
+            questions = await qResp.json();
+
+            const resp = await fetch(`${API_URL}?table=${TABLE_NAME}&id_x=${idX}`, {
+                headers: { 'X-Custom-Auth': AUTH_KEY }
+            });
+            const result = await resp.json();
+            
+            if (result.success) {
+                const x05 = result.data.x_05 ? result.data.x_05.split('|') : [];
+                if (x05[TARGET_INDEX] && x05[TARGET_INDEX].trim() !== "") {
+                    alert("Subtes IST 9 sudah selesai.");
+                    window.location.href = 'index1.html';
+                    return;
+                }
+            }
+            document.getElementById("startTestBtn").onclick = startQuiz;
+        } catch (err) {
+            alert("Gagal koneksi server.");
+        } finally {
+            toggleLoader(false);
+        }
+    };
+
+    function startQuiz() {
+        document.getElementById("instruction-area").classList.add("hidden");
+        document.getElementById("quiz-content").classList.remove("hidden");
+        document.getElementById("skipBtn").onclick = () => {
+            questions.push(questions[currentQuestionIndex]);
+            currentQuestionIndex++;
+            renderQuestion();
+        };
+
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            if (timeLeft <= 0) endQuiz();
+        }, 1000);
+
+        renderQuestion();
+    }
+
+    function renderQuestion() {
+        if (currentQuestionIndex >= questions.length) {
+            endQuiz();
+            return;
+        }
+
+        const qData = questions[currentQuestionIndex];
+        
+        // Membersihkan nomor soal jika ada (misal "1. KATA" menjadi "KATA")
+        const rawText = qData.question;
+        const qContent = rawText.includes('.') ? rawText.split('.')[1].trim() : rawText.trim();
+        const qNum = rawText.split('.')[0] || (currentQuestionIndex + 1);
+
+        document.getElementById("question").innerText = qContent;
+        document.getElementById("progressDisplay").innerText = `${currentQuestionIndex + 1} / ${questions.length}`;
+
+        const container = document.getElementById("optionsContainer");
+        container.innerHTML = "";
+
+        ['A', 'B', 'C', 'D', 'E'].forEach(key => {
+            if (qData.options[key]) {
+                const btn = document.createElement("button");
+                btn.className = "option-btn";
+                btn.innerHTML = `<span class="option-prefix">${key}</span> ${qData.options[key]}`;
+                btn.onclick = () => handleAnswer(key, qData.answer, qNum);
+                container.appendChild(btn);
+            }
+        });
+    }
+
+    function handleAnswer(choice, correct, qNum) {
+        const isCorrect = (choice === correct);
+        if (isCorrect) correctScore++;
+        userAnswers.push(`${qNum}${choice}${isCorrect ? 'v' : 'x'}`);
+        currentQuestionIndex++;
+        renderQuestion();
+    }
+
+    async function endQuiz() {
+        clearInterval(timerInterval);
+        toggleLoader(true, "Menyimpan...");
+        const idX = localStorage.getItem('db_id');
+
+        try {
+            const resp = await fetch(`${API_URL}?table=${TABLE_NAME}&id_x=${idX}`, {
+                headers: { 'X-Custom-Auth': AUTH_KEY }
+            });
+            const result = await resp.json();
+
+            let x05 = result.data.x_05 ? result.data.x_05.split('|') : [];
+            let x08 = result.data.x_08 ? result.data.x_08.split('|') : [];
+            
+            while(x05.length <= TARGET_INDEX) x05.push("");
+            while(x08.length <= TARGET_INDEX) x08.push("");
+
+            x05[TARGET_INDEX] = correctScore.toString();
+            x08[TARGET_INDEX] = JSON.stringify(userAnswers);
+
+            await fetch(`${API_URL}?table=${TABLE_NAME}&id_x=${idX}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'X-Custom-Auth': AUTH_KEY },
+                body: JSON.stringify({ x_05: x05.join('|'), x_08: x08.join('|') })
+            });
+
+            window.location.href = 'index1.html';
+        } catch (e) {
+            alert("Gagal simpan.");
+            toggleLoader(false);
+        }
+    }
+</script>
+</body>
+</html>

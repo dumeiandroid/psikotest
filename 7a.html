@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tes Psikotest - Pilih Ranking Dinamis</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 20px; background: #f0f2f5; }
+        .container { max-width: 1100px; margin: auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        h2 { color: #007bff; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        #deskripsi { margin: 20px 0; line-height: 1.6; color: #333; background: #f8f9fa; padding: 20px; border-left: 5px solid #007bff; border-radius: 4px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #dee2e6; padding: 12px; text-align: left; }
+        th { background: #007bff; color: white; }
+        
+        /* Container tombol menggunakan flex agar merapat ke kiri */
+        .btn-container { 
+            display: flex; 
+            flex-wrap: wrap; 
+            gap: 5px; 
+            min-height: 40px; 
+            align-items: center;
+        }
+
+        .btn-num { 
+            width: 38px; 
+            height: 38px; 
+            cursor: pointer; 
+            border: 1px solid #ddd; 
+            background: #fff; 
+            border-radius: 6px; 
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+        }
+
+        .btn-num:hover { background: #e7f3ff; border-color: #007bff; }
+        
+        .btn-num.selected { 
+            background: #28a745; 
+            color: white; 
+            border-color: #1e7e34; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        /* Menghilangkan tombol yang tidak perlu */
+        .btn-num.hidden { display: none; }
+
+        #loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; }
+        .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .hidden-el { display: none !important; }
+    </style>
+</head>
+<body>
+
+<div id="loader" class="hidden-el">
+    <div class="spinner"></div>
+    <p>Menyimpan Data Kolom <span id="loadKolom">1</span>...</p>
+</div>
+
+<div class="container">
+    <h2 id="titleKolom">Tes Ranking - Kolom 1</h2>
+    <div id="deskripsi"></div>
+
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 50px;">No</th>
+                <th>Pernyataan</th>
+                <th style="width: 550px;">Pilihan Ranking</th>
+            </tr>
+        </thead>
+        <tbody id="pilihanTable"></tbody>
+    </table>
+</div>
+
+<script>
+    // Copy manual data Anda di sini
+    const pembuka = [
+        '1. Tim mengadakan persiapan perjalanan. Rapat-rapat perlu diadakan. Dana dari sponsor, kendaraan, peralatan, dan sebagainya perlu diurus. Urutkan tugas yang paling Anda senangi dengan menuliskan nomor pilihan pada kolom di bawah "Ranking" Urutkan yang paling disenangi mulai dari nomor 1',
+        '2. Anggota yang melakukan tawar-menawar dana mengabarkan, bahwa kedua belasan Anda diminta membantu pelaksanaan "Bazaar Malam" untuk menjual barang-barang simpanan sponsor. Kedua belasan Anda akan mendapat 20% hasil penjualan sebagai tambahan bekal. Pilih sendiri tugas yang Anda senangi.',
+        '3. Persiapan perjalanan mulus, perjalanan juga menyenangkan. Di Kecamatan Depok, Pak Camat meminta agar tim WKN membenahi "Wisma Padepokan KLH" tempat tim Anda menginap dan mengadakan Pameran dan Kampanye KLH. Urutkan pilihan tugas Anda.',
+        '4. Kampanye di wisma direncanakan terdiri atas beberapa acara, antara lain: penghijauan, kependudukan, dan masalah polusi. Urutkan tugas-tugas yang Anda pilih.',
+        '5. Bagi para remaja dan anak-anak, KLH diperkenalkan dengan mengadakan berbagai lomba. Urutkan pilihan Anda.',
+        '6. Guru SD perlu mendapat pengetahuan lebih mendalam mengenai KLH. Mereka mendapat penataran, dan Anda-anda perlu menggantikan tugas mereka. Urutkan pilihan Anda.',
+        '7. Tim Anda diminta menjadi Agen rahasia untuk menyelidiki satu keluarga pedagang kaya raya yang diduga terlibat dalam masalah narkotika. Keluarga ini akan mengadakan pesta besar-besaran di salah satu pulau di Pulau Seribu. Setiap anggota tim menyamar sebagai petugas. Urutkan pilihan tugas Anda.',
+        '8. Di suatu daerah terjadi musibah gempa yang diikuti dengan tanah longsor yang melanda daerah pemukiman. Tim Anda diminta membantu. Urutkan tugas pilihan Anda.'
+    ];
+
+    const pertanyaan = [
+        ['Menyetir mobil antar jemput anggota','Memperbaiki kerusakan mesin mobil','Merencanakan anggaran belanja','Membaca laporan penelitian KLH','Menghadap sponsor (Dana)','Merancang simbol dan logo','Memilih lagu kampanye','Menyiapkan bacaan populer KLH','Menjadi penghubung kelompok','Mencatat hasil dan arsip','Menyiapkan peralatan makan','Menyiapkan peralatan medis'],
+        ['Menservis mesin diesel','Menghitung uang bazaar','Meneliti ulat/kutu gudang','Speaker menarik pengunjung','Merancang papan reklame','Mengubah lagu iklan radio','Mengarang sajak jenaka','Membantu isi daftar pesanan','Mengetik undangan khusus','Memasang tenda dan spanduk','Membantu dokter di posko','Menjaga keamanan (HT)'],
+        ['Perhitungan biaya wisma','Meneliti ular berbisa','Menghadap Pak Camat','Menggambar sketsa tokoh','Aransemen lagu','Menulis puisi lomba','Menyambut penduduk diskusi','Menyimpan arsip rekening','Mengecat tembok wisma','Mengobati penduduk gatal','Mengatur batu kolam','Memperbaiki pompa air'],
+        ['Periksa limbah kimia','Utusan ke direksi pabrik','Merancang poster kampanye','Mengubah lagu penghijauan','Menyiapkan brosur kampanye','Penjelasan ke pengunjung','Mengetik naskah','Mengatur meja pameran','Menjadi mantri puskesmas','Menanam pohon lindung','Merakit pompa air','Hitung ganti rugi limbah'],
+        ['Juri lomba pidato','Juri seni rangkai bunga','Juri menyanyi daerah','Juri merangkai kata','Juri remaja ngetop','Juri mengetik cepat','Juri memasak nasi goreng','Juri lomba PPPK','Juri lomba voli','Juri tambal ban','Juri lomba matematika','Juri observasi IPA'],
+        ['Mengajar lukis & patung','Mengajar musik','Mengajar teknik mengarang','Mengajar agama','Mengajar mengetik','Mengajar prakarya','Mengajar merawat orang sakit','Mengajar olahraga','Mengajar pertukangan','Mengajar berhitung','Mengajar ilmu hewan','Mengajar koperasi'],
+        ['Menjadi pianis band','Asisten pengarang puisi','Menyambut tamu','Sekretaris ketik nama','Asisten koki VIP','Perawat pos kesehatan','Pengatur lalu lintas','Teknisi diesel listrik','Juru bayar rekening','Laboran makanan','Pengarah acara/MC','Pembuat patung'],
+        ['Menulis karangan musibah','Menenangkan korban trauma','Mengetik surat jalan','Pasang tenda penampungan','Membantu luka parah','Membantu gali reruntuhan','Memasang lampu darurat','Menjadi kasir bantuan','Penyelidik lokasi rawan','Menghadap jutawan (Dana)','Membuat gambar/patung dana','Pemain band amal']
+    ];
+    const API_URL = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis6';
+    const TABLE_NAME = 'nilai1';
+    const AUTH_KEY = 'admin';
+
+    const urlParams = new URLSearchParams(window.location.search);
+    let kolomSekarang = parseInt(urlParams.get('kolom')) || 1;
+    const TARGET_INDEX = kolomSekarang + 2; 
+
+    let rowSelections = Array(12).fill(null);
+    let usedNumbers = [];
+
+    window.onload = () => {
+        document.getElementById('titleKolom').innerText = "Tes Ranking - Kolom " + kolomSekarang;
+        document.getElementById('loadKolom').innerText = kolomSekarang;
+        document.getElementById('deskripsi').innerText = pembuka[kolomSekarang - 1] || "Urutkan sesuai prioritas.";
+        renderTable(pertanyaan[kolomSekarang - 1]);
+    };
+
+    function renderTable(listSoal) {
+        const tbody = document.getElementById('pilihanTable');
+        tbody.innerHTML = listSoal.map((text, idx) => `
+            <tr>
+                <td>${idx + 1}</td>
+                <td>${text}</td>
+                <td>
+                    <div class="btn-container" id="container-${idx}">
+                        ${[1,2,3,4,5,6,7,8,9,10,11,12].map(num => `
+                            <button class="btn-num" 
+                                    id="btn-${idx}-${num}" 
+                                    onclick="selectNum(${idx}, ${num})">${num}</button>
+                        `).join('')}
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+        updateUI();
+    }
+
+    function selectNum(rowIdx, val) {
+        if (rowSelections[rowIdx] === val) {
+            // BATALKAN PILIHAN (Klik pada angka yang sudah terpilih)
+            rowSelections[rowIdx] = null;
+            usedNumbers = usedNumbers.filter(n => n !== val);
+        } else {
+            // PILIH ANGKA
+            if (usedNumbers.includes(val)) return; // Tidak bisa pilih angka yg sudah dipakai baris lain
+            
+            // Jika baris ini sebelumnya sudah ada pilihan, hapus pilihan lama dari usedNumbers
+            if (rowSelections[rowIdx] !== null) {
+                usedNumbers = usedNumbers.filter(n => n !== rowSelections[rowIdx]);
+            }
+            
+            rowSelections[rowIdx] = val;
+            usedNumbers.push(val);
+        }
+        
+        updateUI();
+        checkCompletion();
+    }
+
+    function updateUI() {
+        for (let r = 0; r < 12; r++) {
+            const isRowSelected = rowSelections[r] !== null;
+            const selectedVal = rowSelections[r];
+
+            for (let v = 1; v <= 12; v++) {
+                const btn = document.getElementById(`btn-${r}-${v}`);
+                
+                if (isRowSelected) {
+                    // Jika baris ini sudah memilih, sembunyikan semua kecuali angka terpilih
+                    if (v === selectedVal) {
+                        btn.classList.remove('hidden');
+                        btn.classList.add('selected');
+                    } else {
+                        btn.classList.add('hidden');
+                        btn.classList.remove('selected');
+                    }
+                } else {
+                    // Jika baris ini belum memilih, tampilkan angka yang belum dipakai baris lain
+                    btn.classList.remove('selected');
+                    if (usedNumbers.includes(v)) {
+                        btn.classList.add('hidden');
+                    } else {
+                        btn.classList.remove('hidden');
+                    }
+                }
+            }
+        }
+    }
+
+    async function checkCompletion() {
+        const totalTerpilih = rowSelections.filter(n => n !== null).length;
+        if (totalTerpilih === 12) {
+            await saveData(rowSelections.join(';'));
+        }
+    }
+
+    async function saveData(dataString) {
+        const idX = localStorage.getItem('db_id');
+        document.getElementById('loader').classList.remove('hidden-el');
+
+        try {
+            const resp = await fetch(`${API_URL}?table=${TABLE_NAME}&id_x=${idX}`, {
+                headers: { 'X-Custom-Auth': AUTH_KEY }
+            });
+            const result = await resp.json();
+
+            let x06_parts = result.data.x_06 ? result.data.x_06.split('|') : [];
+            while(x06_parts.length <= TARGET_INDEX) x06_parts.push("");
+
+            x06_parts[TARGET_INDEX] = dataString;
+
+            await fetch(`${API_URL}?table=${TABLE_NAME}&id_x=${idX}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'X-Custom-Auth': AUTH_KEY },
+                body: JSON.stringify({ x_06: x06_parts.join('|') })
+            });
+
+            if (kolomSekarang < 8) {
+                window.location.href = `form7_nophp.html?kolom=${kolomSekarang + 1}`;
+            } else {
+                alert("Selesai! Semua kolom telah terisi.");
+                window.location.href = 'index1.html';
+            }
+        } catch (e) {
+            alert("Koneksi gagal saat menyimpan.");
+            document.getElementById('loader').classList.add('hidden-el');
+        }
+    }
+</script>
+</body>
+</html>

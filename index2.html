@@ -115,8 +115,7 @@
             border: 2px solid var(--border); background: white;
             transition: all 0.2s;
         }
-        .task-item.current { border-color: var(--primary); background: #eff6ff; cursor: pointer; }
-        .task-item.current:hover { background: #dbeafe; box-shadow: 0 4px 12px rgba(37,99,235,0.15); transform: translateY(-1px); transition: all 0.2s; }
+        .task-item.current { border-color: var(--primary); background: #eff6ff; }
         .task-item.done    { border-color: #bbf7d0; background: #f0fdf4; }
         .task-item.locked  { opacity: 0.45; }
         .task-item .task-num  { width: 28px; height: 28px; border-radius: 50%; background: var(--border); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85em; flex-shrink: 0; }
@@ -221,41 +220,6 @@
         #screenDone { text-align: center; }
         .done-icon { font-size: 3.5em; margin-bottom: 12px; }
 
-        /* ===== START SCREEN ===== */
-        .instr-section {
-            background: #eff6ff; border-left: 4px solid var(--primary);
-            border-radius: 8px; padding: 16px 20px; margin-bottom: 24px;
-        }
-        .instr-section .instr-heading {
-            font-size: 0.75em; font-weight: 700; text-transform: uppercase;
-            letter-spacing: 0.08em; color: var(--primary); margin-bottom: 8px;
-        }
-        .instr-section p {
-            font-size: 0.93em; line-height: 1.75; color: var(--text);
-            white-space: pre-line;
-        }
-        .example-block { margin-bottom: 24px; }
-        .example-block .ex-heading {
-            font-size: 0.75em; font-weight: 700; text-transform: uppercase;
-            letter-spacing: 0.08em; color: var(--muted); margin-bottom: 12px;
-        }
-        .example-images {
-            display: flex; flex-direction: column; gap: 12px; align-items: center;
-        }
-        .example-images img {
-            max-width: 100%; border-radius: 10px;
-            border: 2px solid var(--border);
-            box-shadow: 0 2px 10px rgba(0,0,0,0.07);
-        }
-        .ex-note {
-            margin-top: 16px; padding: 14px 18px;
-            background: #f8fafc; border-radius: 8px;
-            font-size: 0.88em; line-height: 1.75; color: var(--muted);
-            white-space: pre-line;
-        }
-        .start-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
-        .timer-note { font-size: 0.78em; color: var(--muted); text-align: center; margin-top: 4px; }
-
         /* welcome name */
         .welcome { font-size: 1.1em; font-weight: 700; margin-bottom: 4px; }
         .welcome-sub { font-size: 0.85em; color: var(--muted); margin-bottom: 20px; }
@@ -299,8 +263,10 @@
     <div class="card">
         <div class="page-title">Biodata Peserta</div>
         <p class="page-sub">Lengkapi data diri sebelum memulai tes.</p>
-        <div id="bioFormFields"></div>
-        <button class="btn btn-primary" id="btnBio" onclick="saveBiodata()">Simpan &amp; Lanjutkan</button>
+        <div class="form-group"><label>Nama Lengkap</label><input type="text" id="bioNama" placeholder="Nama Lengkap"></div>
+        <div class="form-group"><label>Usia</label><input type="number" id="bioUsia" placeholder="Usia"></div>
+        <div class="form-group"><label>Pendidikan Terakhir</label><input type="text" id="bioPend" placeholder="S1, SMA, dll"></div>
+        <button class="btn btn-primary" id="btnBio" onclick="saveBiodata()">Simpan & Lanjutkan</button>
     </div>
 </div>
 
@@ -312,6 +278,7 @@
         <div class="welcome" id="welcomeName">Halo!</div>
         <div class="welcome-sub" id="welcomeSub">Selesaikan semua tes berikut secara berurutan.</div>
         <div class="task-grid" id="taskGrid"></div>
+        <button class="btn btn-primary hidden" id="btnGo" onclick="goTest()">Mulai</button>
         <button class="btn btn-danger" style="margin-top:10px" onclick="logout()">Logout</button>
     </div>
 </div>
@@ -320,35 +287,18 @@
      SCREEN: START (intro sebelum tes)
 ══════════════════════════════════════════ -->
 <div id="screenStart" class="screen">
-    <div class="card card-wide">
-
-        <!-- Judul tes -->
-        <div class="page-title" id="startTitle" style="margin-bottom:20px"></div>
-
-        <!-- Instruksi Pengerjaan -->
-        <div class="instr-section">
-            <div class="instr-heading">📋 Instruksi Pengerjaan</div>
-            <p id="startInstructions"></p>
-        </div>
-
-        <!-- Contoh Soal & Jawaban -->
-        <div class="example-block" id="exampleBlock">
-            <div class="ex-heading">📖 Contoh Soal &amp; Jawaban</div>
-            <div class="example-images">
-                <img id="exImgTop"    src="" alt="Contoh Soal">
-                <img id="exImgBottom" src="" alt="Contoh Jawaban">
+    <div class="card">
+        <div class="page-title" id="startTitle"></div>
+        <p class="page-sub" id="startDesc"></p>
+        <div class="status-box" style="margin-bottom:20px">
+            <div style="display:flex;gap:20px;flex-wrap:wrap">
+                <div><div class="label">Tipe Soal</div><div class="value" id="metaTipe">-</div></div>
+                <div><div class="label">Jumlah Soal</div><div class="value" id="metaSoal">-</div></div>
+                <div><div class="label">Waktu</div><div class="value" id="metaWaktu">-</div></div>
             </div>
-            <!-- Penjelasan contoh -->
-            <div class="ex-note" id="exNote"></div>
         </div>
-
-        <!-- Tombol aksi -->
-        <div class="start-actions">
-            <button class="btn btn-primary" id="btnStart" onclick="startTest()">▶ Mulai Tes</button>
-            <!-- tombol kembali dihapus, alur satu arah -->
-            <div class="timer-note" id="timerNote"></div>
-        </div>
-
+        <button class="btn btn-primary" id="btnStart" onclick="startTest()">Mulai Tes</button>
+        <button class="btn btn-outline" style="margin-top:8px" onclick="showScreen('screenDash');renderDashboard()">← Kembali</button>
     </div>
 </div>
 
@@ -402,45 +352,6 @@
    │ kolom       │ Khusus type "ranking": nomor kolom di JSON (1–8)  │
    └─────────────┴────────────────────────────────────────────────────┘
 */
-/* ╔═══════════════════════════════════════════════════════════════════╗
-   ║  BIODATA CONFIG — Atur field biodata peserta di sini            ║
-   ╚═══════════════════════════════════════════════════════════════════╝
-
-   FIELD per item:
-   ┌──────────┬──────────────────────────────────────────────────────────┐
-   │ id       │ ID unik elemen HTML                                      │
-   │ label    │ Label yang tampil di form                                │
-   │ type     │ "text" | "number" | "select"                             │
-   │ placeholder │ Teks placeholder (untuk text/number)                 │
-   │ options  │ Array {value, label} — hanya untuk type "select"        │
-   │ index    │ Posisi penyimpanan di x_02 (pipe-separated), mulai 0    │
-   │ required │ true = wajib diisi                                       │
-   └──────────┴──────────────────────────────────────────────────────────┘
-*/
-const BIODATA_CONFIG = [
-    {
-        id: 'bioNama', label: 'Nama Lengkap', type: 'text',
-        placeholder: 'Nama Lengkap', index: 0, required: true
-    },
-    {
-        id: 'bioUsia', label: 'Usia', type: 'number',
-        placeholder: 'Usia', index: 1, required: true
-    },
-    {
-        id: 'bioPend', label: 'Pendidikan Terakhir', type: 'text',
-        placeholder: 'S1, SMA, dll', index: 2, required: true
-    },
-    {
-        id: 'bioGender', label: 'Jenis Kelamin', type: 'select',
-        index: 3, required: true,
-        options: [
-            { value: 'L', label: 'Laki-laki' },
-            { value: 'P', label: 'Perempuan' }
-        ]
-    }
-    /* ── Tambah field baru di sini ──────────────────────────────── */
-];
-
 const CONFIG = [
     {
         id: "cfit1",
@@ -450,11 +361,7 @@ const CONFIG = [
         dataUrl: "https://cipta.my.id/psikotest/cfit1.txt",
         saveField: "x_05", saveIndex: 0,
         logField:  "x_08", logIndex:  0,
-        timer: 240,
-        instructions: "Perhatikan gambar soal yang ditampilkan di bagian atas.\nPilih SATU gambar dari pilihan jawaban yang tersedia di bawahnya yang paling tepat melengkapi atau menjawab soal.\nKlik gambar pilihan Anda untuk langsung menjawab.\nJika tidak yakin, gunakan tombol Lewati dan kembali nanti.",
-        exImgTop:    "https://assets.lidan.co.id/gambar/09.jpeg",
-        exImgBottom: "https://assets.lidan.co.id/gambar/10.jpeg",
-        exNote: "Pada contoh di atas, gambar soal menunjukkan pola tertentu.\nJawaban yang benar adalah gambar yang melanjutkan pola tersebut secara logis.\nPerhatikan bentuk, ukuran, rotasi, dan posisi elemen dalam gambar."
+        timer: 240
     },
     {
         id: "cfit2",
@@ -464,11 +371,7 @@ const CONFIG = [
         dataUrl: "https://cipta.my.id/psikotest/cfit2_a.txt",
         saveField: "x_05", saveIndex: 1,
         logField:  "x_08", logIndex:  1,
-        timer: 300,
-        instructions: "Dalam setiap soal terdapat deretan gambar.\nTugas Anda adalah memilih TEPAT 2 gambar yang BERBEDA dari gambar lainnya.\nKlik 2 gambar tersebut, lalu tekan tombol Jawab untuk melanjutkan.\nGambar yang dipilih akan ditandai dengan bingkai biru.",
-        exImgTop:    "https://assets.lidan.co.id/gambar/09.jpeg",
-        exImgBottom: "https://assets.lidan.co.id/gambar/10.jpeg",
-        exNote: "Pada contoh di atas, dari deretan 6 gambar, 4 gambar memiliki kesamaan tertentu.\n2 gambar yang berbeda itulah yang harus Anda pilih.\nPerhatikan perbedaan bentuk, jumlah sisi, atau orientasi gambar."
+        timer: 300
     },
     {
         id: "cfit3",
@@ -478,11 +381,7 @@ const CONFIG = [
         dataUrl: "https://cipta.my.id/psikotest/cfit3.txt",
         saveField: "x_05", saveIndex: 2,
         logField:  "x_08", logIndex:  2,
-        timer: 180,
-        instructions: "Perhatikan gambar soal yang ditampilkan.\nPilih SATU jawaban dari pilihan gambar yang paling tepat melengkapi soal.\nKerjakan dengan cepat dan tepat sesuai waktu yang tersedia.",
-        exImgTop:    "https://assets.lidan.co.id/gambar/09.jpeg",
-        exImgBottom: "https://assets.lidan.co.id/gambar/10.jpeg",
-        exNote: "Pada contoh, perhatikan hubungan antar gambar dalam soal.\nPilih gambar jawaban yang melanjutkan atau melengkapi pola dengan benar."
+        timer: 180
     },
     {
         id: "cfit4",
@@ -492,11 +391,7 @@ const CONFIG = [
         dataUrl: "https://cipta.my.id/psikotest/cfit4.txt",
         saveField: "x_05", saveIndex: 3,
         logField:  "x_08", logIndex:  3,
-        timer: 150,
-        instructions: "Perhatikan gambar soal yang ditampilkan.\nPilih SATU jawaban dari pilihan gambar yang paling tepat.\nKerjakan secepat mungkin karena waktu sangat terbatas.",
-        exImgTop:    "https://assets.lidan.co.id/gambar/09.jpeg",
-        exImgBottom: "https://assets.lidan.co.id/gambar/10.jpeg",
-        exNote: "Temukan pola atau hubungan yang berlaku pada gambar soal, lalu pilih gambar yang sesuai."
+        timer: 150
     },
     {
         id: "tkd5",
@@ -506,11 +401,7 @@ const CONFIG = [
         dataUrl: "https://cipta.my.id/psikotest/tkd3.txt",
         saveField: "x_05", saveIndex: 4,
         logField:  "x_08", logIndex:  4,
-        timer: 360,
-        instructions: "Baca setiap soal dengan cermat dan teliti.\nPilih SATU jawaban dari pilihan A, B, C, D, atau E yang paling tepat.\nJika tidak yakin, gunakan tombol Lewati dan kembali di akhir.\nJawaban yang sudah dipilih tidak dapat diubah.",
-        exImgTop:    "https://assets.lidan.co.id/gambar/09.jpeg",
-        exImgBottom: "https://assets.lidan.co.id/gambar/10.jpeg",
-        exNote: "Contoh: soal menanyakan sinonim, antonim, atau pengetahuan umum.\nPilih jawaban yang paling tepat berdasarkan pemahaman Anda.\nPada tes ini tidak ada pengurangan nilai untuk jawaban salah."
+        timer: 360
     },
     {
         id: "deret6",
@@ -520,11 +411,7 @@ const CONFIG = [
         dataUrl: "https://cipta.my.id/psikotest/tkd6_a.txt",
         saveField: "x_05", saveIndex: 5,
         logField:  "x_08", logIndex:  5,
-        timer: 660,
-        instructions: "Perhatikan deret angka yang ditampilkan pada setiap soal.\nTemukan polanya, lalu ketikkan DUA angka berikutnya dipisahkan dengan spasi.\nContoh jawaban: 12 15\nTekan Enter atau klik tombol Jawab untuk melanjutkan ke soal berikutnya.",
-        exImgTop:    "https://assets.lidan.co.id/gambar/09.jpeg",
-        exImgBottom: "https://assets.lidan.co.id/gambar/10.jpeg",
-        exNote: "Contoh: 2 4 6 8 _ _\nJawaban: 10 12 (pola +2 setiap angka)\n\nPola bisa berupa penjumlahan, pengurangan, perkalian, atau kombinasinya."
+        timer: 660
     },
     {
         id: "rmib",
@@ -532,17 +419,11 @@ const CONFIG = [
         desc: "Baca setiap skenario dan urutkan 12 tugas dari yang paling Anda senangi (1) hingga paling tidak disenangi (12).",
         type: "ranking",
         dataUrl: "https://cipta.my.id/psikotest/rmib.txt",
-        dataUrlP: "https://cipta.my.id/psikotest/rmib_perempuan.txt",
         kolom: 1,               // ← Nomor kolom pertama; akan naik otomatis
         totalKolom: 8,          // ← Total kolom yang harus dikerjakan
         saveField: "x_06", saveIndex: 1,  // saveIndex = offset awal (kolom 1 → index 1, dst)
         logField: null, logIndex: null,
-        timer: 0,
-        instructions: "Baca skenario situasi yang diberikan dengan seksama.\nDi bawahnya terdapat 12 tugas yang berhubungan dengan skenario tersebut.\nBerikan nomor urut 1–12 pada setiap tugas, mulai dari yang PALING Anda senangi (1) hingga yang PALING TIDAK Anda senangi (12).\nSetiap nomor hanya boleh digunakan satu kali.\nKlik nomor untuk memilih, klik lagi untuk membatalkan.",
-        exImgTop:    "https://assets.lidan.co.id/gambar/09.jpeg",
-        exImgBottom: "https://assets.lidan.co.id/gambar/10.jpeg",
-        exNote: "Tidak ada jawaban benar atau salah dalam tes ini.\nIsilah sesuai dengan preferensi dan minat Anda yang sesungguhnya.\nPastikan semua 12 tugas telah diberi nomor sebelum lanjut ke skenario berikutnya.",
-        showInstructionsOnce: true
+        timer: 0
     },
     {
         id: "epps",
@@ -552,11 +433,7 @@ const CONFIG = [
         dataUrl: "https://cipta.my.id/psikotest/epps.txt",
         saveField: "x_06", saveIndex: 0,
         logField: null, logIndex: null,
-        timer: 0,
-        instructions: "Pada setiap soal Anda akan melihat DUA pernyataan (A dan B).\nPilih SATU pernyataan yang paling menggambarkan diri Anda.\nJawab berdasarkan keadaan diri Anda yang sebenarnya, bukan yang Anda anggap ideal.\nTidak ada jawaban benar atau salah — semua pilihan sama baiknya.",
-        exImgTop:    "https://assets.lidan.co.id/gambar/09.jpeg",
-        exImgBottom: "https://assets.lidan.co.id/gambar/10.jpeg",
-        exNote: "Contoh:\nA. Saya lebih suka bekerja sendiri.\nB. Saya lebih suka bekerja dalam tim.\n\nPilih yang paling mencerminkan kepribadian Anda sehari-hari."
+        timer: 0
     }
     /* ── Tambah tes baru di sini ──────────────────────────────────── */
 ];
@@ -582,8 +459,6 @@ let timerInterval= null;
 let rowSelections= [];
 let usedNumbers  = [];
 let rankingKolom = 1;      // kolom ranking aktif saat ini
-let skippedIndices = [];   // indeks soal yang dilewati (urutan antrian)
-let answeredIndices = [];  // indeks soal yang sudah dijawab (permanen)
 
 /* ══════════════════════════════════════════════════════════════════
    BOOT
@@ -609,12 +484,11 @@ async function fetchAndRoute(token) {
         currentUser = result.data[0];
         localStorage.setItem('db_id', currentUser.id_x);
 
-        const bioIncomplete = BIODATA_CONFIG.some(f => f.required && !getBio(f.id).trim());
-        if (bioIncomplete) {
-            renderBioForm();
+        const bio = currentUser.x_02 ? currentUser.x_02.split('|') : [];
+        if (bio.length < 3 || bio.some(v => !v || v.trim() === '')) {
             showScreen('screenBio');
         } else {
-            goToCurrentTest();
+            renderDashboard();
         }
     } catch(e) { logout(); }
     finally { hideLoader(); }
@@ -635,12 +509,11 @@ async function handleLogin() {
             localStorage.setItem('token', token);
             localStorage.setItem('db_id', result.data[0].id_x);
             currentUser = result.data[0];
-            const bioIncomplete = BIODATA_CONFIG.some(f => f.required && !getBio(f.id).trim());
-            if (bioIncomplete) {
-                renderBioForm();
+            const bio = currentUser.x_02 ? currentUser.x_02.split('|') : [];
+            if (bio.length < 3 || bio.some(v => !v || v.trim() === '')) {
                 showScreen('screenBio');
             } else {
-                goToCurrentTest();
+                renderDashboard();
             }
         } else {
             alert('Token salah atau tidak terdaftar.');
@@ -652,64 +525,11 @@ async function handleLogin() {
 /* ══════════════════════════════════════════════════════════════════
    BIODATA
 ══════════════════════════════════════════════════════════════════ */
-/* ── Biodata helper: baca nilai field dari x_02 pipe[0] + semicolon ── */
-function getBio(fieldId) {
-    const f = BIODATA_CONFIG.find(c => c.id === fieldId);
-    if (!f) return '';
-    const pipe0   = currentUser.x_02 ? currentUser.x_02.split('|')[0] : '';
-    const semiArr = pipe0 ? pipe0.split(';') : [];
-    return semiArr[f.index] || '';
-}
-function getAllBio() {
-    // Kembalikan object { id: value } untuk semua field
-    const result = {};
-    for (const f of BIODATA_CONFIG) result[f.id] = getBio(f.id);
-    return result;
-}
-
-function renderBioForm() {
-    const container = document.getElementById('bioFormFields');
-    container.innerHTML = '';
-    const sorted = [...BIODATA_CONFIG].sort((a, b) => a.index - b.index);
-    for (const f of sorted) {
-        const div = document.createElement('div');
-        div.className = 'form-group';
-        let input = '';
-        if (f.type === 'select') {
-            const opts = f.options.map(o => `<option value="${o.value}">${o.label}</option>`).join('');
-            input = `<select id="${f.id}" style="width:100%;padding:11px 14px;border:2px solid var(--border);border-radius:10px;font-size:0.95em;background:var(--bg)">
-                        <option value="">Pilih...</option>${opts}
-                     </select>`;
-        } else {
-            input = `<input type="${f.type}" id="${f.id}" placeholder="${f.placeholder||''}">`;
-        }
-        div.innerHTML = `<label>${f.label}</label>${input}`;
-        container.appendChild(div);
-    }
-}
-
 async function saveBiodata() {
-    // Baca x_02 existing, ambil pipe-nya
-    const pipes = currentUser.x_02 ? currentUser.x_02.split('|') : [];
-    // Pastikan minimal 4 pipe tersedia
-    while (pipes.length < 4) pipes.push('');
-
-    // Baca semicolon array dari pipe[0] yang sudah ada
-    const semiArr = pipes[0] ? pipes[0].split(';') : [];
-    const maxIndex = Math.max(...BIODATA_CONFIG.map(f => f.index));
-    while (semiArr.length <= maxIndex) semiArr.push('');
-
-    // Isi nilai dari form ke posisi index masing-masing
-    for (const f of BIODATA_CONFIG) {
-        const el  = document.getElementById(f.id);
-        const val = el ? el.value.trim() : '';
-        if (f.required && !val) return alert(`Mohon lengkapi field: ${f.label}`);
-        semiArr[f.index] = val;
-    }
-
-    // Tulis kembali ke pipe[0]
-    pipes[0] = semiArr.join(';');
-
+    const nama = document.getElementById('bioNama').value.trim();
+    const usia = document.getElementById('bioUsia').value.trim();
+    const pend = document.getElementById('bioPend').value.trim();
+    if (!nama || !usia || !pend) return alert('Mohon lengkapi semua field.');
     const btn = document.getElementById('btnBio');
     setLoading(btn, true);
     try {
@@ -717,8 +537,9 @@ async function saveBiodata() {
         await apiFetch(`${API_URL}?table=${TABLE_NAME}&id_x=${idX}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json', 'X-Custom-Auth': AUTH_KEY },
-            body: JSON.stringify({ x_02: pipes.join('|') })
+            body: JSON.stringify({ x_02: `${nama}|${usia}|${pend}` })
         });
+        // Refresh user data
         await fetchAndRoute(localStorage.getItem('token'));
     } catch(e) { alert('Gagal menyimpan data.'); }
     finally { setLoading(btn, false); }
@@ -750,34 +571,10 @@ function buildTaskList() {
     return list;
 }
 
-function goToCurrentTest() {
-    // Cari tes pertama yang belum selesai dan langsung buka start screen-nya
-    const tasks = buildTaskList();
-    for (const task of tasks) {
-        const parts = (currentUser[task.saveField] || '').split('|');
-        const val   = parts[task.saveIndex] || '';
-        if (val.trim() === '') {
-            openTestById(task.id);
-            return;
-        }
-    }
-    // Semua selesai — tampilkan pesan selesai
-    showDoneAll();
-}
-
-function showDoneAll() {
-    document.getElementById('doneIcon').innerText  = '🎉';
-    document.getElementById('doneTitle').innerText = 'Semua Tes Selesai!';
-    document.getElementById('doneDesc').innerText  = 'Terima kasih sudah mengikuti tes. Hasil Anda telah tersimpan.';
-    // Sembunyikan tombol lanjut, ganti dengan logout
-    const btn = document.querySelector('#screenDone .btn-primary');
-    if (btn) { btn.innerText = 'Logout'; btn.onclick = logout; }
-    showScreen('screenDone');
-}
-
 function renderDashboard() {
     showScreen('screenDash');
-    document.getElementById('welcomeName').innerText = 'Halo, ' + (getBio('bioNama') || 'Peserta') + '!';
+    const bio  = currentUser.x_02 ? currentUser.x_02.split('|') : [];
+    document.getElementById('welcomeName').innerText = 'Halo, ' + (bio[0] || 'Peserta') + '!';
 
     const tasks = buildTaskList();
     let firstPending = null;
@@ -801,20 +598,26 @@ function renderDashboard() {
             <div class="task-num">${done ? '✓' : i+1}</div>
             <div class="task-name">${task.title}</div>
             <span class="task-badge ${done?'badge-done':isCurrent?'badge-current':'badge-locked'}">
-                ${done ? 'Selesai' : isCurrent ? '▶ Mulai' : 'Terkunci'}
+                ${done ? 'Selesai' : isCurrent ? 'Sekarang' : 'Terkunci'}
             </span>`;
-        if (isCurrent) {
-            div.style.cursor = 'pointer';
-            div.onclick = () => openTestById(task.id);
-        }
         grid.appendChild(div);
     });
 
+    const btn = document.getElementById('btnGo');
     if (firstPending) {
-        document.getElementById('welcomeSub').innerText = 'Klik tes yang bertanda ▶ Mulai untuk memulai.';
+        document.getElementById('welcomeSub').innerText = 'Selesaikan semua tes secara berurutan.';
+        btn.classList.remove('hidden');
+        btn.dataset.taskId = firstPending.id;
+        btn.innerText = 'Mulai: ' + firstPending.title;
     } else {
         document.getElementById('welcomeSub').innerText = '🎉 Semua tes telah selesai. Terima kasih!';
+        btn.classList.add('hidden');
     }
+}
+
+function goTest() {
+    const taskId = document.getElementById('btnGo').dataset.taskId;
+    openTestById(taskId);
 }
 
 function openTestById(taskId) {
@@ -832,39 +635,12 @@ function openTestById(taskId) {
     }
     if (!cfg) return;
 
-    // Jika showInstructionsOnce=true dan kolom > 1, langsung startTest
-    if (cfg.showInstructionsOnce && cfg.kolom && cfg.kolom > 1) {
-        console.log('[RMIB] Kolom ' + cfg.kolom + ' - skip instruksi, langsung mulai');
-        showLoader('Memuat soal...');
-        setTimeout(() => startTest(), 100);
-        return;
-    }
-
     // Tampilkan start screen
-    document.getElementById('startTitle').innerText       = cfg.title;
-    document.getElementById('startInstructions').innerText = cfg.instructions || cfg.desc || '';
-    document.getElementById('exNote').innerText           = cfg.exNote || '';
-
-    // Gambar contoh
-    const hasImg = cfg.exImgTop || cfg.exImgBottom;
-    document.getElementById('exampleBlock').style.display = hasImg ? '' : 'none';
-    if (cfg.exImgTop)    document.getElementById('exImgTop').src    = cfg.exImgTop;
-    if (cfg.exImgBottom) document.getElementById('exImgBottom').src = cfg.exImgBottom;
-
-    // Info waktu — tampil di console, teks kecil di bawah tombol
-    const timerNote = document.getElementById('timerNote');
-    if (cfg.timer > 0) {
-        const mnt = Math.floor(cfg.timer / 60);
-        const dtk = cfg.timer % 60;
-        const label = mnt > 0 ? mnt + ' menit ' + (dtk > 0 ? dtk + ' detik' : '') : dtk + ' detik';
-        console.log('[TES] ' + cfg.title + ' | Waktu: ' + cfg.timer + ' detik (' + label.trim() + ')');
-        timerNote.innerText = '⏱ Tes ini memiliki batas waktu';
-        timerNote.style.display = '';
-    } else {
-        console.log('[TES] ' + cfg.title + ' | Tanpa batas waktu');
-        timerNote.style.display = 'none';
-    }
-
+    document.getElementById('startTitle').innerText  = cfg.title;
+    document.getElementById('startDesc').innerText   = cfg.desc || '';
+    document.getElementById('metaTipe').innerText    = cfg.type;
+    document.getElementById('metaWaktu').innerText   = cfg.timer ? cfg.timer + ' detik' : 'Tanpa batas';
+    document.getElementById('metaSoal').innerText    = cfg.type === 'ranking' ? '12 pernyataan' : 'Memuat...';
     showScreen('screenStart');
 }
 
@@ -875,6 +651,8 @@ async function startTest() {
     showLoader('Memuat soal...');
     try {
         await loadQuestions();
+        document.getElementById('metaSoal').innerText = cfg.type === 'ranking' ? '12' : questions.length;
+
         // Reset state
         const saved = localStorage.getItem('_st_' + cfg._taskId);
         if (saved) {
@@ -883,14 +661,10 @@ async function startTest() {
             correctScore = s.correctScore || 0; timeLeft = s.timeLeft || cfg.timer;
             rowSelections = s.rowSelections || Array(12).fill(null);
             usedNumbers   = s.usedNumbers   || [];
-            skippedIndices  = s.skippedIndices  || [];
-            answeredIndices = s.answeredIndices || [];
         } else {
             qIndex = 0; userAnswers = []; correctScore = 0;
             timeLeft = cfg.timer || 0;
             rowSelections = Array(12).fill(null); usedNumbers = [];
-            skippedIndices  = [];
-            answeredIndices = [];
         }
 
         document.getElementById('testTitle').innerText = cfg.title;
@@ -913,15 +687,7 @@ async function startTest() {
 }
 
 async function loadQuestions() {
-    // Pilih URL berdasarkan gender untuk ranking
-    let url = cfg.dataUrl;
-    if (cfg.type === 'ranking' && cfg.dataUrlP) {
-        const gender = getBio('bioGender') || 'L';
-        if (gender === 'P') url = cfg.dataUrlP;
-        console.log('[RMIB] Gender: ' + gender + ' | URL: ' + (gender==='P' ? 'Perempuan' : 'Laki-laki'));
-    }
-    
-    const resp = await fetch(url + '?v=' + Date.now());
+    const resp = await fetch(cfg.dataUrl + '?v=' + Date.now());
     const data = await resp.json();
     if (cfg.type === 'ranking') {
         const kd = data.find(d => d.kolom === cfg.kolom);
@@ -948,11 +714,9 @@ function startTimer() {
 function updateTimerDisplay() {
     const m = String(Math.floor(timeLeft/60)).padStart(2,'0');
     const s = String(timeLeft%60).padStart(2,'0');
-    // Log ke console setiap 10 detik atau ketika <=10 detik
-    if (timeLeft % 10 === 0 || timeLeft <= 10) {
-        console.log('[TIMER] Sisa waktu: ' + m + ':' + s + ' (' + timeLeft + ' detik)');
-    }
-    // Timer display tetap hidden di UI
+    const el = document.getElementById('timerDisplay');
+    el.innerText = m + ':' + s;
+    el.classList.toggle('warning', timeLeft <= 30);
 }
 
 /* ══════════════════════════════════════════════════════════════════
@@ -960,77 +724,17 @@ function updateTimerDisplay() {
 ══════════════════════════════════════════════════════════════════ */
 function saveState() {
     localStorage.setItem('_st_' + cfg._taskId, JSON.stringify(
-        { qIndex, userAnswers, correctScore, timeLeft, rowSelections, usedNumbers, skippedIndices, answeredIndices }
+        { qIndex, userAnswers, correctScore, timeLeft, rowSelections, usedNumbers }
     ));
 }
 
 /* ══════════════════════════════════════════════════════════════════
    RENDER DISPATCHER
 ══════════════════════════════════════════════════════════════════ */
-
-function dbg(label) {
-    console.log(
-        `[SKIP DEBUG] ${label}` +
-        ` | qIndex=${qIndex}` +
-        ` | answered=[${answeredIndices.join(',')}]` +
-        ` | skipped=[${skippedIndices.join(',')}]` +
-        ` | total=${questions.length}`
-    );
-}
-
-// Setelah menjawab soal, cari soal berikutnya yang belum dijawab.
-// Urutan pencarian: lanjut maju dari posisi sekarang, jika mentok akhir
-// ambil dari antrian skippedIndices (soal yang dilewati).
-function goNext() {
-    dbg('goNext MASUK');
-
-    // Cari soal berikutnya yang belum dijawab, mulai dari qIndex+1 maju ke depan
-    let found = -1;
-    for (let i = qIndex + 1; i < questions.length; i++) {
-        if (!answeredIndices.includes(i) && !skippedIndices.includes(i)) {
-            found = i;
-            break;
-        }
-    }
-
-    if (found !== -1) {
-        // Ada soal normal yang belum dijawab di depan
-        qIndex = found;
-        dbg(`goNext → soal normal index ${qIndex}`);
-    } else if (skippedIndices.length > 0) {
-        // Tidak ada soal normal tersisa → ambil soal pertama yang dilewati
-        qIndex = skippedIndices.shift();
-        dbg(`goNext → kembali ke soal dilewati index ${qIndex}`);
-    } else {
-        // Semua soal sudah dijawab
-        dbg('goNext → SEMUA SELESAI, endTest');
-        saveState();
-        endTest(false);
-        return;
-    }
-
-    saveState();
-    renderQuestion();
-}
-
 function renderQuestion() {
     updateProgress();
     if (cfg.type === 'ranking') { renderRanking(); return; }
-
-    dbg('renderQuestion');
-
-    // Safety net
-    if (qIndex < 0 || qIndex >= questions.length) {
-        console.error('[SKIP DEBUG] qIndex di luar range!', qIndex);
-        if (skippedIndices.length > 0) {
-            qIndex = skippedIndices.shift();
-            saveState();
-        } else {
-            endTest(false);
-            return;
-        }
-    }
-
+    if (qIndex >= questions.length) { endTest(false); return; }
     const q = questions[qIndex];
     const map = {
         image_single: renderImageSingle,
@@ -1047,21 +751,17 @@ function updateProgress() {
     const curr  = cfg.type === 'ranking' ? (cfg.kolom||1) : qIndex + 1;
     const pct   = total ? Math.round(((curr-1)/total)*100) : 0;
     document.getElementById('progressBar').style.width = pct + '%';
-    let infoText = cfg.type === 'ranking'
-        ? `Kolom ${cfg.kolom} / ${cfg.totalKolom||8}`
-        : `Soal ${qIndex+1} / ${questions.length}`;
-    if (skippedIndices.length > 0 && cfg.type !== 'ranking') {
-        infoText += ` · ⟳ ${skippedIndices.length} soal dilewati`;
-    }
-    document.getElementById('progressInfo').innerText = infoText;
+    document.getElementById('progressInfo').innerText  =
+        cfg.type === 'ranking'
+            ? `Kolom ${cfg.kolom} / ${cfg.totalKolom||8}`
+            : `Soal ${qIndex+1} / ${questions.length}`;
 }
 
 /* ── image_single ────────────────────────────────────────────── */
 function renderImageSingle(q) {
     const parts = q.question.split(' ');
-    const skippedBadge = skippedIndices.includes(qIndex) ? ' <span style="background:#fef3c7;color:#92400e;font-size:0.75em;padding:2px 8px;border-radius:99px;font-weight:600;">⟳ Dilewati</span>' : '';
     document.getElementById('questionContent').innerHTML =
-        `<div class="q-label">Soal ${parts[0]}${skippedBadge}</div>
+        `<div class="q-label">Soal ${parts[0]}</div>
          <img class="q-image" src="${parts[1]}" alt="soal">
          <div class="options-img" id="optArea"></div>`;
     document.getElementById('actionBar').innerHTML =
@@ -1070,7 +770,7 @@ function renderImageSingle(q) {
     for (const k in q.options) {
         if (!q.options[k]) continue;
         const img = Object.assign(document.createElement('img'), { src: q.options[k], title: k });
-        img.onclick = () => { markAnswered(qIndex); userAnswers.push(`${qIndex+1}${k}${k===q.answer?'v':'x'}`); if(k===q.answer)correctScore++; saveState(); goNext(); };
+        img.onclick = () => { userAnswers.push(`${qIndex+1}${k}${k===q.answer?'v':'x'}`); if(k===q.answer)correctScore++; qIndex++; saveState(); renderQuestion(); };
         div.appendChild(img);
     }
 }
@@ -1099,10 +799,9 @@ function submitImageMulti() {
     const q   = questions[qIndex];
     const sel = [...document.querySelectorAll('#optArea input:checked')].map(c => c.value);
     const ok  = sel.length===2 && sel.every(v => q.correctAnswers.includes(v));
-    markAnswered(qIndex);
     userAnswers.push(`${qIndex+1}SEL${ok?'v':'x'}`);
     if(ok) correctScore++;
-    saveState(); goNext();
+    qIndex++; saveState(); renderQuestion();
 }
 
 /* ── text_choice ─────────────────────────────────────────────── */
@@ -1112,26 +811,23 @@ function renderTextChoice(q) {
         if (!q.options[k]) continue;
         opts += `<button class="opt-text" onclick="submitTextChoice('${k}','${q.answer}')"><strong>${k}.</strong> ${q.options[k]}</button>`;
     }
-    const skippedBadgeTC = skippedIndices.includes(qIndex) ? ' <span style="background:#fef3c7;color:#92400e;font-size:0.75em;padding:2px 8px;border-radius:99px;font-weight:600;">⟳ Dilewati</span>' : '';
     document.getElementById('questionContent').innerHTML =
-        `<div class="q-label">Soal No. ${qIndex+1}${skippedBadgeTC}</div>
+        `<div class="q-label">Soal No. ${qIndex+1}</div>
          <div class="q-text">${q.question}</div>
          <div class="options-text">${opts}</div>`;
     document.getElementById('actionBar').innerHTML =
         `<button class="btn btn-outline btn-sm" onclick="skipQ()">Lewati</button>`;
 }
 function submitTextChoice(k, ans) {
-    markAnswered(qIndex);
     userAnswers.push(`${qIndex+1}${k}${k===ans?'v':'x'}`);
     if(k===ans) correctScore++;
-    saveState(); goNext();
+    qIndex++; saveState(); renderQuestion();
 }
 
 /* ── text_input ──────────────────────────────────────────────── */
 function renderTextInput(q) {
-    const skippedBadgeTI = skippedIndices.includes(qIndex) ? ' <span style="background:#fef3c7;color:#92400e;font-size:0.75em;padding:2px 8px;border-radius:99px;font-weight:600;">⟳ Dilewati</span>' : '';
     document.getElementById('questionContent').innerHTML =
-        `<div class="q-label">Soal No. ${qIndex+1}${skippedBadgeTI}</div>
+        `<div class="q-label">Soal No. ${qIndex+1}</div>
          <div class="q-text">${q.question}</div>
          <div class="input-wrap">
              <input type="text" id="userAnswer" placeholder="Jawaban..."
@@ -1151,10 +847,9 @@ function submitTextInput() {
     for (const ca of (q.correctAnswers||[])) {
         if (ans.toLowerCase() === ca.answer.replace(/,/g,' ').trim().toLowerCase()) { ok=true; break; }
     }
-    markAnswered(qIndex);
     userAnswers.push(`${qIndex+1}${ans}${ok?'v':'x'}`);
     if(ok) correctScore++;
-    saveState(); goNext();
+    qIndex++; saveState(); renderQuestion();
 }
 
 /* ── ab_choice ───────────────────────────────────────────────── */
@@ -1169,7 +864,7 @@ function renderAbChoice(q) {
          </div>`;
     document.getElementById('actionBar').innerHTML = '';
 }
-function submitAb(c) { userAnswers.push(c); saveState(); goNext(); }
+function submitAb(c) { userAnswers.push(c); qIndex++; renderQuestion(); }
 
 /* ── ranking ─────────────────────────────────────────────────── */
 function renderRanking() {
@@ -1234,58 +929,7 @@ async function saveRanking(dataStr) {
 }
 
 /* ── skip ────────────────────────────────────────────────────── */
-function skipQ() {
-    dbg('skipQ MASUK');
-
-    // Tambahkan ke antrian skip jika belum ada
-    if (!skippedIndices.includes(qIndex) && !answeredIndices.includes(qIndex)) {
-        skippedIndices.push(qIndex);
-        userAnswers.push(`${qIndex+1}SKIPx`);
-    }
-
-    // Cari soal berikutnya yang belum dijawab dan bukan di antrian skip, mulai dari qIndex+1
-    let found = -1;
-    for (let i = qIndex + 1; i < questions.length; i++) {
-        if (!answeredIndices.includes(i) && !skippedIndices.includes(i)) {
-            found = i;
-            break;
-        }
-    }
-
-    if (found !== -1) {
-        qIndex = found;
-        dbg(`skipQ → soal normal index ${qIndex}`);
-    } else if (skippedIndices.length > 0) {
-        // Semua soal normal habis → kerjakan soal dilewati pertama
-        qIndex = skippedIndices.shift();
-        dbg(`skipQ → kembali ke soal dilewati index ${qIndex}`);
-    } else {
-        dbg('skipQ → SEMUA SELESAI, endTest');
-        saveState();
-        endTest(false);
-        return;
-    }
-
-    saveState();
-    renderQuestion();
-}
-
-// Tandai soal sebagai sudah dijawab (permanen)
-function markAnswered(idx) {
-    if (!answeredIndices.includes(idx)) {
-        answeredIndices.push(idx);
-    }
-    // Hapus dari antrian skipped jika ada
-    const pos = skippedIndices.indexOf(idx);
-    if (pos !== -1) {
-        skippedIndices.splice(pos, 1);
-        // Hapus entri SKIPx dari userAnswers
-        const skipTag = `${idx+1}SKIPx`;
-        const ua = userAnswers.indexOf(skipTag);
-        if (ua !== -1) userAnswers.splice(ua, 1);
-    }
-    dbg(`markAnswered idx=${idx}`);
-}
+function skipQ() { userAnswers.push(`${qIndex+1}SKIPx`); qIndex++; saveState(); renderQuestion(); }
 
 /* ══════════════════════════════════════════════════════════════════
    END TEST
@@ -1298,16 +942,11 @@ async function endTest(timeout) {
         const cur = await apiGet(idX);
         const upd = {};
 
-        // Skor / Jawaban
+        // Skor
         const sf = cfg.saveField;
         let sp = (cur.data[sf]||'').split('|');
         while(sp.length<=cfg.saveIndex) sp.push('');
-        // Untuk ab_choice (EPPS): simpan jawaban A/B dipisah titik koma
-        if (cfg.type === 'ab_choice') {
-            sp[cfg.saveIndex] = userAnswers.join(';') + ';';
-        } else {
-            sp[cfg.saveIndex] = correctScore.toString();
-        }
+        sp[cfg.saveIndex] = correctScore.toString();
         upd[sf] = sp.join('|');
 
         // Log
@@ -1327,20 +966,20 @@ async function endTest(timeout) {
         currentUser[sf] = upd[sf];
         if (cfg.logField) currentUser[cfg.logField] = upd[cfg.logField];
 
-        // Log ke console
-        console.log('[TES SELESAI] ' + cfg.title + (cfg.type!=='ab_choice'&&cfg.type!=='ranking' ? ' | Skor: '+correctScore : ''));
-        
-        // Langsung lanjut ke tes berikutnya tanpa tampilkan layar selesai
-        hideLoader();
-        afterTest();
+        document.getElementById('doneIcon').innerText  = timeout ? '⏰' : '✅';
+        document.getElementById('doneTitle').innerText = timeout ? 'Waktu Habis!' : cfg.title + ' Selesai!';
+        document.getElementById('doneDesc').innerText  =
+            cfg.type==='ab_choice'||cfg.type==='ranking'
+                ? 'Jawaban Anda telah tersimpan.'
+                : `Skor: ${correctScore} | Jawaban telah tersimpan.`;
+        showScreen('screenDone');
     } catch(e) {
         alert('Gagal menyimpan: ' + e.message);
-        hideLoader();
-    }
+    } finally { hideLoader(); }
 }
 
 function afterTest() {
-    // Refresh user data dari server lalu lanjut ke tes berikutnya
+    // Refresh user data dari server lalu kembali ke dashboard
     fetchAndRoute(localStorage.getItem('token'));
 }
 

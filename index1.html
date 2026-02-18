@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Tes Lidan</title>
+    <style>
+        :root { --primary: #007bff; --success: #28a745; --danger: #dc3545; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f7f6; display: flex; justify-content: center; padding: 20px; }
+        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 450px; }
+        h2 { color: #333; margin-top: 0; text-align: center; }
+        input, select { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.3s; margin-top: 10px; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:disabled { background: #ccc; cursor: not-allowed; }
+        .btn-danger { background: var(--danger); color: white; margin-top: 20px; }
+        .hidden { display: none; }
+        .status-box { background: #e9ecef; border-left: 5px solid var(--primary); padding: 15px; margin: 20px 0; border-radius: 4px; }
+        .loading-spinner { display: inline-block; width: 15px; height: 15px; border: 2px solid rgba(255,255,255,.3); border-radius: 50%; border-top-color: #fff; animation: spin 1s ease-in-out infinite; margin-right: 10px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <div class="card" id="main-card">
+        <div id="login-section" class="hidden">
+            <h2>Portal Tes</h2>
+            <p style="text-align: center; color: #666;">Masukkan nomor token anda</p>
+            <input type="text" id="token-input" placeholder="Contoh: TKN-123">
+            <button id="btn-login" class="btn-primary" onclick="handleLogin()">Masuk</button>
+        </div>
+
+        <div id="biodata-section" class="hidden">
+            <h2>Biodata Peserta</h2>
+            <input type="text" id="bio-nama" placeholder="Nama Lengkap">
+            <input type="number" id="bio-usia" placeholder="Usia">
+            <input type="text" id="bio-pendidikan" placeholder="Pendidikan Terakhir">
+            <button id="btn-bio" class="btn-primary" onclick="saveBiodata()">Simpan & Lanjutkan</button>
+        </div>
+
+        <div id="dashboard-section" class="hidden">
+            <h2 id="welcome-msg">Dashboard</h2>
+            <div id="task-info" class="status-box">
+                </div>
+            <div id="action-area"></div>
+            <button class="btn-danger" onclick="logout()">Logout</button>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis6';
+        const TABLE_NAME = 'nilai1';
+        const AUTH_KEY = 'admin'; // Sesuai 'mySecret' di API Anda
+
+        window.onload = checkAuth;
+
+        // --- CORE LOGIC ---
+
+        function checkAuth() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                showSection('login-section');
+            } else {
+                fetchUserData(token);
+            }
+        }
+
+        async function handleLogin() {
+            const input = document.getElementById('token-input');
+            const btn = document.getElementById('btn-login');
+            if (!input.value) return alert('Token tidak boleh kosong');
+
+            setLoading(btn, true);
+            try {
+                // Mencari record di kolom x_01 yang sesuai dengan token
+                const resp = await fetch(`${API_URL}?table=${TABLE_NAME}&x_01_eq=${input.value}`, {
+                    headers: { 'X-Custom-Auth': AUTH_KEY }
+                });
+                const result = await resp.json();
+
+                if (result.success && result.count > 0) {
+                    localStorage.setItem('token', input.value);
+                    localStorage.setItem('db_id', result.data[0].id_x);
+                    fetchUserData(input.value);
+                } else {
+                    alert('Token salah atau tidak terdaftar.');
+                }
+            } catch (err) {
+                alert('Koneksi gagal: ' + err.message);
+            } finally {
+                setLoading(btn, false);
+            }
+        }
+
+        async function fetchUserData(token) {
+            try {
+                const resp = await fetch(`${API_URL}?table=${TABLE_NAME}&x_01_eq=${token}`, {
+                    headers: { 'X-Custom-Auth': AUTH_KEY }
+                });
+                const result = await resp.json();
+                const user = result.data[0];
+
+                // Cek kolom x_02 (Biodata)
+                const bioData = user.x_02 ? user.x_02.split('|') : [];
+                if (bioData.length < 3 || bioData.some(val => val.trim() === "")) {
+                    showSection('biodata-section');
+                } else {
+                    renderDashboard(user, bioData[0]);
+                }
+            } catch (err) {
+                console.error(err);
+                logout();
+            }
+        }
+
+        async function saveBiodata() {
+            const btn = document.getElementById('btn-bio');
+            const nama = document.getElementById('bio-nama').value;
+            const usia = document.getElementById('bio-usia').value;
+            const pend = document.getElementById('bio-pendidikan').value;
+            const idX = localStorage.getItem('db_id');
+
+            if (!nama || !usia || !pend) return alert('Mohon lengkapi semua field');
+
+            setLoading(btn, true);
+            try {
+                const payload = { x_02: `${nama}|${usia}|${pend}` };
+                const resp = await fetch(`${API_URL}?table=${TABLE_NAME}&id_x=${idX}`, {
+                    method: 'PUT',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'X-Custom-Auth': AUTH_KEY 
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (resp.ok) checkAuth();
+            } catch (err) {
+                alert('Gagal menyimpan data');
+            } finally {
+                setLoading(btn, false);
+            }
+        }
+
+        function renderDashboard(user, name) {
+            showSection('dashboard-section');
+            document.getElementById('welcome-msg').innerText = `Halo, ${name}`;
+            const infoBox = document.getElementById('task-info');
+            const actionArea = document.getElementById('action-area');
+
+            // Daftar semua tugas secara berurutan dengan nomor global
+            // Format: { dataField, index, url }
+            const tasks = [
+                // x_05: bagian 1–4 → halaman 1.html, 2.html, 3.html, 4.html
+                { data: user.x_05, partIndex: 0, url: '1.html' },
+                { data: user.x_05, partIndex: 1, url: '2.html' },
+                { data: user.x_05, partIndex: 2, url: '3.html' },
+                { data: user.x_05, partIndex: 3, url: '4.html' },
+                { data: user.x_05, partIndex: 4, url: '5.html' },
+                { data: user.x_05, partIndex: 5, url: '6.html' },
+                { data: user.x_06, partIndex: 2, url: '7.html' },
+                { data: user.x_06, partIndex: 0, url: '8.html' },
+                // x_07: bagian 1–4 → halaman 9.html, 10.html, 11.html, 12.html
+                // { data: user.x_07, partIndex: 0, url: '9.html' },
+                // { data: user.x_07, partIndex: 1, url: '10.html' },
+                // { data: user.x_07, partIndex: 2, url: '11.html' },
+                // { data: user.x_07, partIndex: 3, url: '12.html' },
+            ];
+
+            let currentTask = null;
+            for (let i = 0; i < tasks.length; i++) {
+                const parts = tasks[i].data ? tasks[i].data.split('|') : [];
+                const val = parts[tasks[i].partIndex];
+                if (!val || val.trim() === '') {
+                    currentTask = { nomor: i + 1, url: tasks[i].url };
+                    break;
+                }
+            }
+
+            if (currentTask) {
+                infoBox.innerHTML = `Tugas Anda saat ini:<br><strong>${currentTask.nomor}</strong>`;
+                actionArea.innerHTML = `<button class="btn-primary" onclick="goTo('${currentTask.url}')">Start</button>`;
+            } else {
+                infoBox.innerHTML = `<h3 style="color: var(--success); margin:0;">Terima kasih sudah mengerjakan semua tes.</h3>`;
+                actionArea.innerHTML = "";
+            }
+        }
+
+        function setLoading(btn, isLoading) {
+            if (isLoading) {
+                btn.disabled = true;
+                btn.dataset.oldText = btn.innerHTML;
+                btn.innerHTML = `<span class="loading-spinner"></span> Memproses...`;
+            } else {
+                btn.disabled = false;
+                btn.innerHTML = btn.dataset.oldText;
+            }
+        }
+
+        function showSection(id) {
+            ['login-section', 'biodata-section', 'dashboard-section'].forEach(sec => {
+                document.getElementById(sec).classList.add('hidden');
+            });
+            document.getElementById(id).classList.remove('hidden');
+        }
+
+        function goTo(url) {
+            window.location.href = url;
+        }
+
+        function logout() {
+            localStorage.clear();
+            location.reload();
+        }
+    </script>
+</body>
+</html>

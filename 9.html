@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Soal Psikotest - IST 1</title>
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f4f4f4; text-align: center; padding: 20px; }
+        .quiz-container { max-width: 800px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .hidden { display: none !important; }
+        #loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; }
+        .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        #question { font-size: 1.3em; font-weight: bold; margin-bottom: 25px; color: #333; }
+        .options { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
+        .options button { padding: 15px; font-size: 16px; cursor: pointer; background: #fff; border: 2px solid #ddd; border-radius: 8px; text-align: left; }
+        .options button:hover { background: #007bff; color: white; }
+        .skip-btn { grid-column: span 2; background: #6c757d !important; color: white; margin-top: 10px; text-align: center !important; }
+        #startButton { padding: 15px 50px; font-size: 18px; cursor: pointer; background: #28a745; color: white; border: none; border-radius: 8px; }
+    </style>
+</head>
+<body>
+
+<div id="loader" class="hidden">
+    <div class="spinner"></div>
+    <p id="loader-text">Memproses...</p>
+</div>
+
+<div class="quiz-container">
+    <h1>Subtes IST 1</h1>
+    <p id="instruction">Klik tombol Start untuk memulai pengerjaan.</p>
+    
+    <button id="startButton" class="hidden">Start</button>
+
+    <div id="quiz-content" class="hidden">
+        <div id="question"></div>
+        <div class="options"></div>
+        <div style="margin-top: 20px; font-size: 0.8em; color: #888;">
+            Progres: <span id="progressDisplay">Menunggu...</span>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const API_URL = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis6';
+        const TABLE_NAME = 'nilai1';
+        const AUTH_KEY = 'admin';
+        const DATA_URL = 'https://cipta.my.id/psikotest/ist1.txt';
+        const STORAGE_KEY = 'gameIst1_Storage';
+        const TARGET_INDEX = 8; // Sesuai permintaan: Indeks ke-8
+
+        let questions = [];
+        let currentQuestionIndex = 0;
+        let correctScore = 0;
+        let timeLeft = 360; 
+        let userAnswers = [];
+        let timerInterval;
+
+        function toggleLoader(show, text = "") {
+            const loader = document.getElementById('loader');
+            if(text) document.getElementById('loader-text').innerText = text;
+            loader.classList.toggle('hidden', !show);
+        }
+
+        // --- VALIDASI AWAL ---
+        async function validateStatus() {
+            const token = localStorage.getItem('token');
+            const idX = localStorage.getItem('db_id');
+
+            if (!token || !idX) {
+                alert("Sesi tidak valid.");
+                window.location.href = 'index1.html';
+                return;
+            }
+
+            toggleLoader(true, "Memverifikasi Status...");
+            try {
+                const resp = await fetch(`${API_URL}?table=${TABLE_NAME}&id_x=${idX}`, {
+                    headers: { 'X-Custom-Auth': AUTH_KEY }
+                });
+                const result = await resp.json();
+                
+                if (!result.success) throw new Error("Data user tidak ditemukan.");
+
+                const rawX05 = result.data.x_05 || "";
+                const x05_parts = rawX05.split('|');
+
+                // Cek apakah indeks ke-8 sudah berisi nilai
+                if (x05_parts.length > TARGET_INDEX && x05_parts[TARGET_INDEX] && x05_parts[TARGET_INDEX].trim() !== "") {
+                    alert("Anda sudah mengerjakan subtes IST 1.");
+                    window.location.href = 'index1.html';
+                    return;
+                }
+
+                // Load soal jika valid
+                const qResp = await fetch(DATA_URL + '?v=' + new Date().getTime());
+                questions = await qResp.json();
+                loadGameState();
+                document.getElementById("startButton").classList.remove("hidden");
+
+            } catch (err) {
+                console.error(err);
+                alert("Error: " + err.message);
+            } finally {
+                toggleLoader(false);
+            }
+        }
+
+        document.getElementById("startButton").onclick = startGame;
+
+        function startGame() {
+            document.getElementById("startButton").classList.add("hidden");
+            document.getElementById("instruction").classList.add("hidden");
+            document.getElementById("quiz-content").classList.remove("hidden");
+            startTimer();
+            newQuestion();
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                saveGameState();
+                if (timeLeft <= 0) endGame(true);
+            }, 1000);
+        }
+
+        function newQuestion() {
+            if (currentQuestionIndex >= questions.length) {
+                endGame(false);
+                return;
+            }
+
+            const qData = questions[currentQuestionIndex];
+            document.getElementById("question").innerHTML = qData.question;
+            document.getElementById("progressDisplay").innerText = "Soal " + (currentQuestionIndex + 1);
+
+            const optionsDiv = document.querySelector(".options");
+            optionsDiv.innerHTML = "";
+
+            for (const key in qData.options) {
+                if (qData.options[key]) {
+                    const btn = document.createElement("button");
+                    btn.innerHTML = `<strong>${key}.</strong> ${qData.options[key]}`;
+                    btn.onclick = () => submitAnswer(key, qData.answer);
+                    optionsDiv.appendChild(btn);
+                }
+            }
+
+            const skipBtn = document.createElement("button");
+            skipBtn.innerText = "Lewati Soal";
+            skipBtn.className = "skip-btn";
+            skipBtn.onclick = skipQuestion;
+            optionsDiv.appendChild(skipBtn);
+        }
+
+        function submitAnswer(choice, correct) {
+            const isCorrect = (choice === correct);
+            if (isCorrect) correctScore++;
+            userAnswers.push(`${currentQuestionIndex + 1}${choice}${isCorrect ? 'v' : 'x'}`);
+            currentQuestionIndex++;
+            saveGameState();
+            newQuestion();
+        }
+
+        function skipQuestion() {
+            userAnswers.push(`${currentQuestionIndex + 1}SKIPx`);
+            currentQuestionIndex++;
+            saveGameState();
+            newQuestion();
+        }
+
+        async function endGame(timeout) {
+            clearInterval(timerInterval);
+            toggleLoader(true, "Menyimpan Hasil...");
+            const idX = localStorage.getItem('db_id');
+
+            try {
+                // Ambil data terbaru sebelum update
+                const resp = await fetch(`${API_URL}?table=${TABLE_NAME}&id_x=${idX}`, {
+                    headers: { 'X-Custom-Auth': AUTH_KEY }
+                });
+                const result = await resp.json();
+
+                // Proses x_05 (Skor)
+                let x05_parts = result.data.x_05 ? result.data.x_05.split('|') : [];
+                while(x05_parts.length <= TARGET_INDEX) x05_parts.push("");
+                x05_parts[TARGET_INDEX] = correctScore.toString();
+
+                // Proses x_08 (Log)
+                let x08_parts = result.data.x_08 ? result.data.x_08.split('|') : [];
+                while(x08_parts.length <= TARGET_INDEX) x08_parts.push("");
+                x08_parts[TARGET_INDEX] = JSON.stringify(userAnswers);
+
+                // Kirim ke API
+                await fetch(`${API_URL}?table=${TABLE_NAME}&id_x=${idX}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'X-Custom-Auth': AUTH_KEY },
+                    body: JSON.stringify({ 
+                        x_05: x05_parts.join('|'), 
+                        x_08: x08_parts.join('|') 
+                    })
+                });
+
+                localStorage.removeItem(STORAGE_KEY);
+                alert(timeout ? "Waktu Habis! Data tersimpan." : "Tes Selesai! Data tersimpan.");
+                window.location.href = 'index1.html';
+            } catch (error) {
+                console.error(error);
+                alert("Gagal menyimpan data.");
+                toggleLoader(false);
+            }
+        }
+
+        function saveGameState() {
+            const state = { currentQuestionIndex, userAnswers, timeLeft, correctScore };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        }
+
+        function loadGameState() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                const state = JSON.parse(saved);
+                currentQuestionIndex = state.currentQuestionIndex || 0;
+                userAnswers = state.userAnswers || [];
+                timeLeft = state.timeLeft || 360;
+                correctScore = state.correctScore || 0;
+            }
+        }
+
+        validateStatus(); // Jalankan validasi saat start
+    });
+</script>
+</body>
+</html>

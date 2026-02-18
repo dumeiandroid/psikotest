@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Soal Psikotest - Deret Angka (Subtes 6)</title>
+    <link rel="stylesheet" href="css_tes.css">
+    <style>
+        .hidden { display: none !important; }
+        #loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; }
+        .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        .quiz-container { text-align: center; max-width: 800px; margin: auto; padding: 20px; }
+        .options { margin-top: 20px; }
+        #userAnswer { padding: 10px; font-size: 18px; width: 80%; max-width: 300px; text-align: center; border: 2px solid #ccc; border-radius: 5px; }
+        .tengah { margin-top: 20px; display: flex; justify-content: center; gap: 10px; }
+        button { padding: 10px 20px; cursor: pointer; border-radius: 5px; border: 1px solid #ccc; }
+        #nextButton { background-color: #28a745; color: white; border: none; }
+        #nextButton:disabled { background-color: #ccc; }
+        #timer { margin-top: 20px; font-weight: bold; color: #d9534f; }
+    </style>
+</head>
+<body>
+
+    <div id="loader" class="hidden">
+        <div class="spinner"></div>
+        <p id="loader-text">Memproses...</p>
+    </div>
+
+    <h1 id="mainTitle" style="text-align: center;">Psikotest - Subtes 6</h1>
+    <p id="instruction" style="text-align: center">Tuliskan dua jawaban berikutnya dipisahkan dengan spasi.</p>
+
+    <div class="quiz-container">
+        <button id="startButton" onclick="startGame()" class="hidden" style="padding: 15px 30px; font-size: 18px;">Mulai Tes</button>
+        
+        <div id="questionArea" class="hidden">
+            <div id="question"></div>
+            <div class="options">
+                <input type="text" id="userAnswer" placeholder="Contoh: 10 12" autocomplete="off" oninput="checkInput()">
+            </div>
+            <div class="tengah">
+                <button id="nextButton" onclick="submitAnswer()" disabled>Next</button>
+                <button id="skipButton" onclick="skipQuestion()">Skip</button>
+            </div>
+        </div>
+        
+        <div id="timer" class="hidden">Waktu Tersisa: 660 detik</div>
+    </div>
+
+    <script>
+        const API_URL = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis6';
+        const TABLE_NAME = 'nilai1';
+        const AUTH_KEY = 'admin';
+
+        let correctScore = 0;
+        let timeLeft = 660;
+        let currentQuestionIndex = 0;
+        let questions = [];
+        let userAnswers = []; 
+        let timerInterval;
+
+        // --- VALIDASI & DEBUG ---
+        window.onload = async () => {
+            const token = localStorage.getItem('token');
+            const idX = localStorage.getItem('db_id');
+
+            console.log("DEBUG: ID User =", idX);
+
+            if (!token || !idX) {
+                console.error("DEBUG: Token atau ID tidak ada.");
+                alert("Sesi tidak valid. Silakan kembali ke halaman utama.");
+                window.location.href = 'index1.html';
+                return;
+            }
+
+            toggleLoader(true, "Memvalidasi Status Tes...");
+
+            try {
+                const resp = await fetch(`${API_URL}?table=${TABLE_NAME}&id_x=${idX}`, {
+                    headers: { 'X-Custom-Auth': AUTH_KEY }
+                });
+                const result = await resp.json();
+                
+                console.log("DEBUG: Data dari API =", result);
+
+                if (!result.success) throw new Error("Data user tidak ditemukan.");
+
+                // Ambil x_05 dan split dengan pipe (|)
+                const rawX05 = result.data.x_05 || "";
+                const x05_parts = rawX05.split('|');
+                
+                console.log("DEBUG: x_05 Parts =", x05_parts);
+                console.log("DEBUG: Isi Indeks ke-5 =", x05_parts[5]);
+
+                // Logika: Jika indeks ke-5 (subtes 6) sudah ada isinya, jangan bolehkan masuk
+                if (x05_parts.length > 5 && x05_parts[5] !== undefined && x05_parts[5].trim() !== "") {
+                    console.warn("DEBUG: Subtes 6 sudah dikerjakan.");
+                    alert("Anda sudah mengerjakan subtes ini.");
+                    window.location.href = 'index1.html';
+                    return;
+                }
+
+                // Jika aman, ambil soal
+                await fetchQuestions();
+                document.getElementById("startButton").classList.remove("hidden");
+
+            } catch (err) {
+                console.error("DEBUG ERROR:", err);
+                alert("Terjadi kesalahan koneksi atau data: " + err.message);
+            } finally {
+                toggleLoader(false);
+            }
+        };
+
+        async function fetchQuestions() {
+            try {
+                const response = await fetch('https://cipta.my.id/psikotest/tkd6_a.txt?v=' + new Date().getTime());
+                questions = await response.json();
+                loadGameState();
+            } catch (error) {
+                console.error('Error fetching questions:', error);
+            }
+        }
+
+        function toggleLoader(show, text = "") {
+            const loader = document.getElementById('loader');
+            if(text) document.getElementById('loader-text').innerText = text;
+            loader.classList.toggle('hidden', !show);
+        }
+
+        function loadGameState() {
+            const savedState = localStorage.getItem('gameState5');
+            if (savedState) {
+                const state = JSON.parse(savedState);
+                correctScore = state.correctScore || 0;
+                currentQuestionIndex = state.currentQuestionIndex || 0;
+                userAnswers = state.userAnswers || [];
+                timeLeft = state.timeLeft || 660;
+            }
+        }
+
+        function saveGameState() {
+            const gameState = { correctScore, currentQuestionIndex, userAnswers, timeLeft };
+            localStorage.setItem('gameState5', JSON.stringify(gameState));
+        }
+
+        function startGame() {
+            document.getElementById("startButton").classList.add("hidden");
+            document.getElementById("instruction").classList.add("hidden");
+            document.getElementById("questionArea").classList.remove("hidden");
+            document.getElementById("timer").classList.remove("hidden");
+            
+            document.getElementById("userAnswer").focus();
+            document.getElementById("userAnswer").addEventListener("keyup", (e) => {
+                if (e.key === "Enter" && e.target.value.trim() !== "") submitAnswer();
+            });
+
+            startTimer();
+            newQuestion();
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                document.getElementById("timer").innerText = `Waktu Tersisa: ${timeLeft} detik`;
+                if (timeLeft <= 0) { 
+                    clearInterval(timerInterval); 
+                    endGame(true); 
+                } else { 
+                    saveGameState(); 
+                }
+            }, 1000);
+        }
+
+        function newQuestion() {
+            if (currentQuestionIndex >= questions.length) { 
+                endGame(false); 
+                return; 
+            }
+            
+            let currentQuestion = questions[currentQuestionIndex];
+            document.getElementById("question").innerHTML = `<h3>Soal No. ${currentQuestionIndex + 1}</h3>` + currentQuestion.question;
+            document.getElementById("userAnswer").value = "";
+            document.getElementById("nextButton").disabled = true;
+            document.getElementById("userAnswer").focus();
+        }
+
+        function checkInput() {
+            document.getElementById("nextButton").disabled = document.getElementById("userAnswer").value.trim() === "";
+        }
+
+        function submitAnswer() {
+            const userAnswer = document.getElementById("userAnswer").value.trim().replace(/,/g, ' ');
+            let isCorrect = false;
+            let currentQuestion = questions[currentQuestionIndex];
+
+            // Validasi jawaban berdasarkan array correctAnswers di JSON
+            for (let correctAnswerObj of currentQuestion.correctAnswers) {
+                let normalizedCorrect = correctAnswerObj.answer.replace(/,/g, ' ').trim();
+                if (userAnswer.toLowerCase() === normalizedCorrect.toLowerCase()) {
+                    isCorrect = true;
+                    break;
+                }
+            }
+
+            const resultIndicator = isCorrect ? 'v' : 'x';
+            userAnswers.push(`${currentQuestionIndex + 1}${userAnswer}${resultIndicator}`);
+            if (isCorrect) correctScore++;
+
+            currentQuestionIndex++;
+            saveGameState();
+            newQuestion();
+        }
+
+        function skipQuestion() { 
+            userAnswers.push(`${currentQuestionIndex + 1}SKIPx`);
+            currentQuestionIndex++; 
+            saveGameState();
+            newQuestion(); 
+        }
+
+        async function endGame(timeout) {
+            clearInterval(timerInterval);
+            toggleLoader(true, "Menyimpan Hasil...");
+            const idX = localStorage.getItem('db_id');
+
+            try {
+                // Ambil data terbaru dulu untuk memastikan kita tidak menimpa subtes lain
+                const resp = await fetch(`${API_URL}?table=${TABLE_NAME}&id_x=${idX}`, {
+                    headers: { 'X-Custom-Auth': AUTH_KEY }
+                });
+                const result = await resp.json();
+
+                // Siapkan data x_05 (Skor) - Simpan di Indeks ke-5
+                let x05_parts = result.data.x_05 ? result.data.x_05.split('|') : ["", "", "", "", "", ""];
+                // Pastikan array memiliki panjang yang cukup
+                while(x05_parts.length <= 5) x05_parts.push("");
+                x05_parts[5] = correctScore.toString(); 
+
+                // Siapkan data x_08 (Log) - Simpan di Indeks ke-5
+                let x08_parts = result.data.x_08 ? result.data.x_08.split('|') : ["", "", "", "", "", ""];
+                while(x08_parts.length <= 5) x08_parts.push("");
+                x08_parts[5] = JSON.stringify(userAnswers); 
+
+                // Update ke Server
+                await fetch(`${API_URL}?table=${TABLE_NAME}&id_x=${idX}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'X-Custom-Auth': AUTH_KEY },
+                    body: JSON.stringify({ 
+                        x_05: x05_parts.join('|'), 
+                        x_08: x08_parts.join('|') 
+                    })
+                });
+
+                localStorage.removeItem('gameState5');
+                alert("Tes Selesai! Skor Anda telah disimpan.");
+                window.location.href = 'index1.html';
+            } catch (error) {
+                console.error("ERROR SAAT ENDGAME:", error);
+                alert("Gagal menyimpan data ke server. Periksa koneksi Anda.");
+                toggleLoader(false);
+            }
+        }
+    </script>
+</body>
+</html>

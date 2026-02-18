@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Soal Psikotest - IST 8</title>
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f4f4f4; text-align: center; padding: 10px; margin: 0; }
+        .quiz-container { max-width: 900px; margin: 10px auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .hidden { display: none !important; }
+        
+        /* Loader */
+        #loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; }
+        .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Area Soal */
+        #question-area { margin-bottom: 20px; }
+        .q-img { max-height: 280px; width: auto; max-width: 100%; border: 1px solid #ddd; border-radius: 8px; }
+        
+        /* Container Opsi Tanpa Label Huruf */
+        .options { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-top: 20px; }
+        .option-card { border: 2px solid #ddd; border-radius: 10px; padding: 5px; cursor: pointer; transition: 0.3s; background: #fff; display: flex; align-items: center; justify-content: center; }
+        .option-card:hover { border-color: #007bff; transform: translateY(-3px); background: #f0f7ff; }
+        .opt-img { width: 100%; height: auto; border-radius: 5px; display: block; }
+
+        #startButton { padding: 15px 50px; font-size: 18px; cursor: pointer; background: #28a745; color: white; border: none; border-radius: 8px; }
+        .skip-btn { margin-top: 30px; padding: 10px 25px; background: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer; }
+
+        @media (max-width: 600px) { .options { grid-template-columns: repeat(3, 1fr); } }
+    </style>
+</head>
+<body>
+
+<div id="loader" class="hidden">
+    <div class="spinner"></div>
+    <p id="loader-text">Memproses...</p>
+</div>
+
+<div class="quiz-container">
+    <h1>Subtes IST 8</h1>
+    <div id="setup-area">
+        <p>Pilihlah gambar kubus (A, B, C, D, atau E) yang merupakan hasil putaran dari kubus pada soal.</p>
+        <button id="startButton">Mulai Tes</button>
+    </div>
+
+    <div id="quiz-content" class="hidden">
+        <div id="question-area">
+            <div id="question-title" style="margin-bottom: 10px; font-weight: bold; color: #666;"></div>
+            <div id="image-placeholder"></div>
+        </div>
+        <div class="options" id="optionsContainer"></div>
+        <button class="skip-btn" id="skipBtn">Lewati Soal</button>
+        <div style="margin-top: 25px; color: #888; font-size: 0.9em;">
+            Progres: <span id="progressDisplay">0 / 0</span>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API_URL = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis6';
+    const TABLE_NAME = 'nilai1';
+    const AUTH_KEY = 'admin';
+    const DATA_URL = 'https://cipta.my.id/psikotest/ist8.txt';
+    const TARGET_INDEX = 15; // IST 8 disimpan di indeks ke-15
+
+    let questions = [];
+    let currentQuestionIndex = 0;
+    let correctScore = 0;
+    let timeLeft = 540; // 9 Menit
+    let userAnswers = [];
+    let timerInterval;
+
+    function toggleLoader(show, text = "") {
+        const loader = document.getElementById('loader');
+        if(text) document.getElementById('loader-text').innerText = text;
+        loader.classList.toggle('hidden', !show);
+    }
+
+    window.onload = async () => {
+        const idX = localStorage.getItem('db_id');
+        if (!idX) { window.location.href = 'index1.html'; return; }
+
+        toggleLoader(true, "Menyiapkan IST 8...");
+        try {
+            const qResp = await fetch(DATA_URL + '?v=' + new Date().getTime());
+            questions = await qResp.json();
+
+            const resp = await fetch(`${API_URL}?table=${TABLE_NAME}&id_x=${idX}`, {
+                headers: { 'X-Custom-Auth': AUTH_KEY }
+            });
+            const result = await resp.json();
+            
+            if (result.success) {
+                const x05 = result.data.x_05 ? result.data.x_05.split('|') : [];
+                if (x05[TARGET_INDEX] && x05[TARGET_INDEX].trim() !== "") {
+                    alert("Subtes IST 8 sudah selesai dikerjakan.");
+                    window.location.href = 'index1.html';
+                    return;
+                }
+            }
+            document.getElementById("startButton").onclick = startGame;
+        } catch (err) {
+            alert("Gagal mengambil data. Periksa koneksi internet.");
+        } finally {
+            toggleLoader(false);
+        }
+    };
+
+    function startGame() {
+        document.getElementById("setup-area").classList.add("hidden");
+        document.getElementById("quiz-content").classList.remove("hidden");
+        document.getElementById("skipBtn").onclick = skipQuestion;
+        
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            if (timeLeft <= 0) endGame(true);
+        }, 1000);
+        
+        newQuestion();
+    }
+
+    function newQuestion() {
+        if (currentQuestionIndex >= questions.length) {
+            endGame(false);
+            return;
+        }
+
+        const qData = questions[currentQuestionIndex];
+        const rawText = qData.question;
+        
+        // Bersihkan link gambar dari nomor soal
+        const httpPos = rawText.indexOf("http");
+        const qImgUrl = httpPos !== -1 ? rawText.substring(httpPos).trim() : rawText.trim();
+        const qNum = rawText.split('.')[0] || (currentQuestionIndex + 1);
+
+        document.getElementById("question-title").innerText = "Soal Nomor " + qNum;
+        document.getElementById("image-placeholder").innerHTML = `<img src="${qImgUrl}" class="q-img" onerror="this.src='https://placehold.co/400x200?text=Gambar+Tidak+Tersedia'">`;
+        
+        document.getElementById("progressDisplay").innerText = `${currentQuestionIndex + 1} / ${questions.length}`;
+
+        const optDiv = document.getElementById("optionsContainer");
+        optDiv.innerHTML = "";
+
+        // Tampilkan gambar opsi tanpa label teks
+        for (const key in qData.options) {
+            const card = document.createElement("div");
+            card.className = "option-card";
+            card.innerHTML = `<img src="${qData.options[key].trim()}" class="opt-img">`;
+            card.onclick = () => submitAnswer(key, qData.answer, qNum);
+            optDiv.appendChild(card);
+        }
+    }
+
+    function submitAnswer(choice, correct, qNum) {
+        const isCorrect = (choice === correct);
+        if (isCorrect) correctScore++;
+        userAnswers.push(`${qNum}${choice}${isCorrect ? 'v' : 'x'}`);
+        currentQuestionIndex++;
+        newQuestion();
+    }
+
+    function skipQuestion() {
+        questions.push(questions[currentQuestionIndex]);
+        currentQuestionIndex++;
+        newQuestion();
+    }
+
+    async function endGame(timeout) {
+        clearInterval(timerInterval);
+        toggleLoader(true, "Menyimpan hasil...");
+        const idX = localStorage.getItem('db_id');
+
+        try {
+            const resp = await fetch(`${API_URL}?table=${TABLE_NAME}&id_x=${idX}`, {
+                headers: { 'X-Custom-Auth': AUTH_KEY }
+            });
+            const result = await resp.json();
+
+            let x05 = result.data.x_05 ? result.data.x_05.split('|') : [];
+            let x08 = result.data.x_08 ? result.data.x_08.split('|') : [];
+            
+            while(x05.length <= TARGET_INDEX) x05.push("");
+            while(x08.length <= TARGET_INDEX) x08.push("");
+
+            x05[TARGET_INDEX] = correctScore.toString();
+            x08[TARGET_INDEX] = JSON.stringify(userAnswers);
+
+            await fetch(`${API_URL}?table=${TABLE_NAME}&id_x=${idX}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'X-Custom-Auth': AUTH_KEY },
+                body: JSON.stringify({ x_05: x05.join('|'), x_08: x08.join('|') })
+            });
+
+            window.location.href = 'index1.html';
+        } catch (e) {
+            alert("Gagal menyimpan hasil.");
+            toggleLoader(false);
+        }
+    }
+</script>
+</body>
+</html>
