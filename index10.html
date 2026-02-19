@@ -196,6 +196,43 @@
         .action-bar { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 12px; }
         .action-bar .btn { width: auto; }
 
+        /* ===== ANSWER HISTORY PANEL ===== */
+        #answerPanel {
+            margin-top: 24px;
+            border-top: 2px solid var(--border);
+            padding-top: 14px;
+        }
+        #answerPanel .panel-title {
+            font-size: 0.75em; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.06em; color: var(--muted); margin-bottom: 10px;
+        }
+        .answer-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+        .answer-chip {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 5px 10px; border-radius: 10px;
+            border: 2px solid var(--border); background: white;
+            font-size: 0.8em; cursor: pointer;
+            transition: all 0.18s; color: var(--text);
+            max-width: 300px;
+        }
+        .answer-chip:hover:not(.chip-active):not(.chip-skipped):not(.chip-ab) {
+            border-color: var(--primary); color: var(--primary); transform: translateY(-1px);
+            box-shadow: 0 3px 10px rgba(37,99,235,0.12);
+        }
+        .answer-chip.chip-answered { border-color: #bbf7d0; background: #f0fdf4; color: #166534; }
+        .answer-chip.chip-skipped  { border-color: #fde68a; background: #fffbeb; color: #92400e; cursor: default; }
+        .answer-chip.chip-active   { border-color: var(--primary); background: #eff6ff; color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.15); cursor: default; }
+        .answer-chip.chip-ab       { cursor: default; }
+        .chip-num  { font-weight: 700; white-space: nowrap; flex-shrink: 0; }
+        .chip-ans  { font-weight: 400; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: inherit; opacity: 0.85; }
+        .chip-key  { font-weight: 700; font-size: 0.9em; flex-shrink: 0; opacity: 0.9; }
+        .chip-thumb {
+            width: 36px; height: 36px; object-fit: cover;
+            border-radius: 5px; border: 1px solid rgba(0,0,0,0.12);
+            flex-shrink: 0; display: block;
+        }
+        .answer-chip { align-items: center; }
+
         /* ranking */
         #deskripsiBox {
             margin-bottom: 18px; padding: 14px 18px;
@@ -365,6 +402,11 @@
         <div class="progress-wrap"><div id="progressBar" style="width:0%"></div></div>
         <div id="questionContent"></div>
         <div class="action-bar" id="actionBar"></div>
+        <!-- Panel riwayat jawaban -->
+        <div id="answerPanel" class="hidden">
+            <div class="panel-title">Jawaban Saya — klik untuk edit</div>
+            <div class="answer-chips" id="answerChips"></div>
+        </div>
     </div>
 </div>
 
@@ -424,15 +466,15 @@ const BIODATA_CONFIG = [
     },
     {
         id: 'bioUsia', label: 'Usia', type: 'number',
-        placeholder: 'Usia', index: 4, required: true
+        placeholder: 'Usia', index: 1, required: true
     },
     {
         id: 'bioPend', label: 'Pendidikan Terakhir', type: 'text',
-        placeholder: 'S1, SMA, dll', index: 7, required: true
+        placeholder: 'S1, SMA, dll', index: 2, required: true
     },
     {
         id: 'bioGender', label: 'Jenis Kelamin', type: 'select',
-        index: 8, required: true,
+        index: 3, required: true,
         options: [
             { value: 'L', label: 'Laki-laki' },
             { value: 'P', label: 'Perempuan' }
@@ -452,8 +494,8 @@ const CONFIG = [
         logField:  "x_08", logIndex:  0,
         timer: 240,
         instructions: "Perhatikan gambar soal yang ditampilkan di bagian atas.\nPilih SATU gambar dari pilihan jawaban yang tersedia di bawahnya yang paling tepat melengkapi atau menjawab soal.\nKlik gambar pilihan Anda untuk langsung menjawab.\nJika tidak yakin, gunakan tombol Lewati dan kembali nanti.",
-        exImgTop:    "https://assets.lidan.co.id/gambar_tes/cfit1a.png",
-        exImgBottom: "https://assets.lidan.co.id/gambar_tes/cfit1a.png",
+        exImgTop:    "https://assets.lidan.co.id/gambar/09.jpeg",
+        exImgBottom: "https://assets.lidan.co.id/gambar/10.jpeg",
         exNote: "Pada contoh di atas, gambar soal menunjukkan pola tertentu.\nJawaban yang benar adalah gambar yang melanjutkan pola tersebut secara logis.\nPerhatikan bentuk, ukuran, rotasi, dan posisi elemen dalam gambar."
     },
     {
@@ -466,8 +508,8 @@ const CONFIG = [
         logField:  "x_08", logIndex:  1,
         timer: 300,
         instructions: "Dalam setiap soal terdapat deretan gambar.\nTugas Anda adalah memilih TEPAT 2 gambar yang BERBEDA dari gambar lainnya.\nKlik 2 gambar tersebut, lalu tekan tombol Jawab untuk melanjutkan.\nGambar yang dipilih akan ditandai dengan bingkai biru.",
-        exImgTop:    "https://assets.lidan.co.id/gambar_tes/cfit2a.png",
-        exImgBottom: "https://assets.lidan.co.id/gambar_tes/cfit2b.png",
+        exImgTop:    "https://assets.lidan.co.id/gambar/09.jpeg",
+        exImgBottom: "https://assets.lidan.co.id/gambar/10.jpeg",
         exNote: "Pada contoh di atas, dari deretan 6 gambar, 4 gambar memiliki kesamaan tertentu.\n2 gambar yang berbeda itulah yang harus Anda pilih.\nPerhatikan perbedaan bentuk, jumlah sisi, atau orientasi gambar."
     },
     {
@@ -480,8 +522,8 @@ const CONFIG = [
         logField:  "x_08", logIndex:  2,
         timer: 180,
         instructions: "Perhatikan gambar soal yang ditampilkan.\nPilih SATU jawaban dari pilihan gambar yang paling tepat melengkapi soal.\nKerjakan dengan cepat dan tepat sesuai waktu yang tersedia.",
-        exImgTop:    "https://assets.lidan.co.id/gambar_tes/cfit3a.png",
-        exImgBottom: "https://assets.lidan.co.id/gambar_tes/cfit3b.png",
+        exImgTop:    "https://assets.lidan.co.id/gambar/09.jpeg",
+        exImgBottom: "https://assets.lidan.co.id/gambar/10.jpeg",
         exNote: "Pada contoh, perhatikan hubungan antar gambar dalam soal.\nPilih gambar jawaban yang melanjutkan atau melengkapi pola dengan benar."
     },
     {
@@ -494,8 +536,8 @@ const CONFIG = [
         logField:  "x_08", logIndex:  3,
         timer: 150,
         instructions: "Perhatikan gambar soal yang ditampilkan.\nPilih SATU jawaban dari pilihan gambar yang paling tepat.\nKerjakan secepat mungkin karena waktu sangat terbatas.",
-        exImgTop:    "https://assets.lidan.co.id/gambar_tes/cfit4a.png",
-        exImgBottom: "https://assets.lidan.co.id/gambar_tes/cfit4b.png",
+        exImgTop:    "https://assets.lidan.co.id/gambar/09.jpeg",
+        exImgBottom: "https://assets.lidan.co.id/gambar/10.jpeg",
         exNote: "Temukan pola atau hubungan yang berlaku pada gambar soal, lalu pilih gambar yang sesuai."
     },
     {
@@ -504,12 +546,12 @@ const CONFIG = [
         desc: "Baca soal dengan seksama dan pilih jawaban yang paling tepat.",
         type: "text_choice",
         dataUrl: "https://cipta.my.id/psikotest/tkd3.txt",
-        saveField: "x_05", saveIndex: 15,
-        logField:  "x_08", logIndex:  15,
+        saveField: "x_05", saveIndex: 4,
+        logField:  "x_08", logIndex:  4,
         timer: 360,
         instructions: "Baca setiap soal dengan cermat dan teliti.\nPilih SATU jawaban dari pilihan A, B, C, D, atau E yang paling tepat.\nJika tidak yakin, gunakan tombol Lewati dan kembali di akhir.\nJawaban yang sudah dipilih tidak dapat diubah.",
-        exImgTop:    "https://assets.lidan.co.id/gambar_tes/tkd3_1a.png",
-        exImgBottom: "https://assets.lidan.co.id/gambar_tes/tkd3_1b.png",
+        exImgTop:    "https://assets.lidan.co.id/gambar/09.jpeg",
+        exImgBottom: "https://assets.lidan.co.id/gambar/10.jpeg",
         exNote: "Contoh: soal menanyakan sinonim, antonim, atau pengetahuan umum.\nPilih jawaban yang paling tepat berdasarkan pemahaman Anda.\nPada tes ini tidak ada pengurangan nilai untuk jawaban salah."
     },
     {
@@ -518,12 +560,12 @@ const CONFIG = [
         desc: "Temukan pola deret angka dan tuliskan dua angka berikutnya, dipisahkan dengan spasi.",
         type: "text_input",
         dataUrl: "https://cipta.my.id/psikotest/tkd6_a.txt",
-        saveField: "x_05", saveIndex: 17,
-        logField:  "x_08", logIndex:  17,
+        saveField: "x_05", saveIndex: 5,
+        logField:  "x_08", logIndex:  5,
         timer: 660,
         instructions: "Perhatikan deret angka yang ditampilkan pada setiap soal.\nTemukan polanya, lalu ketikkan DUA angka berikutnya dipisahkan dengan spasi.\nContoh jawaban: 12 15\nTekan Enter atau klik tombol Jawab untuk melanjutkan ke soal berikutnya.",
-        exImgTop:    "https://assets.lidan.co.id/gambar_tes/tkd6_1a.png",
-        exImgBottom: "https://assets.lidan.co.id/gambar_tes/tkd6_1b.png",
+        exImgTop:    "https://assets.lidan.co.id/gambar/09.jpeg",
+        exImgBottom: "https://assets.lidan.co.id/gambar/10.jpeg",
         exNote: "Contoh: 2 4 6 8 _ _\nJawaban: 10 12 (pola +2 setiap angka)\n\nPola bisa berupa penjumlahan, pengurangan, perkalian, atau kombinasinya."
     },
     {
@@ -535,12 +577,12 @@ const CONFIG = [
         dataUrlP: "https://cipta.my.id/psikotest/rmib_perempuan.txt",
         kolom: 1,               // ← Nomor kolom pertama; akan naik otomatis
         totalKolom: 8,          // ← Total kolom yang harus dikerjakan
-        saveField: "x_06", saveIndex: 2,  // saveIndex = offset awal (kolom 1 → index 1, dst)
+        saveField: "x_06", saveIndex: 1,  // saveIndex = offset awal (kolom 1 → index 1, dst)
         logField: null, logIndex: null,
         timer: 0,
         instructions: "Baca skenario situasi yang diberikan dengan seksama.\nDi bawahnya terdapat 12 tugas yang berhubungan dengan skenario tersebut.\nBerikan nomor urut 1–12 pada setiap tugas, mulai dari yang PALING Anda senangi (1) hingga yang PALING TIDAK Anda senangi (12).\nSetiap nomor hanya boleh digunakan satu kali.\nKlik nomor untuk memilih, klik lagi untuk membatalkan.",
-        exImgTop:    "https://assets.lidan.co.id/gambar_tes/rmib_a.png",
-        exImgBottom: "https://assets.lidan.co.id/gambar_tes/rmib_b.png",
+        exImgTop:    "https://assets.lidan.co.id/gambar/09.jpeg",
+        exImgBottom: "https://assets.lidan.co.id/gambar/10.jpeg",
         exNote: "Tidak ada jawaban benar atau salah dalam tes ini.\nIsilah sesuai dengan preferensi dan minat Anda yang sesungguhnya.\nPastikan semua 12 tugas telah diberi nomor sebelum lanjut ke skenario berikutnya.",
         showInstructionsOnce: true
     },
@@ -554,8 +596,8 @@ const CONFIG = [
         logField: null, logIndex: null,
         timer: 0,
         instructions: "Pada setiap soal Anda akan melihat DUA pernyataan (A dan B).\nPilih SATU pernyataan yang paling menggambarkan diri Anda.\nJawab berdasarkan keadaan diri Anda yang sebenarnya, bukan yang Anda anggap ideal.\nTidak ada jawaban benar atau salah — semua pilihan sama baiknya.",
-        exImgTop:    "https://assets.lidan.co.id/gambar_tes/epps_a.png",
-        exImgBottom: "https://assets.lidan.co.id/gambar_tes/epps_b.png",
+        exImgTop:    "https://assets.lidan.co.id/gambar/09.jpeg",
+        exImgBottom: "https://assets.lidan.co.id/gambar/10.jpeg",
         exNote: "Contoh:\nA. Saya lebih suka bekerja sendiri.\nB. Saya lebih suka bekerja dalam tim.\n\nPilih yang paling mencerminkan kepribadian Anda sehari-hari."
     }
     /* ── Tambah tes baru di sini ──────────────────────────────────── */
@@ -584,6 +626,8 @@ let usedNumbers  = [];
 let rankingKolom = 1;      // kolom ranking aktif saat ini
 let skippedIndices = [];   // indeks soal yang dilewati (urutan antrian)
 let answeredIndices = [];  // indeks soal yang sudah dijawab (permanen)
+let historyStack = [];     // stack riwayat soal (untuk panel riwayat & navigasi)
+
 
 /* ══════════════════════════════════════════════════════════════════
    BOOT
@@ -885,12 +929,16 @@ async function startTest() {
             usedNumbers   = s.usedNumbers   || [];
             skippedIndices  = s.skippedIndices  || [];
             answeredIndices = s.answeredIndices || [];
+            historyStack    = s.historyStack    || [];
+
         } else {
             qIndex = 0; userAnswers = []; correctScore = 0;
             timeLeft = cfg.timer || 0;
             rowSelections = Array(12).fill(null); usedNumbers = [];
             skippedIndices  = [];
             answeredIndices = [];
+            historyStack    = [];
+
         }
 
         document.getElementById('testTitle').innerText = cfg.title;
@@ -960,7 +1008,7 @@ function updateTimerDisplay() {
 ══════════════════════════════════════════════════════════════════ */
 function saveState() {
     localStorage.setItem('_st_' + cfg._taskId, JSON.stringify(
-        { qIndex, userAnswers, correctScore, timeLeft, rowSelections, usedNumbers, skippedIndices, answeredIndices }
+        { qIndex, userAnswers, correctScore, timeLeft, rowSelections, usedNumbers, skippedIndices, answeredIndices, historyStack }
     ));
 }
 
@@ -970,21 +1018,25 @@ function saveState() {
 
 function dbg(label) {
     console.log(
-        `[SKIP DEBUG] ${label}` +
+        `[NAV] ${label}` +
         ` | qIndex=${qIndex}` +
         ` | answered=[${answeredIndices.join(',')}]` +
         ` | skipped=[${skippedIndices.join(',')}]` +
+        ` | history=[${historyStack.join(',')}]` +
         ` | total=${questions.length}`
     );
 }
 
-// Setelah menjawab soal, cari soal berikutnya yang belum dijawab.
-// Urutan pencarian: lanjut maju dari posisi sekarang, jika mentok akhir
-// ambil dari antrian skippedIndices (soal yang dilewati).
+// Pindah ke soal berikutnya setelah menjawab
 function goNext() {
     dbg('goNext MASUK');
 
-    // Cari soal berikutnya yang belum dijawab, mulai dari qIndex+1 maju ke depan
+    // Tambahkan soal yang baru dijawab ke historyStack (urutan kronologis)
+    if (!historyStack.includes(qIndex)) {
+        historyStack.push(qIndex);
+    }
+
+    // Cari soal berikutnya yang belum dijawab dan bukan di antrian skip
     let found = -1;
     for (let i = qIndex + 1; i < questions.length; i++) {
         if (!answeredIndices.includes(i) && !skippedIndices.includes(i)) {
@@ -994,23 +1046,68 @@ function goNext() {
     }
 
     if (found !== -1) {
-        // Ada soal normal yang belum dijawab di depan
         qIndex = found;
         dbg(`goNext → soal normal index ${qIndex}`);
     } else if (skippedIndices.length > 0) {
-        // Tidak ada soal normal tersisa → ambil soal pertama yang dilewati
         qIndex = skippedIndices.shift();
         dbg(`goNext → kembali ke soal dilewati index ${qIndex}`);
     } else {
-        // Semua soal sudah dijawab
-        dbg('goNext → SEMUA SELESAI, endTest');
+        dbg('goNext → SEMUA SELESAI');
         saveState();
-        endTest(false);
+        confirmSubmit();
         return;
     }
 
     saveState();
     renderQuestion();
+}
+
+// Lompat ke soal tertentu dari panel riwayat (untuk edit jawaban)
+function jumpToQuestion(idx) {
+    dbg(`jumpToQuestion idx=${idx}`);
+    // Undo jawaban lama soal idx agar bisa dijawab ulang (gunakan regex eksak)
+    const soalNumJ = String(idx + 1);
+    const skipTagJ = soalNumJ + 'SKIPx';
+    const reJ = new RegExp('^' + soalNumJ + '(?!\\d)');
+    const ua2 = userAnswers.findIndex(a => reJ.test(a) && a !== skipTagJ);
+    if (ua2 !== -1) {
+        const removed = userAnswers.splice(ua2, 1)[0];
+        // Jawaban benar diakhiri 'v' — untuk image_multi format ":v" juga true
+        // Kurangi skor hanya jika tipe punya skor (image_single, text_choice, text_input)
+        const scoredTypes = ['image_single','text_choice','text_input'];
+        if (removed.endsWith('v') && scoredTypes.includes(cfg.type)) correctScore--;
+        dbg(`jumpToQuestion → hapus jawaban lama: ${removed}`);
+    }
+    // Hapus dari answeredIndices
+    const aPos = answeredIndices.indexOf(idx);
+    if (aPos !== -1) answeredIndices.splice(aPos, 1);
+    // Hapus dari historyStack (akan ditambah lagi saat dijawab ulang)
+    const hPos = historyStack.indexOf(idx);
+    if (hPos !== -1) historyStack.splice(hPos, 1);
+
+    qIndex = idx;
+    saveState();
+    renderQuestion();
+    // Scroll ke atas soal
+    document.getElementById('testCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// Dialog konfirmasi sebelum submit
+function confirmSubmit() {
+    const unanswered = skippedIndices.length;
+    const total = questions.length;
+    const answered = answeredIndices.length;
+    let msg = `Anda telah menjawab ${answered} dari ${total} soal.`;
+    if (unanswered > 0) msg += `\n${unanswered} soal belum dijawab (dilewati).`;
+    msg += '\n\nYakin ingin mengirim jawaban?';
+    if (confirm(msg)) {
+        endTest(false);
+    } else {
+        // User batal — kembali tampilkan soal terakhir yang aktif
+        // agar user bisa lihat panel riwayat dan tetap bisa navigasi
+        // Tetap di qIndex saat ini (soal terakhir), render ulang
+        renderQuestion();
+    }
 }
 
 function renderQuestion() {
@@ -1040,6 +1137,81 @@ function renderQuestion() {
         ab_choice:    renderAbChoice
     };
     (map[cfg.type] || (() => {}))(q);
+
+    // Update panel riwayat jawaban (kecuali ranking)
+    if (cfg.type !== 'ranking') {
+        updateAnswerPanel();
+    }
+}
+
+// ── Panel riwayat jawaban ──────────────────────────────────────
+function updateAnswerPanel() {
+    const panel = document.getElementById('answerPanel');
+    const chips = document.getElementById('answerChips');
+    if (!panel || !chips) return;
+
+    // Kumpulkan semua soal yang sudah pernah dikunjungi, urut per nomor
+    const visited = [...new Set([...answeredIndices, ...skippedIndices, ...historyStack])].sort((a,b) => a-b);
+
+    if (visited.length === 0) {
+        panel.classList.add('hidden');
+        return;
+    }
+    panel.classList.remove('hidden');
+
+    chips.innerHTML = visited.map(idx => {
+        const isActive  = idx === qIndex;
+        const isSkipped = skippedIndices.includes(idx) && !answeredIndices.includes(idx);
+        const prev      = getPrevAnswer(idx);
+
+        let cls = 'answer-chip';
+        if (isActive)       cls += ' chip-active';
+        else if (isSkipped) cls += ' chip-skipped';
+        else                cls += ' chip-answered';
+
+        const canJump = !isActive && !isSkipped && cfg.type !== 'ab_choice';
+        if (cfg.type === 'ab_choice' && !isActive && !isSkipped) cls += ' chip-ab';
+
+        let innerContent = '';
+        let titleAttr = '';
+
+        if (!prev) {
+            // Belum dijawab / dilewati
+            innerContent = `<span class="chip-num">${idx+1}.</span><span class="chip-ans">—</span>`;
+            titleAttr = `title="Soal ${idx+1}: belum dijawab"`;
+        } else if (prev.isImage) {
+            if (prev.imgs && prev.imgs.length > 0) {
+                // image_multi: nomor · thumb1 · thumb2 (dua gambar yang dipilih)
+                const thumbs = prev.imgs.map(url =>
+                    `<img class="chip-thumb" src="${url}" alt="pilihan">`
+                ).join('');
+                innerContent = `<span class="chip-num">${idx+1}.</span>${thumbs}`;
+                titleAttr = canJump
+                    ? `title="Soal ${idx+1} · 2 gambar dipilih — klik untuk edit"`
+                    : `title="Soal ${idx+1} · 2 gambar dipilih"`;
+            } else {
+                // image_single: nomor · thumbnail soal · huruf · thumbnail jawaban
+                const thumbQ   = prev.imgQ   ? `<img class="chip-thumb" src="${prev.imgQ}"   alt="soal">` : '';
+                const thumbAns = prev.imgAns ? `<img class="chip-thumb" src="${prev.imgAns}" alt="${prev.key}">` : '';
+                const keyLabel = `<span class="chip-key">${prev.key}</span>`;
+                innerContent = `<span class="chip-num">${idx+1}.</span>${thumbQ}${keyLabel}${thumbAns}`;
+                titleAttr = canJump
+                    ? `title="Soal ${idx+1} · Pilihan ${prev.key} — klik untuk edit"`
+                    : `title="Soal ${idx+1} · Pilihan ${prev.key}"`;
+            }
+        } else {
+            // Soal teks/ab_choice: nomor · teks jawaban
+            const dispText = truncate(prev.text, 40);
+            const fullText = prev.text;
+            innerContent = `<span class="chip-num">${idx+1}.</span><span class="chip-ans">${dispText}</span>`;
+            titleAttr = canJump
+                ? `title="${fullText.replace(/"/g,'&quot;')} — klik untuk edit"`
+                : `title="Soal ${idx+1}: ${fullText.replace(/"/g,'&quot;')}"`;
+        }
+
+        const onclick = canJump ? `onclick="jumpToQuestion(${idx})"` : '';
+        return `<div class="${cls}" ${onclick} ${titleAttr}>${innerContent}</div>`;
+    }).join('');
 }
 
 function updateProgress() {
@@ -1064,13 +1236,29 @@ function renderImageSingle(q) {
         `<div class="q-label">Soal ${parts[0]}${skippedBadge}</div>
          <img class="q-image" src="${parts[1]}" alt="soal">
          <div class="options-img" id="optArea"></div>`;
+
     document.getElementById('actionBar').innerHTML =
         `<button class="btn btn-outline btn-sm" onclick="skipQ()">Lewati</button>`;
+
+    // Cari jawaban lama untuk soal ini (jika pernah dijawab sebelumnya)
+    const prevAnswer = getPrevAnswer(qIndex);
+
     const div = document.getElementById('optArea');
     for (const k in q.options) {
         if (!q.options[k]) continue;
         const img = Object.assign(document.createElement('img'), { src: q.options[k], title: k });
-        img.onclick = () => { markAnswered(qIndex); userAnswers.push(`${qIndex+1}${k}${k===q.answer?'v':'x'}`); if(k===q.answer)correctScore++; saveState(); goNext(); };
+        // Highlight jawaban lama
+        if (prevAnswer && prevAnswer.key === k) {
+            img.style.border = '3px solid var(--warning)';
+            img.style.opacity = '0.7';
+            img.title = k + ' (jawaban sebelumnya)';
+        }
+        img.onclick = () => {
+            markAnswered(qIndex);
+            userAnswers.push(`${qIndex+1}${k}${k===q.answer?'v':'x'}`);
+            if(k===q.answer) correctScore++;
+            saveState(); goNext();
+        };
         div.appendChild(img);
     }
 }
@@ -1080,9 +1268,11 @@ function renderImageMulti(q) {
     document.getElementById('questionContent').innerHTML =
         `<div class="q-label">Pilih 2 gambar yang BERBEDA dari lainnya</div>
          <div class="options-img" id="optArea" style="gap:14px"></div>`;
+
     document.getElementById('actionBar').innerHTML =
         `<button class="btn btn-success btn-sm" id="btnJawab" onclick="submitImageMulti()" disabled>Jawab</button>
          <button class="btn btn-outline btn-sm" onclick="skipQ()">Lewati</button>`;
+
     const div = document.getElementById('optArea');
     q.options.forEach((src, i) => {
         const wrap = document.createElement('div');
@@ -1100,23 +1290,35 @@ function submitImageMulti() {
     const sel = [...document.querySelectorAll('#optArea input:checked')].map(c => c.value);
     const ok  = sel.length===2 && sel.every(v => q.correctAnswers.includes(v));
     markAnswered(qIndex);
-    userAnswers.push(`${qIndex+1}SEL${ok?'v':'x'}`);
+    // Simpan URL 2 gambar yang dipilih agar bisa ditampilkan di panel riwayat
+    // Format: "{nomor}SEL:{url1}::{url2}:{v/x}"
+    const selStr = sel.join('::');
+    userAnswers.push(`${qIndex+1}SEL:${selStr}:${ok?'v':'x'}`);
     if(ok) correctScore++;
     saveState(); goNext();
 }
 
 /* ── text_choice ─────────────────────────────────────────────── */
 function renderTextChoice(q) {
+    const prevAnswer = getPrevAnswer(qIndex);
     let opts = '';
     for (const k in q.options) {
         if (!q.options[k]) continue;
-        opts += `<button class="opt-text" onclick="submitTextChoice('${k}','${q.answer}')"><strong>${k}.</strong> ${q.options[k]}</button>`;
+        // Highlight jawaban lama dengan warna kuning
+        const prevStyle = (prevAnswer && prevAnswer.key === k)
+            ? ' style="border-color:var(--warning);background:#fffbeb;"'
+            : '';
+        const prevNote = (prevAnswer && prevAnswer.key === k)
+            ? ' <span style="font-size:0.75em;color:var(--warning);font-weight:600;">(jawaban sebelumnya)</span>'
+            : '';
+        opts += `<button class="opt-text"${prevStyle} onclick="submitTextChoice('${k}','${q.answer}')"><strong>${k}.</strong> ${q.options[k]}${prevNote}</button>`;
     }
     const skippedBadgeTC = skippedIndices.includes(qIndex) ? ' <span style="background:#fef3c7;color:#92400e;font-size:0.75em;padding:2px 8px;border-radius:99px;font-weight:600;">⟳ Dilewati</span>' : '';
     document.getElementById('questionContent').innerHTML =
         `<div class="q-label">Soal No. ${qIndex+1}${skippedBadgeTC}</div>
          <div class="q-text">${q.question}</div>
          <div class="options-text">${opts}</div>`;
+
     document.getElementById('actionBar').innerHTML =
         `<button class="btn btn-outline btn-sm" onclick="skipQ()">Lewati</button>`;
 }
@@ -1129,16 +1331,21 @@ function submitTextChoice(k, ans) {
 
 /* ── text_input ──────────────────────────────────────────────── */
 function renderTextInput(q) {
+    const prevAnswer = getPrevAnswer(qIndex);
+    const prevVal = prevAnswer ? prevAnswer.key : '';
     const skippedBadgeTI = skippedIndices.includes(qIndex) ? ' <span style="background:#fef3c7;color:#92400e;font-size:0.75em;padding:2px 8px;border-radius:99px;font-weight:600;">⟳ Dilewati</span>' : '';
+    const prevNote = prevVal ? `<div style="font-size:0.8em;color:var(--warning);margin-top:4px;">Jawaban sebelumnya: <strong>${prevVal}</strong></div>` : '';
     document.getElementById('questionContent').innerHTML =
         `<div class="q-label">Soal No. ${qIndex+1}${skippedBadgeTI}</div>
          <div class="q-text">${q.question}</div>
          <div class="input-wrap">
-             <input type="text" id="userAnswer" placeholder="Jawaban..."
+             <input type="text" id="userAnswer" placeholder="Jawaban..." value="${prevVal}"
                     autocomplete="off" oninput="document.getElementById('btnNext').disabled=this.value.trim()===''">
+             ${prevNote}
          </div>`;
+
     document.getElementById('actionBar').innerHTML =
-        `<button class="btn btn-primary btn-sm" id="btnNext" onclick="submitTextInput()" disabled>Jawab</button>
+        `<button class="btn btn-primary btn-sm" id="btnNext" onclick="submitTextInput()" ${prevVal?'':'disabled'}>Jawab</button>
          <button class="btn btn-outline btn-sm" onclick="skipQ()">Lewati</button>`;
     const inp = document.getElementById('userAnswer');
     inp.focus();
@@ -1169,7 +1376,14 @@ function renderAbChoice(q) {
          </div>`;
     document.getElementById('actionBar').innerHTML = '';
 }
-function submitAb(c) { userAnswers.push(c); saveState(); goNext(); }
+function submitAb(c) {
+    // Format: "{nomor}{key}x" — ab_choice tidak ada benar/salah
+    userAnswers.push(`${qIndex+1}${c}x`);
+    markAnswered(qIndex);
+    // goNext() akan push ke historyStack — tidak perlu push di sini
+    saveState();
+    goNext();
+}
 
 /* ── ranking ─────────────────────────────────────────────────── */
 function renderRanking() {
@@ -1260,14 +1474,79 @@ function skipQ() {
         qIndex = skippedIndices.shift();
         dbg(`skipQ → kembali ke soal dilewati index ${qIndex}`);
     } else {
-        dbg('skipQ → SEMUA SELESAI, endTest');
+        dbg('skipQ → SEMUA SELESAI, konfirmasi');
         saveState();
-        endTest(false);
+        confirmSubmit();
         return;
     }
 
     saveState();
     renderQuestion();
+}
+
+// Ambil jawaban sebelumnya untuk soal idx dari userAnswers
+// Format userAnswers: "3Av" (soal 3, pilih A, benar) / "3Bx" / "3SKIPx" / "3 12 15v"
+// Cari entry userAnswers untuk soal idx secara eksak (hindari soal 1 match soal 10)
+function findEntry(idx) {
+    const soalNum = String(idx + 1);
+    const skipTag = soalNum + 'SKIPx';
+    // Gunakan regex: harus diawali angka soal lalu huruf non-digit (bukan angka lain)
+    const re = new RegExp('^' + soalNum + '(?!\d)');
+    return userAnswers.find(a => re.test(a) && a !== skipTag) || null;
+}
+
+function getPrevAnswer(idx) {
+    const entry = findEntry(idx);
+    if (!entry) return null;
+
+    const soalNum = String(idx + 1);
+    const raw = entry.slice(soalNum.length); // sisa setelah nomor soal
+
+    const q = questions[idx];
+    if (!q) return { key: raw, text: raw, isImage: false, imgs: [] };
+
+    if (cfg.type === 'image_single') {
+        // raw = "Av" atau "Bx" → key = "A"
+        const key = raw.slice(0, -1);
+        const parts = (q.question || '').split(' ');
+        const imgQ   = parts[1] || '';
+        const imgAns = (q.options && q.options[key]) ? q.options[key] : '';
+        return { key, text: key, isImage: true, imgQ, imgAns, imgs: [] };
+    }
+
+    if (cfg.type === 'image_multi') {
+        // raw = "SEL:url1::url2:v"
+        // Hapus "SEL:" di awal dan ":{v/x}" di akhir
+        const inner = raw.replace(/^SEL:/, '');           // "url1::url2:v"
+        const withoutResult = inner.replace(/:[vx]$/, ''); // "url1::url2"
+        const imgs = withoutResult.split('::').filter(Boolean);
+        return { key: 'SEL', text: 'SEL', isImage: true, imgQ: '', imgAns: '', imgs };
+    }
+
+    if (cfg.type === 'ab_choice') {
+        // raw = "Ax" atau "Bx"
+        const key = raw.slice(0, -1); // "A" atau "B"
+        let text = key;
+        if (key === 'A') text = q.A || (q.options && q.options.A) || 'A';
+        else if (key === 'B') text = q.B || (q.options && q.options.B) || 'B';
+        return { key, text, isImage: false, imgs: [] };
+    }
+
+    if (cfg.type === 'text_choice') {
+        const key = raw.slice(0, -1);
+        const text = (q.options && q.options[key]) ? q.options[key] : key;
+        return { key, text, isImage: false, imgs: [] };
+    }
+
+    // text_input: raw = "12 15v" → key = "12 15"
+    const key = raw.slice(0, -1);
+    return { key, text: key, isImage: false, imgs: [] };
+}
+
+// Potong teks menjadi max n karakter
+function truncate(str, n) {
+    if (!str) return '';
+    return str.length > n ? str.slice(0, n) + '…' : str;
 }
 
 // Tandai soal sebagai sudah dijawab (permanen)
@@ -1279,7 +1558,6 @@ function markAnswered(idx) {
     const pos = skippedIndices.indexOf(idx);
     if (pos !== -1) {
         skippedIndices.splice(pos, 1);
-        // Hapus entri SKIPx dari userAnswers
         const skipTag = `${idx+1}SKIPx`;
         const ua = userAnswers.indexOf(skipTag);
         if (ua !== -1) userAnswers.splice(ua, 1);
@@ -1302,9 +1580,13 @@ async function endTest(timeout) {
         const sf = cfg.saveField;
         let sp = (cur.data[sf]||'').split('|');
         while(sp.length<=cfg.saveIndex) sp.push('');
-        // Untuk ab_choice (EPPS): simpan jawaban A/B dipisah titik koma
+        // Untuk ab_choice (EPPS): simpan hanya huruf A/B dipisah titik koma
+        // Format userAnswers entry: "1Ax", "2Bx" → ambil hanya huruf ke-2 (A atau B)
         if (cfg.type === 'ab_choice') {
-            sp[cfg.saveIndex] = userAnswers.join(';') + ';';
+            const abAnswers = userAnswers
+                .filter(a => /^\d+[AB]x$/.test(a))
+                .map(a => a.replace(/^\d+([AB])x$/, '$1'));
+            sp[cfg.saveIndex] = abAnswers.join(';') + ';';
         } else {
             sp[cfg.saveIndex] = correctScore.toString();
         }
