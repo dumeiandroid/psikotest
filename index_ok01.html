@@ -301,7 +301,6 @@
         <p class="page-sub">Lengkapi data diri sebelum memulai tes.</p>
         <div id="bioFormFields"></div>
         <button class="btn btn-primary" id="btnBio" onclick="saveBiodata()">Simpan &amp; Lanjutkan</button>
-        <button class="btn btn-outline" style="margin-top:10px" onclick="logout()">Logout</button>
     </div>
 </div>
 
@@ -348,7 +347,6 @@
             <button class="btn btn-primary" id="btnStart" onclick="startTest()">▶ Mulai Tes</button>
             <!-- tombol kembali dihapus, alur satu arah -->
             <div class="timer-note" id="timerNote"></div>
-            <button class="btn btn-outline btn-sm" style="margin-top:6px;width:auto;align-self:center" onclick="logout()">⏻ Logout</button>
         </div>
 
     </div>
@@ -363,7 +361,6 @@
             <span class="top-title" id="testTitle"></span>
             <span id="progressInfo"></span>
             <span id="timerDisplay" class="hidden"></span>
-            <button class="btn btn-outline btn-sm" style="width:auto;padding:5px 14px;font-size:0.8em" onclick="confirmLogout()">⏻ Logout</button>
         </div>
         <div class="progress-wrap"><div id="progressBar" style="width:0%"></div></div>
         <div id="questionContent"></div>
@@ -592,20 +589,6 @@ let answeredIndices = [];  // indeks soal yang sudah dijawab (permanen)
    BOOT
 ══════════════════════════════════════════════════════════════════ */
 window.onload = async () => {
-    // Cek apakah ada ?token= di URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const urlToken  = urlParams.get('token');
-
-    if (urlToken) {
-        // Simpan token dari URL ke localStorage lalu login otomatis
-        localStorage.setItem('token', urlToken);
-        // Bersihkan token dari URL agar tidak tampil di address bar
-        const cleanUrl = window.location.pathname;
-        window.history.replaceState({}, document.title, cleanUrl);
-        await fetchAndRoute(urlToken);
-        return;
-    }
-
     const token = localStorage.getItem('token');
     if (!token) {
         hideLoader();
@@ -1398,12 +1381,6 @@ function setLoading(btn, on) {
     else btn.innerHTML = btn.dataset.txt;
 }
 function logout() { localStorage.clear(); location.reload(); }
-
-function confirmLogout() {
-    if (confirm('Yakin ingin logout? Progres soal yang sedang dikerjakan mungkin belum tersimpan.')) {
-        logout();
-    }
-}
 </script>
 </body>
 </html>
