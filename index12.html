@@ -422,141 +422,122 @@
 */
 const BIODATA_CONFIG = [
     {
-        id: 'bioNama', label: 'Nama Lengkap', type: 'text',
-        placeholder: 'Nama Lengkap', index: 0, required: true
-    },
-    {
-        id: 'bioUsia', label: 'Usia', type: 'number',
-        placeholder: 'Usia', index: 4, required: true
-    },
-    {
-        id: 'bioPend', label: 'Pendidikan Terakhir', type: 'text',
-        placeholder: 'S1, SMA, dll', index: 7, required: true
-    },
-    {
-        id: 'bioGender', label: 'Jenis Kelamin', type: 'select',
-        index: 8, required: true,
-        options: [
-            { value: 'L', label: 'Laki-laki' },
-            { value: 'P', label: 'Perempuan' }
-        ]
-    }
-    /* ── Tambah field baru di sini ──────────────────────────────── */
-];
-
-const CONFIG = [
-    {
-        "id": "cfit1",
-        "title": "Subtes 1 — CFIT",
-        "desc": "Tes ini terdiri dari 4 subtes. Pada subtes pertama, lengkapi kotak keempat pada tiap soal.",
-        "type": "image_single",
-        "dataUrl": "https://cipta.my.id/psikotest/cfit1.txt",
-        "saveField": "x_05", "saveIndex": 0,
-        "logField": "x_08", "logIndex": 0,
-        "timer": 240,
-        "instructions": "Tes ini terdiri dari 4 subtes yang masing-masing memiliki durasi waktu tersendiri, jadi harap anda mengerjakannya secepat dan setepat mungkin.\n\nPada subtes pertama ini anda diminta untuk **MELENGKAPI KOTAK KEEMPAT** pada tiap soal. Di contoh pertama ini, Anda akan menemukan sederet kotak yang berisi urutan gambar. Namun kotak terakhir belum ada isinya.\n\nIngat bahwa kotak tersebut adalah pola yang berkesinambungan. Tugas Anda memilih jawaban yang sesuai dari 6 pilihan jawaban.",
-        "exImgTop": "https://assets.lidan.co.id/gambar_tes/cfit1a.png",
-        "exImgBottom": "https://assets.lidan.co.id/gambar_tes/cfit1b.png",
-        "exNote": "**CONTOH PERTAMA**\nPerhatikan dengan seksama pola yang ada dalam kotak-kotak di atas. Setiap gambar menunjukkan sebuah ranting dengan cabang-cabang kecil. Jika diamati, ada perubahan bertahap dari satu gambar ke gambar berikutnya.\n\nPada kotak pertama, ranting memiliki dua cabang yang mengarah sedikit ke atas, pada kotak kedua, posisi cabang mulai sedikit lebih miring ke bawah. Dan pada kotak ketiga, cabang semakin turun lebih jauh dibandingkan gambar sebelumnya.\n\nDari pola ini, kita bisa menyimpulkan bahwa semakin ke kanan, cabang kecil pada ranting semakin menunduk atau mengarah ke bawah. Jawaban **C** adalah yang paling sesuai karena posisi cabangnya lebih turun.\n\n**CONTOH KEDUA**\nBayangkan bahwa bagian berwarna dalam gambar ini adalah tirai yang sedang diturunkan secara bertahap. Jika kita memperhatikan gambar dari kiri ke kanan, kita bisa melihat bahwa tirai semakin lama semakin turun menutupi bagian bawah kotak.\n\nJawaban yang benar harus mengikuti pola ini, yaitu tirai semakin turun lebih jauh lagi. Jawaban **E** adalah yang paling sesuai, karena tirai sudah hampir sepenuhnya turun."
-    },
-    {
-        "id": "cfit2",
-        "title": "Subtes 2 — CFIT",
-        "desc": "Temukan dan pilih tepat 2 gambar yang BERBEDA dari 3 gambar lainnya.",
-        "type": "image_multi",
-        "dataUrl": "https://cipta.my.id/psikotest/cfit2_a.txt",
-        "saveField": "x_05", "saveIndex": 1,
-        "logField": "x_08", "logIndex": 1,
-        "timer": 300,
-        "instructions": "Pada setiap soal, Anda akan menemukan 5 buah gambar. Tugas Anda ialah menemukan **2 GAMBAR** yang memiliki karakteristik yang serupa. Tiga gambar lainnya berfungsi sebagai pengecoh Anda, sehingga telitilah dalam menentukan pilihan.",
-        "exImgTop": "https://assets.lidan.co.id/gambar_tes/cfit2a.png",
-        "exImgBottom": "https://assets.lidan.co.id/gambar_tes/cfit2b.png",
-        "exNote": "**CONTOH PERTAMA**\nDalam subtes ini, Anda diminta untuk memilih dua bentuk yang berbeda dari tiga bentuk lainnya. Jika dianalisa, gambar A, C, dan E memiliki bentuk segitiga sedangkan gambar B dan D memiliki bentuk segi empat.\n\nKarena sebagian besar gambar adalah segitiga, maka dua gambar yang berbeda harus memiliki bentuk yang bukan segitiga. Jawaban yang benar adalah **B DAN D**.\n\n**CONTOH KEDUA**\nPerhatikan contoh kedua ini. Gambar A, B, dan D memiliki bentuk lingkaran kosong, sedangkan gambar C dan E memiliki pola titik-titik hitam di dalamnya.\n\nOleh karena itu, jawaban yang benar adalah **C DAN E**, karena mereka berbeda dari pola mayoritas."
-    },
-    {
-        "id": "cfit3",
-        "title": "Subtes 3 — CFIT",
-        "desc": "Lengkapi kotak kecil yang masih kosong dengan pola yang sesuai.",
-        "type": "image_single",
-        "dataUrl": "https://cipta.my.id/psikotest/cfit3.txt",
-        "saveField": "x_05", "saveIndex": 2,
-        "logField": "x_08", "logIndex": 2,
-        "timer": 180,
-        "instructions": "Pada subtes ini, Anda akan menemukan sebuah kotak yang di dalamnya terdapat kotak-kotak kecil bergambar dengan pola tertentu. Tugas Anda adalah **MELENGKAPI BAGIAN KOSONG** tersebut dengan salah satu pilihan jawaban yang tersedia di sebelah kanan.",
-        "exImgTop": "https://assets.lidan.co.id/gambar_tes/cfit3a.png",
-        "exImgBottom": "https://assets.lidan.co.id/gambar_tes/cfit3b.png",
-        "exNote": "**CONTOH PERTAMA**\nKetiga kotak kecil lainnya memiliki pola garis miring yang ditarik dari kanan atas ke kiri bawah. Untuk mengisi kotak kosong, kita harus mengikuti pola tersebut. Jawaban **B** adalah yang paling sesuai.\n\n**CONTOH KEDUA**\nDua kotak kecil di atas memperlihatkan anak ayam yang posisinya saling berlawanan. Untuk mengisi kotak yang kosong, kita lihat anak ayam corak hitam mengarah ke kiri, maka pasangannya harus mencari anak ayam corak hitam yang mengarah ke kanan. Jawaban **C** adalah yang paling sesuai."
-    },
-    {
-        "id": "cfit4",
-        "title": "Subtes 4 — CFIT",
-        "desc": "Pilih gambar yang memiliki komposisi posisi titik yang serupa.",
-        "type": "image_single",
-        "dataUrl": "https://cipta.my.id/psikotest/cfit4.txt",
-        "saveField": "x_05", "saveIndex": 3,
-        "logField": "x_08", "logIndex": 3,
-        "timer": 150,
-        "instructions": "Pada subtes 4 ini, perhatikan kotak di sebelah kiri yang berisi **TITIK** dan 2 bentuk lainnya. Tugas anda adalah memilih gambar jawaban di mana anda dapat meletakkan posisi titik dengan **KOMPOSISI YANG SAMA** seperti gambar contoh.",
-        "exImgTop": "https://assets.lidan.co.id/gambar_tes/cfit4a.png",
-        "exImgBottom": "https://assets.lidan.co.id/gambar_tes/cfit4b.png",
-        "exNote": "**CONTOH PERTAMA**\nPada gambar stimulus (kiri), titik terletak di dalam perpotongan persegi dan lingkaran. Cari gambar jawaban yang memiliki area di mana persegi dan lingkaran saling berpotongan sehingga titik bisa diletakkan di sana. Jawaban **C** adalah yang benar.\n\n**CONTOH KEDUA**\nTitik pada stimulus berada di dalam segitiga tetapi di luar persegi panjang. Cari gambar jawaban yang memiliki bagian segitiga yang tidak tertutup oleh persegi panjang. Jawaban **D** adalah yang benar."
-    },
-    {
-        "id": "tkd5",
-        "title": "Subtes 5 — TKD",
-        "desc": "Analogi kata. Cari hubungan antara kata ke-1 dan ke-2.",
-        "type": "text_choice",
-        "dataUrl": "https://cipta.my.id/psikotest/tkd3.txt",
-        "saveField": "x_05", "saveIndex": 15,
-        "logField": "x_08", "logIndex": 15,
-        "timer": 360,
-        "instructions": "Ini adalah persoalan bahasa. Anda akan disediakan 3 kata dan diminta mencari **KATA KE-4**. Kata ke-4 itu mempunyai hubungan tertentu dengan kata ke-3, seperti hubungan antara kata ke-1 dan kata ke-2.",
-        "exImgTop": "https://assets.lidan.co.id/gambar_tes/tkd3_1a.png",
-        "exImgBottom": "https://assets.lidan.co.id/gambar_tes/tkd3_1b.png",
-        "exNote": "**CONTOH PERTAMA**\nHubungan Nuri dan Burung: Nuri adalah jenis burung. Maka Sepat adalah? Sepat merupakan jenis ikan. Jawaban yang tepat adalah **B. IKAN**\n\n**CONTOH KEDUA**\nPanas lawan katanya dingin. Maka untuk Suka lawan katanya adalah? Jawaban yang benar adalah **C. DUKA**"
-    },
-    {
-        "id": "deret6",
-        "title": "Subtes 6 — Deret Angka",
-        "desc": "Cari dua angka berikutnya sesuai pola deret.",
-        "type": "text_input",
-        "dataUrl": "https://cipta.my.id/psikotest/tkd6_a.txt",
-        "saveField": "x_05", "saveIndex": 17,
-        "logField": "x_08", "logIndex": 17,
-        "timer": 660,
-        "instructions": "Setiap deret angka mempunyai pola tertentu. Tugas Anda adalah mencari **DUA ANGKA BERIKUTNYA** sesuai dengan irama deret tersebut.",
-        "exImgTop": "https://assets.lidan.co.id/gambar_tes/tkd6_1a.png",
-        "exImgBottom": "https://assets.lidan.co.id/gambar_tes/tkd6_1b.png",
-        "exNote": "**CONTOH PERTAMA**\nSetiap angka didapat dengan menambah 4 pada angka sebelumnya (20+4=24, 24+4=28, dst). Maka dua jawaban berikutnya adalah **28 32**\n\n**CONTOH KEDUA**\nSetiap angka didapat dengan menambah 5 pada angka sebelumnya. Maka dua jawaban berikutnya adalah **47 52**"
-    },
-    {
-        "id": "rmib",
-        "title": "RMIB — Minat Jabatan",
-        "desc": "Urutkan tugas dari yang paling Anda senangi (1) hingga paling tidak disenangi (12).",
-        "type": "ranking",
-        "dataUrl": "https://cipta.my.id/psikotest/rmib.txt",
-        "kolom": 1,
-        "totalKolom": 8,
-        "saveField": "x_06", "saveIndex": 2,
-        "timer": 0,
-        "instructions": "**BAYANGKAN ANDA** bergabung dalam tim proyek Wisma Kerja Nyata (WKN) yang bertujuan meningkatkan kesadaran Lingkungan Hidup.\n\nTugas Anda adalah mengurutkan daftar tugas berdasarkan minat:\n1. Berikan **NOMOR 1** pada tugas yang paling Anda sukai.\n2. Lanjutkan hingga **NOMOR 12** untuk yang paling tidak disukai.\n\nUrutkan berdasarkan **MINAT**, bukan kemampuan. Anda akan dilatih jika diperlukan.",
-        "exImgTop": "https://assets.lidan.co.id/gambar_tes/rmib_a.png",
-        "exImgBottom": "https://assets.lidan.co.id/gambar_tes/rmib_b.png",
-        "exNote": "**CATATAN PENTING**\nPastikan membaca setiap tugas dengan seksama. Ranking 1 adalah pekerjaan yang paling Anda sukai, hingga ranking 12 untuk yang paling tidak disukai."
-    },
-    {
-        "id": "epps",
-        "title": "Tes Kepribadian — EPPS",
-        "desc": "Pilih satu pernyataan dari pasangan yang paling menggambarkan diri Anda.",
-        "type": "ab_choice",
-        "dataUrl": "https://cipta.my.id/psikotest/epps.txt",
-        "saveField": "x_06", "saveIndex": 0,
-        "timer": 0,
-        "instructions": "Pilih salah satu pernyataan dari setiap pasangan yang **PALING SESUAI** dengan kepribadian Anda.\n\n1. Pilih **A ATAU B**.\n2. Tidak ada jawaban benar atau salah.\n3. Jawab jujur sesuai diri sendiri, bukan apa yang dianggap benar secara sosial.\n4. Jawab secara **SPONTAN** sesuai perasaan pertama Anda.",
-        "exImgTop": "https://assets.lidan.co.id/gambar_tes/epps_a.png",
-        "exImgBottom": "https://assets.lidan.co.id/gambar_tes/epps_b.png",
-        "exNote": "Perhatikan penjelasan di atas dan pilihlah salah satu pernyataan **A ATAU B** yang paling menggambarkan diri Anda saat ini."
-    }
+    id: "cfit1",
+    title: "Subtes 1 — CFIT",
+    desc: "Tes ini terdiri dari 4 subtes. Pada subtes pertama, lengkapi kotak keempat pada tiap soal dengan memilih 1 dari 6 pilihan jawaban yang tersedia.",
+    type: "image_single",
+    dataUrl: "https://cipta.my.id/psikotest/cfit1.txt",
+    saveField: "x_05", saveIndex: 0,
+    logField:  "x_08", logIndex:  0,
+    timer: 240,
+    instructions: "Perhatikan gambar soal yang ditampilkan di bagian atas.\nPilih SATU gambar dari 6 pilihan jawaban yang paling tepat melengkapi kotak kosong pada soal.\nIngat bahwa kotak-kotak tersebut membentuk pola yang berkesinambungan.\nKlik gambar pilihan Anda untuk langsung menjawab.\nJika tidak yakin, gunakan tombol Lewati dan kembali nanti.",
+    exImgTop:    "https://assets.lidan.co.id/gambar_tes/cfit1a.png",
+    exImgBottom: "https://assets.lidan.co.id/gambar_tes/cfit1b.png",
+    exNote: "Contoh pertama: Perhatikan pola ranting dengan cabang-cabang kecil. Setiap gambar menunjukkan perubahan bertahap — cabang semakin menunduk ke bawah dari kiri ke kanan. Jawaban C adalah yang paling sesuai karena posisi cabangnya lebih turun dibandingkan gambar sebelumnya.\n\nContoh kedua: Bayangkan bagian berwarna adalah tirai yang diturunkan bertahap. Dari kiri ke kanan, tirai semakin menutupi bagian bawah kotak. Jawaban E adalah yang paling sesuai karena tirai sudah hampir sepenuhnya turun."
+},
+{
+    id: "cfit2",
+    title: "Subtes 2 — CFIT",
+    desc: "Pada setiap soal terdapat 5 gambar. Temukan dan pilih tepat 2 gambar yang BERBEDA dari 3 gambar lainnya.",
+    type: "image_multi",
+    dataUrl: "https://cipta.my.id/psikotest/cfit2_a.txt",
+    saveField: "x_05", saveIndex: 1,
+    logField:  "x_08", logIndex:  1,
+    timer: 300,
+    instructions: "Dalam setiap soal terdapat deretan 5 gambar.\nTiga gambar memiliki karakteristik yang serupa, sementara 2 gambar lainnya berbeda.\nTugas Anda adalah menemukan dan memilih TEPAT 2 gambar yang BERBEDA dari gambar lainnya.\nHati-hati, tiga gambar lainnya berfungsi sebagai pengecoh — telitilah dalam menentukan pilihan.\nKlik 2 gambar tersebut, lalu tekan tombol Jawab untuk melanjutkan.",
+    exImgTop:    "https://assets.lidan.co.id/gambar_tes/cfit2a.png",
+    exImgBottom: "https://assets.lidan.co.id/gambar_tes/cfit2b.png",
+    exNote: "Contoh pertama: Gambar A, C, dan E berbentuk segitiga, sedangkan gambar B dan D berbentuk segi empat. Karena mayoritas gambar adalah segitiga, maka jawaban yang benar adalah B dan D.\n\nContoh kedua: Gambar A, B, dan D adalah lingkaran kosong, sedangkan gambar C dan E adalah lingkaran dengan pola titik-titik hitam. Karena mayoritas adalah lingkaran kosong, maka jawaban yang benar adalah C dan E."
+},
+{
+    id: "cfit3",
+    title: "Subtes 3 — CFIT",
+    desc: "Perhatikan pola dalam kotak besar yang berisi 4 kotak kecil, lalu lengkapi kotak kecil yang masih kosong dengan jawaban yang paling tepat.",
+    type: "image_single",
+    dataUrl: "https://cipta.my.id/psikotest/cfit3.txt",
+    saveField: "x_05", saveIndex: 2,
+    logField:  "x_08", logIndex:  2,
+    timer: 180,
+    instructions: "Pada setiap soal terdapat satu kotak besar yang berisi 4 kotak kecil bergambar, di mana salah satu kotak masih kosong.\nPerhatikan pola pada ketiga kotak kecil lainnya.\nPilih SATU jawaban yang paling tepat untuk melengkapi kotak yang kosong.\nKerjakan dengan cepat dan tepat sesuai waktu yang tersedia.",
+    exImgTop:    "https://assets.lidan.co.id/gambar_tes/cfit3a.png",
+    exImgBottom: "https://assets.lidan.co.id/gambar_tes/cfit3b.png",
+    exNote: "Contoh pertama: Ketiga kotak kecil memiliki pola garis miring dari kanan atas ke kiri bawah. Jawaban B adalah yang paling sesuai karena mengikuti pola yang sama.\n\nContoh kedua: Dua kotak di atas menunjukkan anak ayam yang posisinya saling berlawanan arah. Jawaban C adalah yang paling sesuai karena posisi anak ayam dengan corak hitam berlawanan arah dengan gambar di sebelahnya."
+},
+{
+    id: "cfit4",
+    title: "Subtes 4 — CFIT",
+    desc: "Perhatikan posisi titik terhadap bentuk-bentuk dalam kotak kiri, lalu pilih gambar jawaban yang memiliki komposisi serupa.",
+    type: "image_single",
+    dataUrl: "https://cipta.my.id/psikotest/cfit4.txt",
+    saveField: "x_05", saveIndex: 3,
+    logField:  "x_08", logIndex:  3,
+    timer: 150,
+    instructions: "Pada setiap soal terdapat kotak di sebelah kiri yang berisi titik dan 2 bentuk lainnya.\nPerhatikan posisi titik terhadap kedua bentuk tersebut (di dalam, di luar, atau di antara keduanya).\nTugas Anda adalah memilih gambar jawaban di sebelah kanan yang memiliki posisi titik dengan komposisi yang sama.\nKerjakan secepat mungkin karena waktu sangat terbatas.",
+    exImgTop:    "https://assets.lidan.co.id/gambar_tes/cfit4a.png",
+    exImgBottom: "https://assets.lidan.co.id/gambar_tes/cfit4b.png",
+    exNote: "Contoh pertama: Titik pada gambar stimulus berada di dalam area yang merupakan irisan antara persegi dan lingkaran. Cari gambar jawaban yang memiliki persegi dan lingkaran saling berpotongan dengan titik di dalam kedua bentuk sekaligus. Jawaban C adalah yang benar.\n\nContoh kedua: Titik pada gambar stimulus berada di dalam segitiga tetapi di luar persegi panjang. Cari gambar yang memiliki area segitiga di luar persegi panjang tempat titik dapat diletakkan. Jawaban D adalah yang benar."
+},
+{
+    id: "tkd5",
+    title: "Subtes 5 — TKD",
+    desc: "Soal berbentuk analogi kata. Temukan hubungan antara kata ke-1 dan ke-2, lalu terapkan hubungan yang sama untuk menemukan kata ke-4 dari kata ke-3.",
+    type: "text_choice",
+    dataUrl: "https://cipta.my.id/psikotest/tkd3.txt",
+    saveField: "x_05", saveIndex: 15,
+    logField:  "x_08", logIndex:  15,
+    timer: 360,
+    instructions: "Pada setiap soal, Anda akan menemukan 3 kata dengan hubungan tertentu.\nKata ke-4 harus memiliki hubungan yang sama dengan kata ke-3, seperti hubungan antara kata ke-1 dan kata ke-2.\nPilih SATU jawaban dari pilihan A, B, C, D, atau E yang paling tepat.\nJika tidak yakin, gunakan tombol Lewati dan kembali di akhir.\nTidak ada pengurangan nilai untuk jawaban salah.",
+    exImgTop:    "https://assets.lidan.co.id/gambar_tes/tkd3_1a.png",
+    exImgBottom: "https://assets.lidan.co.id/gambar_tes/tkd3_1b.png",
+    exNote: "Contoh pertama: Hubungan antara 'nuri' dan 'burung' adalah bahwa nuri merupakan salah satu jenis burung. Maka hubungan antara 'sepat' dan jawaban yang dicari adalah: sepat merupakan salah satu jenis ikan. Jawaban yang tepat adalah b. ikan.\n\nContoh kedua: 'Panas' adalah lawan dari 'dingin', maka lawan dari 'suka' adalah 'duka'. Jawaban yang benar adalah c. Duka."
+},
+{
+    id: "deret6",
+    title: "Subtes 6 — Deret Angka",
+    desc: "Temukan pola/irama deret angka, lalu tuliskan dua angka berikutnya dipisahkan dengan spasi.",
+    type: "text_input",
+    dataUrl: "https://cipta.my.id/psikotest/tkd6_a.txt",
+    saveField: "x_05", saveIndex: 17,
+    logField:  "x_08", logIndex:  17,
+    timer: 660,
+    instructions: "Setiap deret angka memiliki pola atau irama tertentu.\nTemukan polanya, lalu ketikkan DUA angka berikutnya dipisahkan dengan spasi.\nContoh jawaban: 28 32\nTekan Enter atau klik tombol Jawab untuk melanjutkan ke soal berikutnya.",
+    exImgTop:    "https://assets.lidan.co.id/gambar_tes/tkd6_1a.png",
+    exImgBottom: "https://assets.lidan.co.id/gambar_tes/tkd6_1b.png",
+    exNote: "Contoh pertama: Setiap angka berikutnya didapat dengan menambahkan 4 pada angka sebelumnya. Maka dua jawaban berikutnya adalah 28 32.\n\nContoh kedua: Setiap angka berikutnya didapat dengan menambahkan 5 pada angka sebelumnya. Maka dua jawaban berikutnya adalah 47 52.\n\nPola bisa berupa penjumlahan, pengurangan, perkalian, atau kombinasinya."
+},
+{
+    id: "rmib",
+    title: "RMIB — Minat Jabatan",
+    desc: "Bayangkan Anda bergabung dalam tim proyek. Urutkan 12 tugas dari yang paling Anda senangi (1) hingga paling tidak disenangi (12) berdasarkan MINAT, bukan kemampuan.",
+    type: "ranking",
+    dataUrl: "https://cipta.my.id/psikotest/rmib.txt",
+    dataUrlP: "https://cipta.my.id/psikotest/rmib_perempuan.txt",
+    kolom: 1,
+    totalKolom: 8,
+    saveField: "x_06", saveIndex: 2,
+    logField: null, logIndex: null,
+    timer: 0,
+    instructions: "Bayangkan Anda bergabung dengan 11 orang lainnya dalam tim proyek Wisma Kerja Nyata (WKN) yang disponsori oleh Supra Motor, bertujuan meningkatkan kesadaran tentang Kelestarian Lingkungan Hidup.\nDi setiap kegiatan, Anda akan diberikan daftar 12 tugas yang harus diurutkan berdasarkan minat Anda.\nBerikan nomor 1 pada tugas yang PALING Anda senangi, hingga nomor 12 untuk yang PALING TIDAK Anda senangi.\nUrutkan berdasarkan MINAT, bukan kemampuan (Anda akan dilatih jika diperlukan).\nSetiap nomor hanya boleh digunakan satu kali. Klik nomor untuk memilih, klik lagi untuk membatalkan.",
+    exImgTop:    "https://assets.lidan.co.id/gambar_tes/rmib_a.png",
+    exImgBottom: "https://assets.lidan.co.id/gambar_tes/rmib_b.png",
+    exNote: "Tidak ada jawaban benar atau salah dalam tes ini.\nIsilah sesuai dengan preferensi dan minat Anda yang sesungguhnya, bukan berdasarkan kemampuan Anda.\nPastikan semua 12 tugas telah diberi nomor sebelum lanjut ke skenario berikutnya.\nPeriksa kembali jawaban Anda untuk memastikan tidak ada tugas yang terlewat.",
+    showInstructionsOnce: true
+},
+{
+    id: "epps",
+    title: "Tes Kepribadian — EPPS",
+    desc: "Pilih satu pernyataan dari setiap pasangan (A atau B) yang paling menggambarkan diri Anda. Jawab dengan jujur dan spontan — tidak ada jawaban benar atau salah.",
+    type: "ab_choice",
+    dataUrl: "https://cipta.my.id/psikotest/epps.txt",
+    saveField: "x_06", saveIndex: 0,
+    logField: null, logIndex: null,
+    timer: 0,
+    instructions: "Pada setiap soal Anda akan melihat DUA pernyataan (A dan B).\nPilih SATU pernyataan yang paling sesuai dengan kepribadian Anda atau yang paling menggambarkan apa yang Anda sukai.\nJawab berdasarkan keadaan diri Anda yang sebenarnya, bukan yang Anda anggap diharapkan orang lain.\nJika kedua pernyataan terasa sulit dipilih, tetap pilih salah satu yang lebih mendekati diri Anda.\nJangan menghabiskan terlalu banyak waktu pada satu soal — jawab secara spontan sesuai perasaan pertama Anda.",
+    exImgTop:    "https://assets.lidan.co.id/gambar_tes/epps_a.png",
+    exImgBottom: "https://assets.lidan.co.id/gambar_tes/epps_b.png",
+    exNote: "Contoh:\nA. Saya lebih suka bekerja sendiri.\nB. Saya lebih suka bekerja dalam tim.\n\nPilih pernyataan yang paling mencerminkan kepribadian Anda sehari-hari.\nPerhatikan: Jawab sesuai diri Anda yang sesungguhnya, bukan berdasarkan apa yang menurut Anda benar secara sosial."
+}
+    /* ── Tambah tes baru di sini ──────────────────────────────────── */
 ];
 
 /* ╔═══════════════════════════════════════════════════════════════════╗
