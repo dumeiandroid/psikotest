@@ -278,9 +278,6 @@
             /* ── Progress bar ── */
             .progress-wrap { margin-bottom: 8px; }
 
-            /* Beri ruang bawah agar konten tidak tertutup sticky footer */
-            #testCard { padding-bottom: 70px; }
-
             /* ── topBar: kompak, tombol logout disembunyikan ── */
             #topBar {
                 margin-bottom: 6px;
@@ -294,20 +291,16 @@
             /* Sembunyikan logout di topBar — pindah ke bottomBar */
             #topBar > .btn { display: none; }
 
-            /* ── bottomBar: sticky footer ── */
+            /* ── bottomBar: judul + progress + timer + logout ── */
             #bottomBar {
-                position: fixed;
-                bottom: 0; left: 0; right: 0;
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
                 gap: 8px;
-                padding: 10px 12px;
-                padding-bottom: calc(10px + env(safe-area-inset-bottom));
-                background: white;
+                flex-wrap: wrap;
+                margin-top: 10px;
+                padding-top: 10px;
                 border-top: 1px solid var(--border);
-                box-shadow: 0 -2px 12px rgba(0,0,0,0.08);
-                z-index: 100;
             }
             .bb-info {
                 display: flex; flex-direction: column; gap: 2px; flex: 1;
@@ -1364,15 +1357,14 @@ async function saveRanking(dataStr) {
     showLoader('Menyimpan kolom ' + cfg.kolom + '...');
     const idX = localStorage.getItem('db_id');
     try {
-        // Gunakan currentUser langsung — tidak perlu apiGet lagi
-        let parts = (currentUser[cfg.saveField]||'').split('|');
+        const cur = await apiGet(idX);
+        let parts = (cur.data[cfg.saveField]||'').split('|');
         while(parts.length<=cfg.saveIndex) parts.push('');
         parts[cfg.saveIndex] = dataStr;
-        const newVal = parts.join('|');
-        await apiPut(idX, { [cfg.saveField]: newVal });
-        // Update currentUser lokal agar kolom berikutnya pakai data terbaru
-        currentUser[cfg.saveField] = newVal;
+        await apiPut(idX, { [cfg.saveField]: parts.join('|') });
         localStorage.removeItem('_st_' + cfg._taskId);
+        // Refresh user data lalu lanjut
+        currentUser = cur.data;
         afterTest();
     } catch(e) { alert('Gagal menyimpan: ' + e.message); }
     finally { hideLoader(); }
