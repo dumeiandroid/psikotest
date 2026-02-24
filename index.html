@@ -308,19 +308,7 @@
             .bb-title    { font-size: 0.8em; font-weight: 700; color: var(--primary); }
             .bb-progress { font-size: 0.72em; color: var(--muted); }
 
-            #timerDisplayBottom {
-                padding: 5px 10px;
-                background: var(--bg);
-                border: 2px solid var(--border);
-                border-radius: 8px;
-                font-weight: 700; font-size: 0.88em;
-                transition: all 0.3s;
-                white-space: nowrap;
-            }
-            #timerDisplayBottom.warning {
-                color: var(--danger); border-color: var(--danger);
-                animation: pulse 1s infinite;
-            }
+            #timerDisplay { display: none !important; } /* timer hanya di console */
             .btn-logout-bottom {
                 padding: 7px 14px; font-size: 0.8em;
                 width: auto; border-radius: 8px;
@@ -498,7 +486,6 @@
                 <span class="bb-title" id="bbTitle"></span>
                 <span class="bb-progress" id="bbProgress"></span>
             </div>
-            <span id="timerDisplayBottom" style="display:none"></span>
             <button class="btn-logout-bottom" onclick="confirmLogout()">⏻ Logout</button>
         </div>
     </div>
@@ -1042,16 +1029,11 @@ async function startTest() {
         document.getElementById('testTitle').innerText = cfg.title;
         showScreen('screenTest');
 
+        // Timer selalu tersembunyi di UI — hanya tampil di console (Inspect)
+        document.getElementById('timerDisplay').classList.add('hidden');
         if (cfg.timer > 0) {
-            const el = document.getElementById('timerDisplay');
-            el.classList.remove('hidden');
             updateTimerDisplay();
             startTimer();
-        } else {
-            document.getElementById('timerDisplay').classList.add('hidden');
-            // Sembunyikan timer bottom juga
-            const tb = document.getElementById('timerDisplayBottom');
-            if (tb) tb.style.display = 'none';
         }
 
         renderQuestion();
@@ -1097,16 +1079,9 @@ function startTimer() {
 function updateTimerDisplay() {
     const m = String(Math.floor(timeLeft/60)).padStart(2,'0');
     const s = String(timeLeft%60).padStart(2,'0');
+    // Tampil di console saja — buka DevTools > Console untuk melihat
     if (timeLeft % 10 === 0 || timeLeft <= 10) {
         console.log('[TIMER] Sisa waktu: ' + m + ':' + s + ' (' + timeLeft + ' detik)');
-    }
-    // Update timerDisplayBottom (HP) — timerDisplay tetap hidden di topBar
-    const tb = document.getElementById('timerDisplayBottom');
-    if (tb) {
-        tb.style.display = '';
-        tb.innerText = '⏱ ' + m + ':' + s;
-        if (timeLeft <= 30) tb.classList.add('warning');
-        else tb.classList.remove('warning');
     }
 }
 
