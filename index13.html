@@ -262,134 +262,10 @@
 
         .hidden { display: none !important; }
 
-        /* ═══════════════════════════════════════
-           MOBILE RESPONSIVE — max 600px
-        ═══════════════════════════════════════ */
         @media (max-width: 600px) {
-
-            /* ── Global: rapatkan kiri-kanan ── */
-            body { padding: 8px 4px; }
-
-            .card {
-                padding: 16px 12px;
-                border-radius: 12px;
-            }
-
-            /* ── Progress bar ── */
-            .progress-wrap { margin-bottom: 8px; }
-
-            /* ── topBar: kompak, tombol logout disembunyikan ── */
-            #topBar {
-                margin-bottom: 6px;
-                gap: 6px;
-                flex-wrap: nowrap;
-                align-items: center;
-            }
-            .top-title    { font-size: 0.82em; }
-            #progressInfo { font-size: 0.78em; white-space: nowrap; }
-
-            /* Sembunyikan logout di topBar — pindah ke bottomBar */
-            #topBar > .btn { display: none; }
-
-            /* ── bottomBar: judul + progress + timer + logout ── */
-            #bottomBar {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                gap: 8px;
-                flex-wrap: wrap;
-                margin-top: 10px;
-                padding-top: 10px;
-                border-top: 1px solid var(--border);
-            }
-            .bb-info {
-                display: flex; flex-direction: column; gap: 2px; flex: 1;
-            }
-            .bb-title    { font-size: 0.8em; font-weight: 700; color: var(--primary); }
-            .bb-progress { font-size: 0.72em; color: var(--muted); }
-
-            #timerDisplayBottom {
-                padding: 5px 10px;
-                background: var(--bg);
-                border: 2px solid var(--border);
-                border-radius: 8px;
-                font-weight: 700; font-size: 0.88em;
-                transition: all 0.3s;
-                white-space: nowrap;
-            }
-            #timerDisplayBottom.warning {
-                color: var(--danger); border-color: var(--danger);
-                animation: pulse 1s infinite;
-            }
-            .btn-logout-bottom {
-                padding: 7px 14px; font-size: 0.8em;
-                width: auto; border-radius: 8px;
-                background: white; color: var(--muted);
-                border: 2px solid var(--border);
-                cursor: pointer; font-weight: 600;
-                display: inline-flex; align-items: center; gap: 4px;
-                font-family: inherit;
-            }
-            .btn-logout-bottom:active { opacity: 0.7; }
-
-            /* ── Gambar soal: full lebar ── */
-            .q-image {
-                max-width: 100%;
-                width: 100%;
-                margin-bottom: 10px;
-            }
-
-            /* ── Pilihan gambar: 5 per baris, lebih besar ── */
-            .options-img {
-                gap: 6px;
-                margin-bottom: 8px;
-            }
-            .options-img img {
-                width: calc(20% - 5px);
-                min-width: 52px;
-            }
-            .opt-check-wrap label img {
-                width: calc(20% - 5px);
-                min-width: 52px;
-            }
-
-            /* ── Action bar ── */
-            .action-bar { gap: 8px; margin-top: 6px; }
-            .action-bar .btn { padding: 9px 16px; font-size: 0.85em; }
-
-            /* ── Text choice ── */
-            .opt-text { padding: 10px 12px; font-size: 0.88em; }
-
-            /* ── AB Choice ── */
-            .opt-ab { padding: 13px 14px; font-size: 0.88em; }
-
-            /* ── RANKING: sembunyikan kolom No ── */
-            .ranking-table th:first-child,
-            .ranking-table td:first-child { display: none; }
-
-            .btn-rank {
-                width: 27px; height: 27px;
-                font-size: 0.74em; border-radius: 5px;
-            }
-            .btn-container { gap: 3px; }
-            .ranking-table th,
-            .ranking-table td { padding: 7px 7px; font-size: 0.82em; }
-
-            #deskripsiBox {
-                padding: 10px 12px; font-size: 0.82em;
-                margin-bottom: 12px;
-            }
-
-            /* ── Start screen ── */
-            .instr-section { padding: 12px 14px; margin-bottom: 14px; }
-            .ex-note       { padding: 10px 13px; font-size: 0.84em; }
-            .page-title    { font-size: 1.25em; }
-            .page-sub      { font-size: 0.85em; }
-        }
-
-        /* Desktop: bottomBar tidak tampil */
-        @media (min-width: 601px) {
-            #bottomBar { display: none !important; }
+            .card { padding: 20px; }
+            .options-img img { width: 78px; }
+            .opt-check-wrap label img { width: 82px; }
         }
     </style>
 </head>
@@ -492,15 +368,6 @@
         <div class="progress-wrap"><div id="progressBar" style="width:0%"></div></div>
         <div id="questionContent"></div>
         <div class="action-bar" id="actionBar"></div>
-        <!-- Bottom bar: tampil di HP saja -->
-        <div id="bottomBar">
-            <div class="bb-info">
-                <span class="bb-title" id="bbTitle"></span>
-                <span class="bb-progress" id="bbProgress"></span>
-            </div>
-            <span id="timerDisplayBottom" style="display:none"></span>
-            <button class="btn-logout-bottom" onclick="confirmLogout()">⏻ Logout</button>
-        </div>
     </div>
 </div>
 
@@ -1049,9 +916,6 @@ async function startTest() {
             startTimer();
         } else {
             document.getElementById('timerDisplay').classList.add('hidden');
-            // Sembunyikan timer bottom juga
-            const tb = document.getElementById('timerDisplayBottom');
-            if (tb) tb.style.display = 'none';
         }
 
         renderQuestion();
@@ -1097,17 +961,11 @@ function startTimer() {
 function updateTimerDisplay() {
     const m = String(Math.floor(timeLeft/60)).padStart(2,'0');
     const s = String(timeLeft%60).padStart(2,'0');
+    // Log ke console setiap 10 detik atau ketika <=10 detik
     if (timeLeft % 10 === 0 || timeLeft <= 10) {
         console.log('[TIMER] Sisa waktu: ' + m + ':' + s + ' (' + timeLeft + ' detik)');
     }
-    // Update timerDisplayBottom (HP) — timerDisplay tetap hidden di topBar
-    const tb = document.getElementById('timerDisplayBottom');
-    if (tb) {
-        tb.style.display = '';
-        tb.innerText = '⏱ ' + m + ':' + s;
-        if (timeLeft <= 30) tb.classList.add('warning');
-        else tb.classList.remove('warning');
-    }
+    // Timer display tetap hidden di UI
 }
 
 /* ══════════════════════════════════════════════════════════════════
@@ -1209,12 +1067,6 @@ function updateProgress() {
         infoText += ` · ⟳ ${skippedIndices.length} soal dilewati`;
     }
     document.getElementById('progressInfo').innerText = infoText;
-
-    // Sync bottom bar (HP)
-    const bbTitle = document.getElementById('bbTitle');
-    const bbProg  = document.getElementById('bbProgress');
-    if (bbTitle)  bbTitle.innerText    = cfg.title || '';
-    if (bbProg)   bbProg.innerText     = infoText;
 }
 
 /* ── image_single ────────────────────────────────────────────── */
@@ -1338,14 +1190,14 @@ function renderRanking() {
         const nums = [1,2,3,4,5,6,7,8,9,10,11,12]
             .map(n => `<button class="btn-rank" id="br-${r}-${n}" onclick="rankSel(${r},${n})">${n}</button>`)
             .join('');
-        return `<tr><td class="col-no" style="width:36px">${r+1}</td><td>${q.text}</td><td><div class="btn-container">${nums}</div></td></tr>`;
+        return `<tr><td style="width:36px">${r+1}</td><td>${q.text}</td><td><div class="btn-container">${nums}</div></td></tr>`;
     }).join('');
 
     document.getElementById('questionContent').innerHTML =
         `<div id="deskripsiBox">${cfg._pembuka||''}</div>
          <div style="overflow-x:auto">
          <table class="ranking-table">
-           <thead><tr><th class="col-no" style="width:36px">No</th><th>Pernyataan</th><th style="width:480px">Pilihan Ranking</th></tr></thead>
+           <thead><tr><th style="width:36px">No</th><th>Pernyataan</th><th style="width:480px">Pilihan Ranking</th></tr></thead>
            <tbody>${rows}</tbody>
          </table></div>`;
     document.getElementById('actionBar').innerHTML = '';
