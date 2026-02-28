@@ -1,0 +1,1480 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Tes</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --success: #16a34a;
+            --danger: #dc2626;
+            --warning: #d97706;
+            --bg: #f1f5f9;
+            --card: #ffffff;
+            --text: #1e293b;
+            --muted: #64748b;
+            --border: #e2e8f0;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 24px 16px;
+        }
+
+        /* ===== LOADER ===== */
+        #globalLoader {
+            position: fixed; inset: 0;
+            background: rgba(255,255,255,0.96);
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            z-index: 9999; gap: 14px;
+        }
+        .spinner {
+            width: 42px; height: 42px;
+            border: 4px solid #e2e8f0;
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.75s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        #loaderText { color: var(--muted); font-size: 0.9em; }
+
+        /* ===== SCREENS ===== */
+        .screen { display: none; }
+        .screen.active { display: block; }
+
+        /* ===== CARD ===== */
+        .card {
+            background: var(--card);
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+            padding: 32px;
+            max-width: 480px;
+            margin: 0 auto;
+        }
+        .card-wide  { max-width: 920px;  }
+        .card-xl    { max-width: 1160px; }
+
+        /* ===== TYPOGRAPHY ===== */
+        .page-title { font-size: 1.5em; font-weight: 700; color: var(--primary); margin-bottom: 6px; }
+        .page-sub   { color: var(--muted); font-size: 0.9em; line-height: 1.6; margin-bottom: 20px; }
+        h3 { font-size: 1em; font-weight: 600; margin-bottom: 14px; }
+
+        /* ===== FORM ===== */
+        .form-group { margin-bottom: 14px; }
+        .form-group label { display: block; font-size: 0.85em; font-weight: 600; color: var(--muted); margin-bottom: 5px; }
+        .form-group input {
+            width: 100%; padding: 11px 14px;
+            border: 2px solid var(--border); border-radius: 10px;
+            font-size: 0.95em; outline: none; transition: border 0.2s;
+            background: var(--bg);
+        }
+        .form-group input:focus { border-color: var(--primary); background: white; }
+
+        /* ===== BUTTONS ===== */
+        .btn {
+            display: inline-flex; align-items: center; justify-content: center;
+            gap: 8px; padding: 11px 24px;
+            border: none; border-radius: 10px;
+            font-size: 0.95em; font-weight: 600;
+            cursor: pointer; transition: all 0.2s;
+            width: 100%;
+        }
+        .btn + .btn { margin-top: 10px; }
+        .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+        .btn-primary  { background: var(--primary); color: white; }
+        .btn-primary:hover:not(:disabled)  { background: var(--primary-dark); transform: translateY(-1px); }
+        .btn-success  { background: var(--success); color: white; }
+        .btn-success:hover:not(:disabled)  { background: #15803d; }
+        .btn-danger   { background: var(--danger);  color: white; }
+        .btn-danger:hover:not(:disabled)   { background: #b91c1c; }
+        .btn-outline  { background: white; color: var(--muted); border: 2px solid var(--border); }
+        .btn-outline:hover:not(:disabled)  { border-color: var(--primary); color: var(--primary); }
+        .btn-sm { padding: 8px 18px; font-size: 0.85em; width: auto; }
+
+        /* ===== STATUS BOX ===== */
+        .status-box {
+            background: var(--bg); border-left: 4px solid var(--primary);
+            padding: 14px 18px; border-radius: 8px; margin-bottom: 18px;
+        }
+        .status-box .label { font-size: 0.8em; color: var(--muted); margin-bottom: 4px; }
+        .status-box .value { font-weight: 700; font-size: 1.05em; color: var(--text); }
+        .status-done { border-color: var(--success); }
+        .status-done .value { color: var(--success); }
+
+        /* ===== DASHBOARD TASK LIST ===== */
+        .task-grid { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+        .task-item {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 12px 16px; border-radius: 10px;
+            border: 2px solid var(--border); background: white;
+            transition: all 0.2s;
+        }
+        .task-item.current { border-color: var(--primary); background: #eff6ff; cursor: pointer; }
+        .task-item.current:hover { background: #dbeafe; box-shadow: 0 4px 12px rgba(37,99,235,0.15); transform: translateY(-1px); transition: all 0.2s; }
+        .task-item.done    { border-color: #bbf7d0; background: #f0fdf4; }
+        .task-item.locked  { opacity: 0.45; }
+        .task-item .task-num  { width: 28px; height: 28px; border-radius: 50%; background: var(--border); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85em; flex-shrink: 0; }
+        .task-item.current .task-num { background: var(--primary); color: white; }
+        .task-item.done    .task-num { background: var(--success); color: white; }
+        .task-item .task-name { flex: 1; margin: 0 12px; font-size: 0.9em; font-weight: 500; }
+        .task-item .task-badge { font-size: 0.75em; padding: 3px 8px; border-radius: 99px; font-weight: 600; }
+        .badge-done    { background: #dcfce7; color: var(--success); }
+        .badge-current { background: #dbeafe; color: var(--primary); }
+        .badge-locked  { background: #f1f5f9; color: var(--muted); }
+
+        /* ===== TEST ENGINE ===== */
+        #topBar {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 20px; gap: 12px; flex-wrap: wrap;
+        }
+        .top-title { font-weight: 700; color: var(--primary); font-size: 1em; }
+        #progressInfo { color: var(--muted); font-size: 0.85em; }
+        #timerDisplay {
+            padding: 6px 14px; background: var(--bg);
+            border: 2px solid var(--border); border-radius: 8px;
+            font-weight: 700; font-size: 1em; transition: all 0.3s;
+        }
+        #timerDisplay.warning { color: var(--danger); border-color: var(--danger); animation: pulse 1s infinite; }
+        @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.6; } }
+
+        .progress-wrap { background: var(--border); border-radius: 99px; height: 5px; margin-bottom: 24px; }
+        #progressBar   { height: 100%; background: var(--primary); border-radius: 99px; transition: width 0.4s; }
+
+        /* question area */
+        #questionContent { min-height: 120px; }
+
+        .q-label { font-size: 0.8em; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-bottom: 8px; }
+        .q-text  { font-size: 1em; line-height: 1.65; color: var(--text); margin-bottom: 20px; }
+        .q-image { display: block; max-width: 300px; margin: 0 auto 20px; border-radius: 8px; border: 2px solid var(--border); }
+
+        /* options */
+        .options-img { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-bottom: 16px; }
+        .options-img img {
+            width: 105px; cursor: pointer; border: 3px solid var(--border);
+            border-radius: 10px; transition: all 0.2s;
+        }
+        .options-img img:hover { border-color: var(--primary); transform: translateY(-3px); box-shadow: 0 6px 16px rgba(37,99,235,0.2); }
+
+        .opt-check-wrap input { display: none; }
+        .opt-check-wrap label img {
+            width: 115px; cursor: pointer; border: 3px solid var(--border);
+            border-radius: 10px; transition: all 0.2s; display: block;
+        }
+        .opt-check-wrap input:checked + label img { border-color: var(--primary); transform: translateY(-4px); box-shadow: 0 6px 18px rgba(37,99,235,0.3); }
+
+        .options-text { display: flex; flex-direction: column; gap: 9px; margin-bottom: 16px; }
+        .opt-text {
+            padding: 13px 16px; text-align: left; background: white;
+            border: 2px solid var(--border); border-radius: 10px;
+            cursor: pointer; transition: all 0.2s; font-size: 0.9em; line-height: 1.5; width: 100%;
+        }
+        .opt-text:hover { border-color: var(--primary); background: #eff6ff; transform: translateX(4px); }
+
+        .options-ab { display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; }
+        .opt-ab {
+            padding: 16px 18px; text-align: left; background: white;
+            border: 2px solid var(--border); border-radius: 12px;
+            cursor: pointer; transition: all 0.2s; font-size: 0.9em; line-height: 1.6; width: 100%;
+        }
+        .opt-ab:hover { border-color: var(--primary); background: #eff6ff; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(37,99,235,0.12); }
+
+        .input-wrap { display: flex; flex-direction: column; align-items: center; gap: 14px; margin-bottom: 16px; }
+        #userAnswer {
+            padding: 13px 18px; font-size: 1.05em; width: 100%; max-width: 320px;
+            text-align: center; border: 2px solid var(--border); border-radius: 10px;
+            outline: none; transition: border 0.2s;
+        }
+        #userAnswer:focus { border-color: var(--primary); }
+
+        /* action bar */
+        .action-bar { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 12px; }
+        .action-bar .btn { width: auto; }
+
+        /* ranking */
+        #deskripsiBox {
+            margin-bottom: 18px; padding: 14px 18px;
+            background: #f8fafc; border-left: 4px solid var(--primary);
+            border-radius: 4px; line-height: 1.6; color: var(--muted); font-size: 0.88em;
+        }
+        .ranking-table { width: 100%; border-collapse: collapse; }
+        .ranking-table th, .ranking-table td { border: 1px solid var(--border); padding: 9px 12px; text-align: left; font-size: 0.88em; }
+        .ranking-table th { background: var(--primary); color: white; font-weight: 600; }
+        .ranking-table tr:nth-child(even) td { background: #f8fafc; }
+        .btn-container { display: flex; flex-wrap: wrap; gap: 4px; }
+        .btn-rank {
+            width: 34px; height: 34px; cursor: pointer;
+            border: 1px solid var(--border); background: white;
+            border-radius: 6px; font-weight: 600; font-size: 0.82em;
+            transition: all 0.15s; display: inline-flex; align-items: center; justify-content: center;
+        }
+        .btn-rank:hover  { background: #eff6ff; border-color: var(--primary); }
+        .btn-rank.sel    { background: var(--success); color: white; border-color: #15803d; }
+        .btn-rank.gone   { display: none !important; }
+
+        /* done */
+        #screenDone { text-align: center; }
+        .done-icon { font-size: 3.5em; margin-bottom: 12px; }
+
+        /* ===== START SCREEN ===== */
+        .instr-section {
+            background: #eff6ff; border-left: 4px solid var(--primary);
+            border-radius: 8px; padding: 16px 20px; margin-bottom: 24px;
+        }
+        .instr-section .instr-heading {
+            font-size: 0.75em; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.08em; color: var(--primary); margin-bottom: 8px;
+        }
+        .instr-section p {
+            font-size: 0.93em; line-height: 1.75; color: var(--text);
+            white-space: pre-line;
+        }
+        .example-block { margin-bottom: 24px; }
+        .example-block .ex-heading {
+            font-size: 0.75em; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.08em; color: var(--muted); margin-bottom: 12px;
+        }
+        .example-images {
+            display: flex; flex-direction: column; gap: 12px; align-items: center;
+        }
+        .example-images img {
+            max-width: 100%; border-radius: 10px;
+            border: 2px solid var(--border);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+        }
+        .ex-note {
+            margin-top: 16px; padding: 14px 18px;
+            background: #f8fafc; border-radius: 8px;
+            font-size: 0.88em; line-height: 1.75; color: var(--muted);
+            white-space: pre-line;
+        }
+        .start-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+        .timer-note { font-size: 0.78em; color: var(--muted); text-align: center; margin-top: 4px; }
+
+        /* welcome name */
+        .welcome { font-size: 1.1em; font-weight: 700; margin-bottom: 4px; }
+        .welcome-sub { font-size: 0.85em; color: var(--muted); margin-bottom: 20px; }
+
+        .hidden { display: none !important; }
+
+        /* ═══════════════════════════════════════
+           MOBILE RESPONSIVE — max 600px
+        ═══════════════════════════════════════ */
+        @media (max-width: 600px) {
+
+            /* ── Global: rapatkan kiri-kanan ── */
+            body { padding: 8px 4px; }
+
+            .card {
+                padding: 16px 12px;
+                border-radius: 12px;
+            }
+
+            /* ── Progress bar ── */
+            .progress-wrap { margin-bottom: 8px; }
+
+            /* Beri ruang bawah agar konten tidak tertutup sticky footer */
+            #testCard { padding-bottom: 70px; }
+
+            /* ── topBar: kompak, tombol logout disembunyikan ── */
+            #topBar {
+                margin-bottom: 6px;
+                gap: 6px;
+                flex-wrap: nowrap;
+                align-items: center;
+            }
+            .top-title    { font-size: 0.82em; }
+            #progressInfo { font-size: 0.78em; white-space: nowrap; }
+
+            /* Sembunyikan logout di topBar — pindah ke bottomBar */
+            #topBar > .btn { display: none; }
+
+            /* ── bottomBar: sticky footer ── */
+            #bottomBar {
+                position: fixed;
+                bottom: 0; left: 0; right: 0;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 8px;
+                padding: 10px 12px;
+                padding-bottom: calc(10px + env(safe-area-inset-bottom));
+                background: white;
+                border-top: 1px solid var(--border);
+                box-shadow: 0 -2px 12px rgba(0,0,0,0.08);
+                z-index: 100;
+            }
+            .bb-info {
+                display: flex; flex-direction: column; gap: 2px; flex: 1;
+            }
+            .bb-title    { font-size: 0.8em; font-weight: 700; color: var(--primary); }
+            .bb-progress { font-size: 0.72em; color: var(--muted); }
+
+            #timerDisplay { display: none !important; } /* timer hanya di console */
+            .btn-logout-bottom {
+                padding: 7px 14px; font-size: 0.8em;
+                width: auto; border-radius: 8px;
+                background: white; color: var(--muted);
+                border: 2px solid var(--border);
+                cursor: pointer; font-weight: 600;
+                display: inline-flex; align-items: center; gap: 4px;
+                font-family: inherit;
+            }
+            .btn-logout-bottom:active { opacity: 0.7; }
+
+            /* ── Gambar soal: full lebar ── */
+            .q-image {
+                max-width: 100%;
+                width: 100%;
+                margin-bottom: 10px;
+            }
+
+            /* ── image_single: pilihan 5 per baris ── */
+            .options-img {
+                gap: 6px;
+                margin-bottom: 8px;
+            }
+            .options-img img {
+                width: calc(20% - 5px);
+                min-width: 52px;
+            }
+
+            /* ── image_multi: pertahankan tampilan asli ── */
+            .opt-check-wrap label img {
+                width: 115px;
+            }
+
+            /* ── Action bar ── */
+            .action-bar { gap: 8px; margin-top: 6px; }
+            .action-bar .btn { padding: 9px 16px; font-size: 0.85em; }
+
+            /* ── Text choice ── */
+            .opt-text { padding: 10px 12px; font-size: 0.88em; }
+
+            /* ── AB Choice ── */
+            .opt-ab { padding: 13px 14px; font-size: 0.88em; }
+
+            /* ── RANKING: sembunyikan kolom No ── */
+            .ranking-table th:first-child,
+            .ranking-table td:first-child { display: none; }
+
+            .btn-rank {
+                width: 27px; height: 27px;
+                font-size: 0.74em; border-radius: 5px;
+            }
+            .btn-container { gap: 3px; }
+            .ranking-table th,
+            .ranking-table td { padding: 7px 7px; font-size: 0.82em; }
+
+            #deskripsiBox {
+                padding: 10px 12px; font-size: 0.82em;
+                margin-bottom: 12px;
+            }
+
+            /* ── Start screen ── */
+            .instr-section { padding: 12px 14px; margin-bottom: 14px; }
+            .ex-note       { padding: 10px 13px; font-size: 0.84em; }
+            .page-title    { font-size: 1.25em; }
+            .page-sub      { font-size: 0.85em; }
+        }
+
+        /* Desktop: bottomBar tidak tampil */
+        @media (min-width: 601px) {
+            #bottomBar { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- LOADER -->
+<div id="globalLoader" class="hidden">
+    <div class="spinner"></div>
+    <p id="loaderText">Memuat...</p>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SCREEN: LOGIN
+══════════════════════════════════════════ -->
+<div id="screenLogin" class="screen">
+    <div class="card">
+        <div class="page-title">Portal Tes</div>
+        <p class="page-sub">Masukkan nomor token Anda untuk memulai.</p>
+        <div class="form-group">
+            <label>Token</label>
+            <input type="text" id="tokenInput" placeholder="Contoh: TKN-001">
+        </div>
+        <button class="btn btn-primary" id="btnLogin" onclick="handleLogin()">Masuk</button>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SCREEN: BIODATA
+══════════════════════════════════════════ -->
+<div id="screenBio" class="screen">
+    <div class="card">
+        <div class="page-title">Biodata Peserta</div>
+        <p class="page-sub">Lengkapi data diri sebelum memulai tes.</p>
+        <div id="bioFormFields"></div>
+        <button class="btn btn-primary" id="btnBio" onclick="saveBiodata()">Simpan &amp; Lanjutkan</button>
+        <button class="btn btn-outline" style="margin-top:10px" onclick="logout()">Logout</button>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SCREEN: DASHBOARD
+══════════════════════════════════════════ -->
+<div id="screenDash" class="screen">
+    <div class="card">
+        <div class="welcome" id="welcomeName">Halo!</div>
+        <div class="welcome-sub" id="welcomeSub">Selesaikan semua tes berikut secara berurutan.</div>
+        <div class="task-grid" id="taskGrid"></div>
+        <button class="btn btn-danger" style="margin-top:10px" onclick="logout()">Logout</button>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SCREEN: START (intro sebelum tes)
+══════════════════════════════════════════ -->
+<div id="screenStart" class="screen">
+    <div class="card card-wide">
+
+        <!-- Judul tes -->
+        <div class="page-title" id="startTitle" style="margin-bottom:20px"></div>
+
+        <!-- Instruksi Pengerjaan -->
+        <div class="instr-section">
+            <div class="instr-heading">📋 Instruksi Pengerjaan</div>
+            <p id="startInstructions"></p>
+        </div>
+
+        <!-- Contoh Soal & Jawaban -->
+        <div class="example-block" id="exampleBlock">
+            <div class="ex-heading">📖 Contoh Soal &amp; Jawaban</div>
+            <div class="example-images">
+                <img id="exImgTop"    src="" alt="Contoh Soal">
+                <img id="exImgBottom" src="" alt="Contoh Jawaban">
+            </div>
+            <!-- Penjelasan contoh -->
+            <div class="ex-note" id="exNote"></div>
+        </div>
+
+        <!-- Tombol aksi -->
+        <div class="start-actions">
+            <button class="btn btn-primary" id="btnStart" onclick="startTest()">▶ Mulai Tes</button>
+            <!-- tombol kembali dihapus, alur satu arah -->
+            <div class="timer-note" id="timerNote"></div>
+            <button class="btn btn-outline btn-sm" style="margin-top:6px;width:auto;align-self:center" onclick="logout()">⏻ Logout</button>
+        </div>
+
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SCREEN: TEST ENGINE
+══════════════════════════════════════════ -->
+<div id="screenTest" class="screen">
+    <div class="card card-wide card-xl" id="testCard">
+        <div id="topBar">
+            <span class="top-title" id="testTitle"></span>
+            <span id="progressInfo"></span>
+            <span id="timerDisplay" class="hidden"></span>
+            <button class="btn btn-outline btn-sm" style="width:auto;padding:5px 14px;font-size:0.8em" onclick="confirmLogout()">⏻ Logout</button>
+        </div>
+        <div class="progress-wrap"><div id="progressBar" style="width:0%"></div></div>
+        <div id="questionContent"></div>
+        <div class="action-bar" id="actionBar"></div>
+        <!-- Bottom bar: tampil di HP saja -->
+        <div id="bottomBar">
+            <div class="bb-info">
+                <span class="bb-title" id="bbTitle"></span>
+                <span class="bb-progress" id="bbProgress"></span>
+            </div>
+            <button class="btn-logout-bottom" onclick="confirmLogout()">⏻ Logout</button>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SCREEN: DONE
+══════════════════════════════════════════ -->
+<div id="screenDone" class="screen">
+    <div class="card" style="text-align:center">
+        <div class="done-icon" id="doneIcon">✅</div>
+        <div class="page-title" id="doneTitle" style="justify-content:center">Tes Selesai!</div>
+        <p class="page-sub" id="doneDesc" style="text-align:center;margin-top:8px"></p>
+        <button class="btn btn-primary" onclick="afterTest()">Lanjut</button>
+    </div>
+</div>
+
+<script>
+/* ╔═══════════════════════════════════════════════════════════════════╗
+   ║  KONFIGURASI — Edit bagian ini untuk mengatur semua tes          ║
+   ╚═══════════════════════════════════════════════════════════════════╝
+
+   FIELD CONFIG per tes:
+   ┌─────────────┬────────────────────────────────────────────────────┐
+   │ id          │ ID unik (string, tanpa spasi)                      │
+   │ title       │ Judul tes yang tampil                              │
+   │ desc        │ Instruksi singkat untuk peserta                    │
+   │ type        │ Tipe engine: "image_single" | "image_multi" |      │
+   │             │   "text_choice" | "text_input" | "ab_choice" |     │
+   │             │   "ranking"                                         │
+   │ dataUrl     │ URL file .txt (JSON) soal                          │
+   │ saveField   │ Kolom DB: "x_05" | "x_06" | "x_07"               │
+   │ saveIndex   │ Index pipe (0, 1, 2, …)                            │
+   │ logField    │ Kolom log jawaban, null = tidak disimpan           │
+   │ logIndex    │ Index pipe untuk log                               │
+   │ timer       │ Detik (0 / null = tanpa timer)                     │
+   │ kolom       │ Khusus type "ranking": nomor kolom di JSON (1–8)  │
+   └─────────────┴────────────────────────────────────────────────────┘
+*/
+/* ╔═══════════════════════════════════════════════════════════════════╗
+   ║  BIODATA CONFIG — Atur field biodata peserta di sini            ║
+   ╚═══════════════════════════════════════════════════════════════════╝
+
+   FIELD per item:
+   ┌──────────┬──────────────────────────────────────────────────────────┐
+   │ id       │ ID unik elemen HTML                                      │
+   │ label    │ Label yang tampil di form                                │
+   │ type     │ "text" | "number" | "select"                             │
+   │ placeholder │ Teks placeholder (untuk text/number)                 │
+   │ options  │ Array {value, label} — hanya untuk type "select"        │
+   │ index    │ Posisi penyimpanan di x_02 (pipe-separated), mulai 0    │
+   │ required │ true = wajib diisi                                       │
+   └──────────┴──────────────────────────────────────────────────────────┘
+*/
+const BIODATA_CONFIG = [
+    {
+        id: 'bioNama', label: 'Nama Lengkap', type: 'text',
+        placeholder: 'Nama Lengkap', index: 0, required: true
+    },
+    {
+        id: 'bioUsia', label: 'Usia', type: 'number',
+        placeholder: 'Usia', index: 4, required: true
+    },
+    {
+        id: 'bioPend', label: 'Pendidikan Terakhir', type: 'text',
+        placeholder: 'S1, SMA, dll', index: 7, required: true
+    },
+    {
+        id: 'bioGender', label: 'Jenis Kelamin', type: 'select',
+        index: 8, required: true,
+        options: [
+            { value: 'L', label: 'Laki-laki' },
+            { value: 'P', label: 'Perempuan' }
+        ]
+    }
+    /* ── Tambah field baru di sini ──────────────────────────────── */
+];
+
+const CONFIG = [
+    {
+        "id": "cfit1",
+        "title": "Subtes 1 — CFIT",
+        "desc": "Tes ini terdiri dari 4 subtes. Pada subtes pertama, lengkapi kotak keempat pada tiap soal.",
+        "type": "image_single",
+        "dataUrl": "https://cipta.my.id/psikotest/cfit1.txt",
+        "saveField": "x_05", "saveIndex": 0,
+        "logField": "x_08", "logIndex": 0,
+        "timer": 240,
+        "instructions": "Tes ini terdiri dari 4 subtes yang masing-masing memiliki durasi waktu tersendiri, jadi harap anda mengerjakannya secepat dan setepat mungkin.\n\nPada subtes pertama ini anda diminta untuk **MELENGKAPI KOTAK KEEMPAT** pada tiap soal. Di contoh pertama ini, Anda akan menemukan sederet kotak yang berisi urutan gambar. Namun kotak terakhir belum ada isinya.\n\nIngat bahwa kotak tersebut adalah pola yang berkesinambungan. Tugas Anda memilih jawaban yang sesuai dari 6 pilihan jawaban.",
+        "exImgTop": "https://assets.lidan.co.id/gambar_tes/cfit1a.png",
+        "exImgBottom": "https://assets.lidan.co.id/gambar_tes/cfit1b.png",
+        "exNote": "**CONTOH PERTAMA**\nPerhatikan dengan seksama pola yang ada dalam kotak-kotak di atas. Setiap gambar menunjukkan sebuah ranting dengan cabang-cabang kecil. Jika diamati, ada perubahan bertahap dari satu gambar ke gambar berikutnya.\n\nPada kotak pertama, ranting memiliki dua cabang yang mengarah sedikit ke atas, pada kotak kedua, posisi cabang mulai sedikit lebih miring ke bawah. Dan pada kotak ketiga, cabang semakin turun lebih jauh dibandingkan gambar sebelumnya.\n\nDari pola ini, kita bisa menyimpulkan bahwa semakin ke kanan, cabang kecil pada ranting semakin menunduk atau mengarah ke bawah. Jawaban **C** adalah yang paling sesuai karena posisi cabangnya lebih turun.\n\n**CONTOH KEDUA**\nBayangkan bahwa bagian berwarna dalam gambar ini adalah tirai yang sedang diturunkan secara bertahap. Jika kita memperhatikan gambar dari kiri ke kanan, kita bisa melihat bahwa tirai semakin lama semakin turun menutupi bagian bawah kotak.\n\nJawaban yang benar harus mengikuti pola ini, yaitu tirai semakin turun lebih jauh lagi. Jawaban **E** adalah yang paling sesuai, karena tirai sudah hampir sepenuhnya turun."
+    },
+    {
+        "id": "cfit2",
+        "title": "Subtes 2 — CFIT",
+        "desc": "Temukan dan pilih tepat 2 gambar yang BERBEDA dari 3 gambar lainnya.",
+        "type": "image_multi",
+        "dataUrl": "https://cipta.my.id/psikotest/cfit2_a.txt",
+        "saveField": "x_05", "saveIndex": 1,
+        "logField": "x_08", "logIndex": 1,
+        "timer": 300,
+        "instructions": "Pada setiap soal, Anda akan menemukan 5 buah gambar. Tugas Anda ialah menemukan **2 GAMBAR** yang memiliki karakteristik yang serupa. Tiga gambar lainnya berfungsi sebagai pengecoh Anda, sehingga telitilah dalam menentukan pilihan.",
+        "exImgTop": "https://assets.lidan.co.id/gambar_tes/cfit2a.png",
+        "exImgBottom": "https://assets.lidan.co.id/gambar_tes/cfit2b.png",
+        "exNote": "**CONTOH PERTAMA**\nDalam subtes ini, Anda diminta untuk memilih dua bentuk yang berbeda dari tiga bentuk lainnya. Jika dianalisa, gambar A, C, dan E memiliki bentuk segitiga sedangkan gambar B dan D memiliki bentuk segi empat.\n\nKarena sebagian besar gambar adalah segitiga, maka dua gambar yang berbeda harus memiliki bentuk yang bukan segitiga. Jawaban yang benar adalah **B DAN D**.\n\n**CONTOH KEDUA**\nPerhatikan contoh kedua ini. Gambar A, B, dan D memiliki bentuk lingkaran kosong, sedangkan gambar C dan E memiliki pola titik-titik hitam di dalamnya.\n\nOleh karena itu, jawaban yang benar adalah **C DAN E**, karena mereka berbeda dari pola mayoritas."
+    },
+    {
+        "id": "cfit3",
+        "title": "Subtes 3 — CFIT",
+        "desc": "Lengkapi kotak kecil yang masih kosong dengan pola yang sesuai.",
+        "type": "image_single",
+        "dataUrl": "https://cipta.my.id/psikotest/cfit3.txt",
+        "saveField": "x_05", "saveIndex": 2,
+        "logField": "x_08", "logIndex": 2,
+        "timer": 180,
+        "instructions": "Pada subtes ini, Anda akan menemukan sebuah kotak yang di dalamnya terdapat kotak-kotak kecil bergambar dengan pola tertentu. Tugas Anda adalah **MELENGKAPI BAGIAN KOSONG** tersebut dengan salah satu pilihan jawaban yang tersedia di sebelah kanan.",
+        "exImgTop": "https://assets.lidan.co.id/gambar_tes/cfit3a.png",
+        "exImgBottom": "https://assets.lidan.co.id/gambar_tes/cfit3b.png",
+        "exNote": "**CONTOH PERTAMA**\nKetiga kotak kecil lainnya memiliki pola garis miring yang ditarik dari kanan atas ke kiri bawah. Untuk mengisi kotak kosong, kita harus mengikuti pola tersebut. Jawaban **B** adalah yang paling sesuai.\n\n**CONTOH KEDUA**\nDua kotak kecil di atas memperlihatkan anak ayam yang posisinya saling berlawanan. Untuk mengisi kotak yang kosong, kita lihat anak ayam corak hitam mengarah ke kiri, maka pasangannya harus mencari anak ayam corak hitam yang mengarah ke kanan. Jawaban **C** adalah yang paling sesuai."
+    },
+    {
+        "id": "cfit4",
+        "title": "Subtes 4 — CFIT",
+        "desc": "Pilih gambar yang memiliki komposisi posisi titik yang serupa.",
+        "type": "image_single",
+        "dataUrl": "https://cipta.my.id/psikotest/cfit4.txt",
+        "saveField": "x_05", "saveIndex": 3,
+        "logField": "x_08", "logIndex": 3,
+        "timer": 150,
+        "instructions": "Pada subtes 4 ini, perhatikan kotak di sebelah kiri yang berisi **TITIK** dan 2 bentuk lainnya. Tugas anda adalah memilih gambar jawaban di mana anda dapat meletakkan posisi titik dengan **KOMPOSISI YANG SAMA** seperti gambar contoh.",
+        "exImgTop": "https://assets.lidan.co.id/gambar_tes/cfit4a.png",
+        "exImgBottom": "https://assets.lidan.co.id/gambar_tes/cfit4b.png",
+        "exNote": "**CONTOH PERTAMA**\nPada gambar stimulus (kiri), titik terletak di dalam perpotongan persegi dan lingkaran. Cari gambar jawaban yang memiliki area di mana persegi dan lingkaran saling berpotongan sehingga titik bisa diletakkan di sana. Jawaban **C** adalah yang benar.\n\n**CONTOH KEDUA**\nTitik pada stimulus berada di dalam segitiga tetapi di luar persegi panjang. Cari gambar jawaban yang memiliki bagian segitiga yang tidak tertutup oleh persegi panjang. Jawaban **D** adalah yang benar."
+    }
+];
+
+/* ╔═══════════════════════════════════════════════════════════════════╗
+   ║  API CONFIG                                                      ║
+   ╚═══════════════════════════════════════════════════════════════════╝ */
+const API_URL    = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis6';
+const TABLE_NAME = 'nilai1';
+const AUTH_KEY   = 'admin';
+
+/* ══════════════════════════════════════════════════════════════════
+   STATE
+══════════════════════════════════════════════════════════════════ */
+let currentUser  = null;   // raw DB row
+let cfg          = null;   // active config item
+let questions    = [];
+let qIndex       = 0;
+let userAnswers  = [];
+let correctScore = 0;
+let timeLeft     = 0;
+let timerInterval= null;
+let rowSelections= [];
+let usedNumbers  = [];
+let rankingKolom = 1;      // kolom ranking aktif saat ini
+let skippedIndices = [];   // indeks soal yang dilewati (urutan antrian)
+let answeredIndices = [];  // indeks soal yang sudah dijawab (permanen)
+
+/* ══════════════════════════════════════════════════════════════════
+   BOOT
+══════════════════════════════════════════════════════════════════ */
+window.onload = async () => {
+    // Cek apakah ada ?token= di URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlToken  = urlParams.get('token');
+
+    if (urlToken) {
+        // Simpan token dari URL ke localStorage lalu login otomatis
+        localStorage.setItem('token', urlToken);
+        // Bersihkan token dari URL agar tidak tampil di address bar
+        const cleanUrl = window.location.pathname;
+        window.history.replaceState({}, document.title, cleanUrl);
+        await fetchAndRoute(urlToken);
+        return;
+    }
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+        hideLoader();
+        showScreen('screenLogin');
+        return;
+    }
+    await fetchAndRoute(token);
+};
+
+async function fetchAndRoute(token) {
+    showLoader('Memeriksa sesi...');
+    try {
+        const result = await apiFetch(`${API_URL}?table=${TABLE_NAME}&x_01_eq=${token}`,
+            { headers: { 'X-Custom-Auth': AUTH_KEY } });
+
+        if (!result.success || result.count === 0) { logout(); return; }
+
+        currentUser = result.data[0];
+        localStorage.setItem('db_id', currentUser.id_x);
+
+        const bioIncomplete = BIODATA_CONFIG.some(f => f.required && !getBio(f.id).trim());
+        if (bioIncomplete) {
+            renderBioForm();
+            showScreen('screenBio');
+        } else {
+            goToCurrentTest();
+        }
+    } catch(e) { logout(); }
+    finally { hideLoader(); }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   LOGIN
+══════════════════════════════════════════════════════════════════ */
+async function handleLogin() {
+    const token = document.getElementById('tokenInput').value.trim();
+    if (!token) return alert('Token tidak boleh kosong.');
+    const btn = document.getElementById('btnLogin');
+    setLoading(btn, true);
+    try {
+        const result = await apiFetch(`${API_URL}?table=${TABLE_NAME}&x_01_eq=${token}`,
+            { headers: { 'X-Custom-Auth': AUTH_KEY } });
+        if (result.success && result.count > 0) {
+            localStorage.setItem('token', token);
+            localStorage.setItem('db_id', result.data[0].id_x);
+            currentUser = result.data[0];
+            const bioIncomplete = BIODATA_CONFIG.some(f => f.required && !getBio(f.id).trim());
+            if (bioIncomplete) {
+                renderBioForm();
+                showScreen('screenBio');
+            } else {
+                goToCurrentTest();
+            }
+        } else {
+            alert('Token salah atau tidak terdaftar.');
+        }
+    } catch(e) { alert('Koneksi gagal.'); }
+    finally { setLoading(btn, false); }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   BIODATA
+══════════════════════════════════════════════════════════════════ */
+/* ── Biodata helper: baca nilai field dari x_02 pipe[0] + semicolon ── */
+function getBio(fieldId) {
+    const f = BIODATA_CONFIG.find(c => c.id === fieldId);
+    if (!f) return '';
+    const pipe0   = currentUser.x_02 ? currentUser.x_02.split('|')[0] : '';
+    const semiArr = pipe0 ? pipe0.split(';') : [];
+    return semiArr[f.index] || '';
+}
+function getAllBio() {
+    // Kembalikan object { id: value } untuk semua field
+    const result = {};
+    for (const f of BIODATA_CONFIG) result[f.id] = getBio(f.id);
+    return result;
+}
+
+function renderBioForm() {
+    const container = document.getElementById('bioFormFields');
+    container.innerHTML = '';
+    const sorted = [...BIODATA_CONFIG].sort((a, b) => a.index - b.index);
+    for (const f of sorted) {
+        const div = document.createElement('div');
+        div.className = 'form-group';
+        let input = '';
+        if (f.type === 'select') {
+            const opts = f.options.map(o => `<option value="${o.value}">${o.label}</option>`).join('');
+            input = `<select id="${f.id}" style="width:100%;padding:11px 14px;border:2px solid var(--border);border-radius:10px;font-size:0.95em;background:var(--bg)">
+                        <option value="">Pilih...</option>${opts}
+                     </select>`;
+        } else {
+            input = `<input type="${f.type}" id="${f.id}" placeholder="${f.placeholder||''}">`;
+        }
+        div.innerHTML = `<label>${f.label}</label>${input}`;
+        container.appendChild(div);
+    }
+}
+
+async function saveBiodata() {
+    // Baca x_02 existing, ambil pipe-nya
+    const pipes = currentUser.x_02 ? currentUser.x_02.split('|') : [];
+    // Pastikan minimal 4 pipe tersedia
+    while (pipes.length < 4) pipes.push('');
+
+    // Baca semicolon array dari pipe[0] yang sudah ada
+    const semiArr = pipes[0] ? pipes[0].split(';') : [];
+    const maxIndex = Math.max(...BIODATA_CONFIG.map(f => f.index));
+    while (semiArr.length <= maxIndex) semiArr.push('');
+
+    // Isi nilai dari form ke posisi index masing-masing
+    for (const f of BIODATA_CONFIG) {
+        const el  = document.getElementById(f.id);
+        const val = el ? el.value.trim() : '';
+        if (f.required && !val) return alert(`Mohon lengkapi field: ${f.label}`);
+        semiArr[f.index] = val;
+    }
+
+    // Tulis kembali ke pipe[0]
+    pipes[0] = semiArr.join(';');
+
+    const btn = document.getElementById('btnBio');
+    setLoading(btn, true);
+    try {
+        const idX = localStorage.getItem('db_id');
+        await apiFetch(`${API_URL}?table=${TABLE_NAME}&id_x=${idX}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'X-Custom-Auth': AUTH_KEY },
+            body: JSON.stringify({ x_02: pipes.join('|') })
+        });
+        await fetchAndRoute(localStorage.getItem('token'));
+    } catch(e) { alert('Gagal menyimpan data.'); }
+    finally { setLoading(btn, false); }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   DASHBOARD
+══════════════════════════════════════════════════════════════════ */
+function buildTaskList() {
+    /* Expand ranking menjadi banyak task (1 per kolom) */
+    const list = [];
+    for (const c of CONFIG) {
+        if (c.type === 'ranking' && c.totalKolom) {
+            for (let k = 1; k <= c.totalKolom; k++) {
+                list.push({
+                    id:         c.id + '_k' + k,
+                    title:      c.title.replace('Minat Jabatan', 'Minat — Kolom ' + k),
+                    type:       c.type,
+                    _baseId:    c.id,
+                    _kolom:     k,
+                    saveField:  c.saveField,
+                    saveIndex:  c.saveIndex + (k - 1)   // saveIndex naik per kolom
+                });
+            }
+        } else {
+            list.push({ id: c.id, title: c.title, type: c.type, saveField: c.saveField, saveIndex: c.saveIndex });
+        }
+    }
+    return list;
+}
+
+function goToCurrentTest() {
+    // Cari tes pertama yang belum selesai dan langsung buka start screen-nya
+    const tasks = buildTaskList();
+    for (const task of tasks) {
+        const parts = (currentUser[task.saveField] || '').split('|');
+        const val   = parts[task.saveIndex] || '';
+        if (val.trim() === '') {
+            openTestById(task.id);
+            return;
+        }
+    }
+    // Semua selesai — tampilkan pesan selesai
+    showDoneAll();
+}
+
+function showDoneAll() {
+    document.getElementById('doneIcon').innerText  = '🎉';
+    document.getElementById('doneTitle').innerText = 'Semua Tes Selesai!';
+    document.getElementById('doneDesc').innerText  = 'Terima kasih sudah mengikuti tes. Hasil Anda telah tersimpan.';
+    // Sembunyikan tombol lanjut, ganti dengan logout
+    const btn = document.querySelector('#screenDone .btn-primary');
+    if (btn) { btn.innerText = 'Logout'; btn.onclick = logout; }
+    showScreen('screenDone');
+}
+
+function renderDashboard() {
+    showScreen('screenDash');
+    document.getElementById('welcomeName').innerText = 'Halo, ' + (getBio('bioNama') || 'Peserta') + '!';
+
+    const tasks = buildTaskList();
+    let firstPending = null;
+
+    const grid = document.getElementById('taskGrid');
+    grid.innerHTML = '';
+
+    tasks.forEach((task, i) => {
+        const parts = (currentUser[task.saveField] || '').split('|');
+        const val   = parts[task.saveIndex] || '';
+        const done  = val.trim() !== '';
+
+        if (!done && !firstPending) firstPending = task;
+
+        const isCurrent = (!done && firstPending && firstPending.id === task.id);
+        const isLocked  = (!done && !isCurrent);
+
+        const div = document.createElement('div');
+        div.className = 'task-item' + (done ? ' done' : isCurrent ? ' current' : ' locked');
+        div.innerHTML = `
+            <div class="task-num">${done ? '✓' : i+1}</div>
+            <div class="task-name">${task.title}</div>
+            <span class="task-badge ${done?'badge-done':isCurrent?'badge-current':'badge-locked'}">
+                ${done ? 'Selesai' : isCurrent ? '▶ Mulai' : 'Terkunci'}
+            </span>`;
+        if (isCurrent) {
+            div.style.cursor = 'pointer';
+            div.onclick = () => openTestById(task.id);
+        }
+        grid.appendChild(div);
+    });
+
+    if (firstPending) {
+        document.getElementById('welcomeSub').innerText = 'Klik tes yang bertanda ▶ Mulai untuk memulai.';
+    } else {
+        document.getElementById('welcomeSub').innerText = '🎉 Semua tes telah selesai. Terima kasih!';
+    }
+}
+
+function openTestById(taskId) {
+    // Cari apakah ini sub-task ranking
+    const isRankingSub = taskId.includes('_k');
+    let baseCfg, kolom;
+    if (isRankingSub) {
+        const base   = taskId.replace(/_k\d+$/, '');
+        kolom        = parseInt(taskId.split('_k')[1]);
+        baseCfg      = CONFIG.find(c => c.id === base);
+        cfg = { ...baseCfg, kolom, saveIndex: baseCfg.saveIndex + (kolom - 1), _taskId: taskId };
+    } else {
+        baseCfg = CONFIG.find(c => c.id === taskId);
+        cfg = { ...baseCfg, _taskId: taskId };
+    }
+    if (!cfg) return;
+
+    // Jika showInstructionsOnce=true dan kolom > 1, langsung startTest
+    if (cfg.showInstructionsOnce && cfg.kolom && cfg.kolom > 1) {
+        console.log('[RMIB] Kolom ' + cfg.kolom + ' - skip instruksi, langsung mulai');
+        showLoader('Memuat soal...');
+        setTimeout(() => startTest(), 100);
+        return;
+    }
+
+    // Tampilkan start screen
+    document.getElementById('startTitle').innerText       = cfg.title;
+    document.getElementById('startInstructions').innerText = cfg.instructions || cfg.desc || '';
+    document.getElementById('exNote').innerText           = cfg.exNote || '';
+
+    // Gambar contoh
+    const hasImg = cfg.exImgTop || cfg.exImgBottom;
+    document.getElementById('exampleBlock').style.display = hasImg ? '' : 'none';
+    if (cfg.exImgTop)    document.getElementById('exImgTop').src    = cfg.exImgTop;
+    if (cfg.exImgBottom) document.getElementById('exImgBottom').src = cfg.exImgBottom;
+
+    // Info waktu — tampil di console, teks kecil di bawah tombol
+    const timerNote = document.getElementById('timerNote');
+    if (cfg.timer > 0) {
+        const mnt = Math.floor(cfg.timer / 60);
+        const dtk = cfg.timer % 60;
+        const label = mnt > 0 ? mnt + ' menit ' + (dtk > 0 ? dtk + ' detik' : '') : dtk + ' detik';
+        console.log('[TES] ' + cfg.title + ' | Waktu: ' + cfg.timer + ' detik (' + label.trim() + ')');
+        timerNote.innerText = '⏱ Tes ini memiliki batas waktu';
+        timerNote.style.display = '';
+    } else {
+        console.log('[TES] ' + cfg.title + ' | Tanpa batas waktu');
+        timerNote.style.display = 'none';
+    }
+
+    showScreen('screenStart');
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   START TEST
+══════════════════════════════════════════════════════════════════ */
+async function startTest() {
+    showLoader('Memuat soal...');
+    try {
+        await loadQuestions();
+        // Reset state
+        const saved = localStorage.getItem('_st_' + cfg._taskId);
+        if (saved) {
+            const s = JSON.parse(saved);
+            qIndex = s.qIndex || 0; userAnswers = s.userAnswers || [];
+            correctScore = s.correctScore || 0; timeLeft = s.timeLeft || cfg.timer;
+            rowSelections = s.rowSelections || Array(12).fill(null);
+            usedNumbers   = s.usedNumbers   || [];
+            skippedIndices  = s.skippedIndices  || [];
+            answeredIndices = s.answeredIndices || [];
+        } else {
+            qIndex = 0; userAnswers = []; correctScore = 0;
+            timeLeft = cfg.timer || 0;
+            rowSelections = Array(12).fill(null); usedNumbers = [];
+            skippedIndices  = [];
+            answeredIndices = [];
+        }
+
+        document.getElementById('testTitle').innerText = cfg.title;
+        showScreen('screenTest');
+
+        // Timer selalu tersembunyi di UI — hanya tampil di console (Inspect)
+        document.getElementById('timerDisplay').classList.add('hidden');
+        if (cfg.timer > 0) {
+            updateTimerDisplay();
+            startTimer();
+        }
+
+        renderQuestion();
+    } catch(e) {
+        alert('Gagal memuat soal: ' + e.message);
+        showScreen('screenDash');
+    } finally { hideLoader(); }
+}
+
+async function loadQuestions() {
+    // Pilih URL berdasarkan gender untuk ranking
+    let url = cfg.dataUrl;
+    if (cfg.type === 'ranking' && cfg.dataUrlP) {
+        const gender = getBio('bioGender') || 'L';
+        if (gender === 'P') url = cfg.dataUrlP;
+        console.log('[RMIB] Gender: ' + gender + ' | URL: ' + (gender==='P' ? 'Perempuan' : 'Laki-laki'));
+    }
+    
+    const resp = await fetch(url + '?v=' + Date.now());
+    const data = await resp.json();
+    if (cfg.type === 'ranking') {
+        const kd = data.find(d => d.kolom === cfg.kolom);
+        if (!kd) throw new Error('Kolom ' + cfg.kolom + ' tidak ada');
+        cfg._pembuka = kd.pembuka;
+        questions = kd.soal.map((s, i) => ({ text: s, id: i }));
+    } else {
+        questions = data;
+    }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   TIMER
+══════════════════════════════════════════════════════════════════ */
+function startTimer() {
+    if (!timeLeft) timeLeft = cfg.timer;
+    timerInterval = setInterval(() => {
+        timeLeft--;
+        updateTimerDisplay();
+        saveState();
+        if (timeLeft <= 0) { clearInterval(timerInterval); endTest(true); }
+    }, 1000);
+}
+function updateTimerDisplay() {
+    const m = String(Math.floor(timeLeft/60)).padStart(2,'0');
+    const s = String(timeLeft%60).padStart(2,'0');
+    // Tampil di console saja — buka DevTools > Console untuk melihat
+    if (timeLeft % 10 === 0 || timeLeft <= 10) {
+        console.log('[TIMER] Sisa waktu: ' + m + ':' + s + ' (' + timeLeft + ' detik)');
+    }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   STATE SAVE/LOAD
+══════════════════════════════════════════════════════════════════ */
+function saveState() {
+    localStorage.setItem('_st_' + cfg._taskId, JSON.stringify(
+        { qIndex, userAnswers, correctScore, timeLeft, rowSelections, usedNumbers, skippedIndices, answeredIndices }
+    ));
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   RENDER DISPATCHER
+══════════════════════════════════════════════════════════════════ */
+
+function dbg(label) {
+    console.log(
+        `[SKIP DEBUG] ${label}` +
+        ` | qIndex=${qIndex}` +
+        ` | answered=[${answeredIndices.join(',')}]` +
+        ` | skipped=[${skippedIndices.join(',')}]` +
+        ` | total=${questions.length}`
+    );
+}
+
+// Setelah menjawab soal, cari soal berikutnya yang belum dijawab.
+// Urutan pencarian: lanjut maju dari posisi sekarang, jika mentok akhir
+// ambil dari antrian skippedIndices (soal yang dilewati).
+function goNext() {
+    dbg('goNext MASUK');
+
+    // Cari soal berikutnya yang belum dijawab, mulai dari qIndex+1 maju ke depan
+    let found = -1;
+    for (let i = qIndex + 1; i < questions.length; i++) {
+        if (!answeredIndices.includes(i) && !skippedIndices.includes(i)) {
+            found = i;
+            break;
+        }
+    }
+
+    if (found !== -1) {
+        // Ada soal normal yang belum dijawab di depan
+        qIndex = found;
+        dbg(`goNext → soal normal index ${qIndex}`);
+    } else if (skippedIndices.length > 0) {
+        // Tidak ada soal normal tersisa → ambil soal pertama yang dilewati
+        qIndex = skippedIndices.shift();
+        dbg(`goNext → kembali ke soal dilewati index ${qIndex}`);
+    } else {
+        // Semua soal sudah dijawab
+        dbg('goNext → SEMUA SELESAI, endTest');
+        saveState();
+        endTest(false);
+        return;
+    }
+
+    saveState();
+    renderQuestion();
+}
+
+function renderQuestion() {
+    updateProgress();
+    if (cfg.type === 'ranking') { renderRanking(); return; }
+
+    dbg('renderQuestion');
+
+    // Safety net
+    if (qIndex < 0 || qIndex >= questions.length) {
+        console.error('[SKIP DEBUG] qIndex di luar range!', qIndex);
+        if (skippedIndices.length > 0) {
+            qIndex = skippedIndices.shift();
+            saveState();
+        } else {
+            endTest(false);
+            return;
+        }
+    }
+
+    const q = questions[qIndex];
+    const map = {
+        image_single: renderImageSingle,
+        image_multi:  renderImageMulti,
+        text_choice:  renderTextChoice,
+        text_input:   renderTextInput,
+        ab_choice:    renderAbChoice
+    };
+    (map[cfg.type] || (() => {}))(q);
+}
+
+function updateProgress() {
+    const total = cfg.type === 'ranking' ? 8 : questions.length;
+    const curr  = cfg.type === 'ranking' ? (cfg.kolom||1) : qIndex + 1;
+    const pct   = total ? Math.round(((curr-1)/total)*100) : 0;
+    document.getElementById('progressBar').style.width = pct + '%';
+    let infoText = cfg.type === 'ranking'
+        ? `Kolom ${cfg.kolom} / ${cfg.totalKolom||8}`
+        : `Soal ${qIndex+1} / ${questions.length}`;
+    if (skippedIndices.length > 0 && cfg.type !== 'ranking') {
+        infoText += ` · ⟳ ${skippedIndices.length} soal dilewati`;
+    }
+    document.getElementById('progressInfo').innerText = infoText;
+
+    // Sync bottom bar (HP)
+    const bbTitle = document.getElementById('bbTitle');
+    const bbProg  = document.getElementById('bbProgress');
+    if (bbTitle)  bbTitle.innerText    = cfg.title || '';
+    if (bbProg)   bbProg.innerText     = infoText;
+}
+
+/* ── image_single ────────────────────────────────────────────── */
+function renderImageSingle(q) {
+    const parts = q.question.split(' ');
+    const skippedBadge = skippedIndices.includes(qIndex) ? ' <span style="background:#fef3c7;color:#92400e;font-size:0.75em;padding:2px 8px;border-radius:99px;font-weight:600;">⟳ Dilewati</span>' : '';
+    document.getElementById('questionContent').innerHTML =
+        `<div class="q-label">Soal ${parts[0]}${skippedBadge}</div>
+         <img class="q-image" src="${parts[1]}" alt="soal">
+         <div class="options-img" id="optArea"></div>`;
+    document.getElementById('actionBar').innerHTML =
+        `<button class="btn btn-outline btn-sm" onclick="skipQ()">Lewati</button>`;
+    const div = document.getElementById('optArea');
+    for (const k in q.options) {
+        if (!q.options[k]) continue;
+        const img = Object.assign(document.createElement('img'), { src: q.options[k], title: k });
+        img.onclick = () => { markAnswered(qIndex); userAnswers.push(`${qIndex+1}${k}${k===q.answer?'v':'x'}`); if(k===q.answer)correctScore++; saveState(); goNext(); };
+        div.appendChild(img);
+    }
+}
+
+/* ── image_multi ─────────────────────────────────────────────── */
+function renderImageMulti(q) {
+    document.getElementById('questionContent').innerHTML =
+        `<div class="q-label">Pilih 2 gambar yang BERBEDA dari lainnya</div>
+         <div class="options-img" id="optArea" style="gap:14px"></div>`;
+    document.getElementById('actionBar').innerHTML =
+        `<button class="btn btn-success btn-sm" id="btnJawab" onclick="submitImageMulti()" disabled>Jawab</button>
+         <button class="btn btn-outline btn-sm" onclick="skipQ()">Lewati</button>`;
+    const div = document.getElementById('optArea');
+    q.options.forEach((src, i) => {
+        const wrap = document.createElement('div');
+        wrap.className = 'opt-check-wrap';
+        wrap.innerHTML = `<input type="checkbox" id="mc${i}" value="${src}"><label for="mc${i}"><img src="${src}"></label>`;
+        wrap.querySelector('input').addEventListener('change', () => {
+            document.getElementById('btnJawab').disabled =
+                document.querySelectorAll('#optArea input:checked').length !== 2;
+        });
+        div.appendChild(wrap);
+    });
+}
+function submitImageMulti() {
+    const q   = questions[qIndex];
+    const sel = [...document.querySelectorAll('#optArea input:checked')].map(c => c.value);
+    const ok  = sel.length===2 && sel.every(v => q.correctAnswers.includes(v));
+    markAnswered(qIndex);
+    userAnswers.push(`${qIndex+1}SEL${ok?'v':'x'}`);
+    if(ok) correctScore++;
+    saveState(); goNext();
+}
+
+/* ── text_choice ─────────────────────────────────────────────── */
+function renderTextChoice(q) {
+    let opts = '';
+    for (const k in q.options) {
+        if (!q.options[k]) continue;
+        opts += `<button class="opt-text" onclick="submitTextChoice('${k}','${q.answer}')"><strong>${k}.</strong> ${q.options[k]}</button>`;
+    }
+    const skippedBadgeTC = skippedIndices.includes(qIndex) ? ' <span style="background:#fef3c7;color:#92400e;font-size:0.75em;padding:2px 8px;border-radius:99px;font-weight:600;">⟳ Dilewati</span>' : '';
+    document.getElementById('questionContent').innerHTML =
+        `<div class="q-label">Soal No. ${qIndex+1}${skippedBadgeTC}</div>
+         <div class="q-text">${q.question}</div>
+         <div class="options-text">${opts}</div>`;
+    document.getElementById('actionBar').innerHTML =
+        `<button class="btn btn-outline btn-sm" onclick="skipQ()">Lewati</button>`;
+}
+function submitTextChoice(k, ans) {
+    markAnswered(qIndex);
+    userAnswers.push(`${qIndex+1}${k}${k===ans?'v':'x'}`);
+    if(k===ans) correctScore++;
+    saveState(); goNext();
+}
+
+/* ── text_input ──────────────────────────────────────────────── */
+function renderTextInput(q) {
+    const skippedBadgeTI = skippedIndices.includes(qIndex) ? ' <span style="background:#fef3c7;color:#92400e;font-size:0.75em;padding:2px 8px;border-radius:99px;font-weight:600;">⟳ Dilewati</span>' : '';
+    document.getElementById('questionContent').innerHTML =
+        `<div class="q-label">Soal No. ${qIndex+1}${skippedBadgeTI}</div>
+         <div class="q-text">${q.question}</div>
+         <div class="input-wrap">
+             <input type="text" id="userAnswer" placeholder="Jawaban..."
+                    autocomplete="off" oninput="document.getElementById('btnNext').disabled=this.value.trim()===''">
+         </div>`;
+    document.getElementById('actionBar').innerHTML =
+        `<button class="btn btn-primary btn-sm" id="btnNext" onclick="submitTextInput()" disabled>Jawab</button>
+         <button class="btn btn-outline btn-sm" onclick="skipQ()">Lewati</button>`;
+    const inp = document.getElementById('userAnswer');
+    inp.focus();
+    inp.addEventListener('keyup', e => { if(e.key==='Enter'&&inp.value.trim()) submitTextInput(); });
+}
+function submitTextInput() {
+    const q   = questions[qIndex];
+    const ans = document.getElementById('userAnswer').value.trim().replace(/,/g,' ');
+    let ok    = false;
+    for (const ca of (q.correctAnswers||[])) {
+        if (ans.toLowerCase() === ca.answer.replace(/,/g,' ').trim().toLowerCase()) { ok=true; break; }
+    }
+    markAnswered(qIndex);
+    userAnswers.push(`${qIndex+1}${ans}${ok?'v':'x'}`);
+    if(ok) correctScore++;
+    saveState(); goNext();
+}
+
+/* ── ab_choice ───────────────────────────────────────────────── */
+function renderAbChoice(q) {
+    const tA = q.A||(q.options&&q.options.A)||'-';
+    const tB = q.B||(q.options&&q.options.B)||'-';
+    document.getElementById('questionContent').innerHTML =
+        `<div class="q-label">Pasangan Soal No. ${qIndex+1}</div>
+         <div class="options-ab">
+             <button class="opt-ab" onclick="submitAb('A')"><strong>A.</strong> ${tA}</button>
+             <button class="opt-ab" onclick="submitAb('B')"><strong>B.</strong> ${tB}</button>
+         </div>`;
+    document.getElementById('actionBar').innerHTML = '';
+}
+function submitAb(c) { userAnswers.push(c); saveState(); goNext(); }
+
+/* ── ranking ─────────────────────────────────────────────────── */
+function renderRanking() {
+    const rows = questions.map((q,r) => {
+        const nums = [1,2,3,4,5,6,7,8,9,10,11,12]
+            .map(n => `<button class="btn-rank" id="br-${r}-${n}" onclick="rankSel(${r},${n})">${n}</button>`)
+            .join('');
+        return `<tr><td class="col-no" style="width:36px">${r+1}</td><td>${q.text}</td><td><div class="btn-container">${nums}</div></td></tr>`;
+    }).join('');
+
+    document.getElementById('questionContent').innerHTML =
+        `<div id="deskripsiBox">${cfg._pembuka||''}</div>
+         <div style="overflow-x:auto">
+         <table class="ranking-table">
+           <thead><tr><th class="col-no" style="width:36px">No</th><th>Pernyataan</th><th style="width:480px">Pilihan Ranking</th></tr></thead>
+           <tbody>${rows}</tbody>
+         </table></div>`;
+    document.getElementById('actionBar').innerHTML = '';
+    updateRankingUI();
+}
+
+function rankSel(r, v) {
+    if (rowSelections[r]===v) {
+        rowSelections[r]=null; usedNumbers=usedNumbers.filter(n=>n!==v);
+    } else {
+        if (usedNumbers.includes(v)) return;
+        if (rowSelections[r]!==null) usedNumbers=usedNumbers.filter(n=>n!==rowSelections[r]);
+        rowSelections[r]=v; usedNumbers.push(v);
+    }
+    updateRankingUI(); saveState();
+    if (rowSelections.filter(n=>n!==null).length===12) saveRanking(rowSelections.join(';'));
+}
+
+function updateRankingUI() {
+    for (let r=0;r<12;r++) {
+        const sel=rowSelections[r];
+        for (let v=1;v<=12;v++) {
+            const b=document.getElementById(`br-${r}-${v}`);
+            if(!b) continue;
+            b.classList.remove('sel','gone');
+            if (sel!==null) { v===sel ? b.classList.add('sel') : b.classList.add('gone'); }
+            else { if(usedNumbers.includes(v)) b.classList.add('gone'); }
+        }
+    }
+}
+
+async function saveRanking(dataStr) {
+    showLoader('Menyimpan kolom ' + cfg.kolom + '...');
+    const idX = localStorage.getItem('db_id');
+    try {
+        // Gunakan currentUser langsung — tidak perlu apiGet lagi
+        let parts = (currentUser[cfg.saveField]||'').split('|');
+        while(parts.length<=cfg.saveIndex) parts.push('');
+        parts[cfg.saveIndex] = dataStr;
+        const newVal = parts.join('|');
+        await apiPut(idX, { [cfg.saveField]: newVal });
+        // Update currentUser lokal agar kolom berikutnya pakai data terbaru
+        currentUser[cfg.saveField] = newVal;
+        localStorage.removeItem('_st_' + cfg._taskId);
+        afterTest();
+    } catch(e) { alert('Gagal menyimpan: ' + e.message); }
+    finally { hideLoader(); }
+}
+
+/* ── skip ────────────────────────────────────────────────────── */
+function skipQ() {
+    dbg('skipQ MASUK');
+
+    // Tambahkan ke antrian skip jika belum ada
+    if (!skippedIndices.includes(qIndex) && !answeredIndices.includes(qIndex)) {
+        skippedIndices.push(qIndex);
+        userAnswers.push(`${qIndex+1}SKIPx`);
+    }
+
+    // Cari soal berikutnya yang belum dijawab dan bukan di antrian skip, mulai dari qIndex+1
+    let found = -1;
+    for (let i = qIndex + 1; i < questions.length; i++) {
+        if (!answeredIndices.includes(i) && !skippedIndices.includes(i)) {
+            found = i;
+            break;
+        }
+    }
+
+    if (found !== -1) {
+        qIndex = found;
+        dbg(`skipQ → soal normal index ${qIndex}`);
+    } else if (skippedIndices.length > 0) {
+        // Semua soal normal habis → kerjakan soal dilewati pertama
+        qIndex = skippedIndices.shift();
+        dbg(`skipQ → kembali ke soal dilewati index ${qIndex}`);
+    } else {
+        dbg('skipQ → SEMUA SELESAI, endTest');
+        saveState();
+        endTest(false);
+        return;
+    }
+
+    saveState();
+    renderQuestion();
+}
+
+// Tandai soal sebagai sudah dijawab (permanen)
+function markAnswered(idx) {
+    if (!answeredIndices.includes(idx)) {
+        answeredIndices.push(idx);
+    }
+    // Hapus dari antrian skipped jika ada
+    const pos = skippedIndices.indexOf(idx);
+    if (pos !== -1) {
+        skippedIndices.splice(pos, 1);
+        // Hapus entri SKIPx dari userAnswers
+        const skipTag = `${idx+1}SKIPx`;
+        const ua = userAnswers.indexOf(skipTag);
+        if (ua !== -1) userAnswers.splice(ua, 1);
+    }
+    dbg(`markAnswered idx=${idx}`);
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   END TEST
+══════════════════════════════════════════════════════════════════ */
+async function endTest(timeout) {
+    clearInterval(timerInterval);
+    showLoader('Menyimpan hasil...');
+    const idX = localStorage.getItem('db_id');
+    try {
+        const cur = await apiGet(idX);
+        const upd = {};
+
+        // Skor / Jawaban
+        const sf = cfg.saveField;
+        let sp = (cur.data[sf]||'').split('|');
+        while(sp.length<=cfg.saveIndex) sp.push('');
+        // Untuk ab_choice (EPPS): simpan jawaban A/B dipisah titik koma
+        if (cfg.type === 'ab_choice') {
+            sp[cfg.saveIndex] = userAnswers.join(';') + ';';
+        } else {
+            sp[cfg.saveIndex] = correctScore.toString();
+        }
+        upd[sf] = sp.join('|');
+
+        // Log
+        if (cfg.logField) {
+            const lf = cfg.logField;
+            let lp = (cur.data[lf]||'').split('|');
+            while(lp.length<=cfg.logIndex) lp.push('');
+            lp[cfg.logIndex] = JSON.stringify(userAnswers);
+            upd[lf] = lp.join('|');
+        }
+
+        await apiPut(idX, upd);
+        localStorage.removeItem('_st_' + cfg._taskId);
+
+        // Update currentUser
+        currentUser = cur.data;
+        currentUser[sf] = upd[sf];
+        if (cfg.logField) currentUser[cfg.logField] = upd[cfg.logField];
+
+        // Log ke console
+        console.log('[TES SELESAI] ' + cfg.title + (cfg.type!=='ab_choice'&&cfg.type!=='ranking' ? ' | Skor: '+correctScore : ''));
+        
+        // Langsung lanjut ke tes berikutnya tanpa tampilkan layar selesai
+        hideLoader();
+        afterTest();
+    } catch(e) {
+        alert('Gagal menyimpan: ' + e.message);
+        hideLoader();
+    }
+}
+
+function afterTest() {
+    // Refresh user data dari server lalu lanjut ke tes berikutnya
+    fetchAndRoute(localStorage.getItem('token'));
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   API HELPERS
+══════════════════════════════════════════════════════════════════ */
+async function apiFetch(url, opts={}) {
+    const r = await fetch(url, opts);
+    return r.json();
+}
+async function apiGet(idX) {
+    return apiFetch(`${API_URL}?table=${TABLE_NAME}&id_x=${idX}`,
+        { headers: { 'X-Custom-Auth': AUTH_KEY } });
+}
+async function apiPut(idX, body) {
+    return fetch(`${API_URL}?table=${TABLE_NAME}&id_x=${idX}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'X-Custom-Auth': AUTH_KEY },
+        body: JSON.stringify(body)
+    });
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   UI HELPERS
+══════════════════════════════════════════════════════════════════ */
+function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+}
+function showLoader(txt) {
+    document.getElementById('loaderText').innerText = txt||'Memuat...';
+    document.getElementById('globalLoader').classList.remove('hidden');
+}
+function hideLoader() { document.getElementById('globalLoader').classList.add('hidden'); }
+function setLoading(btn, on) {
+    btn.disabled = on;
+    if (on) { btn.dataset.txt=btn.innerHTML; btn.innerHTML='<span class="spinner" style="width:18px;height:18px;border-width:3px"></span>'; }
+    else btn.innerHTML = btn.dataset.txt;
+}
+function logout() { localStorage.clear(); location.reload(); }
+
+function confirmLogout() {
+    if (confirm('Yakin ingin logout? Progres soal yang sedang dikerjakan mungkin belum tersimpan.')) {
+        logout();
+    }
+}
+</script>
+</body>
+</html>
