@@ -784,6 +784,9 @@ let usedNumbers  = [];
 let rankingKolom = 1;      // kolom ranking aktif saat ini
 let skippedIndices = [];   // indeks soal yang dilewati (urutan antrian)
 let answeredIndices = [];  // indeks soal yang sudah dijawab (permanen)
+let timerSyncInterval = null; // interval sync timer ke server
+let timerStarted     = false; // flag agar timer hanya dimulai sekali saat soal tampil
+let stopwatchElapsed = 0;     // detik berjalan untuk tes tidak berwaktu
 
 /* ══════════════════════════════════════════════════════════════════
    BOOT
@@ -1111,16 +1114,13 @@ async function startTest() {
             skippedIndices  = [];
             answeredIndices = [];
         }
+        timerStarted = false;
 
         document.getElementById('testTitle').innerText = cfg.title;
         showScreen('screenTest');
 
         // Timer selalu tersembunyi di UI — hanya tampil di console (Inspect)
         document.getElementById('timerDisplay').classList.add('hidden');
-        if (cfg.timer > 0) {
-            updateTimerDisplay();
-            startTimer();
-        }
 
         renderQuestion();
     } catch(e) {
@@ -1155,12 +1155,65 @@ async function loadQuestions() {
 ══════════════════════════════════════════════════════════════════ */
 function startTimer() {
     if (!timeLeft) timeLeft = cfg.timer;
+    syncTimerToServer('COUNTDOWN:' + timeLeft);
     timerInterval = setInterval(() => {
         timeLeft--;
         updateTimerDisplay();
         saveState();
-        if (timeLeft <= 0) { clearInterval(timerInterval); endTest(true); }
+        if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            clearInterval(timerSyncInterval);
+            timerSyncInterval = null;
+            endTest(true);
+        }
     }, 1000);
+    timerSyncInterval = setInterval(async () => {
+        const forceEnd = await checkForceEnd();
+        if (forceEnd) return;
+        syncTimerToServer('COUNTDOWN:' + timeLeft);
+    }, 5000);
+}
+
+function startStopwatch() {
+    stopwatchElapsed = 0;
+    syncTimerToServer('STOPWATCH:0');
+    timerInterval = setInterval(() => {
+        stopwatchElapsed++;
+        saveState();
+    }, 1000);
+    timerSyncInterval = setInterval(async () => {
+        const forceEnd = await checkForceEnd();
+        if (forceEnd) return;
+        syncTimerToServer('STOPWATCH:' + stopwatchElapsed);
+    }, 5000);
+}
+
+async function checkForceEnd() {
+    try {
+        const idX = localStorage.getItem('db_id');
+        const res = await apiGet(idX);
+        if (res && res.data && res.data.x_04 === 'FORCE_END') {
+            clearInterval(timerInterval);
+            clearInterval(timerSyncInterval);
+            timerSyncInterval = null;
+            endTest(true);
+            return true;
+        }
+    } catch(e) {}
+    return false;
+}
+
+async function syncTimerToServer(modeVal) {
+    const idX = localStorage.getItem('db_id');
+    if (!idX) return;
+    try {
+        const val = cfg.title + '|' + modeVal;
+        await fetch(`${API_URL}?table=${TABLE_NAME}&id_x=${idX}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'X-Custom-Auth': AUTH_KEY },
+            body: JSON.stringify({ x_04: val })
+        });
+    } catch(e) {}
 }
 function updateTimerDisplay() {
     const m = String(Math.floor(timeLeft/60)).padStart(2,'0');
@@ -1231,6 +1284,18 @@ function goNext() {
 
 function renderQuestion() {
     updateProgress();
+
+    // Mulai timer tepat saat soal pertama tampil di layar
+    if (!timerStarted) {
+        timerStarted = true;
+        if (cfg.timer > 0) {
+            updateTimerDisplay();
+            startTimer();
+        } else {
+            startStopwatch();
+        }
+    }
+
     if (cfg.type === 'ranking') { renderRanking(); return; }
 
     dbg('renderQuestion');
@@ -1592,7 +1657,6 @@ async function saveRanking(dataStr) {
     showLoader('Menyimpan kolom ' + cfg.kolom + '...');
     const idX = localStorage.getItem('db_id');
     try {
-        // Simpan sebagai JSON dengan key = cfg._taskId
         const sf = cfg.saveField;
         const cur = await apiGet(idX);
         let sfObj = {};
@@ -1600,12 +1664,12 @@ async function saveRanking(dataStr) {
         sfObj[cfg._taskId] = dataStr;
         const newVal = JSON.stringify(sfObj);
         await apiPut(idX, { [sf]: newVal });
-        // Update currentUser lokal agar kolom berikutnya pakai data terbaru
+        currentUser = cur.data;
         currentUser[sf] = newVal;
         localStorage.removeItem('_st_' + cfg._taskId);
+        hideLoader();
         afterTest();
-    } catch(e) { alert('Gagal menyimpan: ' + e.message); }
-    finally { hideLoader(); }
+    } catch(e) { alert('Gagal menyimpan: ' + e.message); hideLoader(); }
 }
 
 /* ── skip ────────────────────────────────────────────────────── */
@@ -1667,8 +1731,18 @@ function markAnswered(idx) {
 ══════════════════════════════════════════════════════════════════ */
 async function endTest(timeout) {
     clearInterval(timerInterval);
-    showLoader('Menyimpan hasil...');
+    clearInterval(timerSyncInterval);
+    timerSyncInterval = null;
+    // Kosongkan x_04 — timer admin diam saat subtest selesai
     const idX = localStorage.getItem('db_id');
+    if (idX) {
+        fetch(`${API_URL}?table=${TABLE_NAME}&id_x=${idX}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'X-Custom-Auth': AUTH_KEY },
+            body: JSON.stringify({ x_04: '' })
+        }).catch(() => {});
+    }
+    showLoader('Menyimpan hasil...');
     try {
         const cur = await apiGet(idX);
         const upd = {};

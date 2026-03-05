@@ -825,17 +825,6 @@ async function saveBiodata() {
     // Tulis kembali ke pipe[0]
     pipes[0] = semiArr.join(';');
 
-    // ── Simpan tanggal tes hari ini ke pipe ke-4 (index 4) ──
-    // Format: YYYY-MM-DD — digunakan dashboard admin untuk filter "hari ini"
-    while (pipes.length < 5) pipes.push('');
-    // Hanya isi jika pipe tanggal belum ada (agar tidak overwrite jika peserta reload)
-    if (!pipes[4]) {
-        const now = new Date();
-        pipes[4] = now.getFullYear() + '-' +
-            String(now.getMonth()+1).padStart(2,'0') + '-' +
-            String(now.getDate()).padStart(2,'0');
-    }
-
     const btn = document.getElementById('btnBio');
     setLoading(btn, true);
     try {

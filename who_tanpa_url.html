@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Tes</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --success: #16a34a;
+            --danger: #dc2626;
+            --bg: #f1f5f9;
+            --card: #ffffff;
+            --text: #1e293b;
+            --muted: #64748b;
+            --border: #e2e8f0;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 24px 16px;
+        }
+
+        /* ===== LOADER ===== */
+        #globalLoader {
+            position: fixed; inset: 0;
+            background: rgba(255,255,255,0.96);
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            z-index: 9999; gap: 14px;
+        }
+        .spinner {
+            width: 42px; height: 42px;
+            border: 4px solid #e2e8f0;
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.75s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        #loaderText { color: var(--muted); font-size: 0.9em; }
+
+        /* ===== SCREENS ===== */
+        .screen { display: none; }
+        .screen.active { display: block; }
+
+        /* ===== CARD ===== */
+        .card {
+            background: var(--card);
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+            padding: 32px;
+            max-width: 480px;
+            margin: 0 auto;
+        }
+        .card-wide { max-width: 760px; }
+
+        /* ===== TYPOGRAPHY ===== */
+        .page-title { font-size: 1.5em; font-weight: 700; color: var(--primary); margin-bottom: 6px; }
+        .page-sub   { color: var(--muted); font-size: 0.9em; line-height: 1.6; margin-bottom: 20px; }
+
+        /* ===== FORM ===== */
+        .form-group { margin-bottom: 14px; }
+        .form-group label { display: block; font-size: 0.85em; font-weight: 600; color: var(--muted); margin-bottom: 5px; }
+        .form-group input, .form-group select {
+            width: 100%; padding: 11px 14px;
+            border: 2px solid var(--border); border-radius: 10px;
+            font-size: 0.95em; outline: none; transition: border 0.2s;
+            background: var(--bg); font-family: inherit;
+        }
+        .form-group input:focus, .form-group select:focus { border-color: var(--primary); background: white; }
+
+        /* ===== BUTTONS ===== */
+        .btn {
+            display: inline-flex; align-items: center; justify-content: center;
+            gap: 8px; padding: 11px 24px;
+            border: none; border-radius: 10px;
+            font-size: 0.95em; font-weight: 600;
+            cursor: pointer; transition: all 0.2s;
+            width: 100%; font-family: inherit;
+        }
+        .btn + .btn { margin-top: 10px; }
+        .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+        .btn-primary  { background: var(--primary); color: white; }
+        .btn-primary:hover:not(:disabled) { background: var(--primary-dark); transform: translateY(-1px); }
+        .btn-outline  { background: white; color: var(--muted); border: 2px solid var(--border); }
+        .btn-outline:hover:not(:disabled) { border-color: var(--primary); color: var(--primary); }
+        .btn-sm { padding: 8px 18px; font-size: 0.85em; width: auto; }
+
+        /* ===== TASK LIST (Dashboard) ===== */
+        .task-grid { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+        .task-item {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 12px 16px; border-radius: 10px;
+            border: 2px solid var(--border); background: white;
+            transition: all 0.2s;
+        }
+        .task-item.current { border-color: var(--primary); background: #eff6ff; cursor: pointer; }
+        .task-item.current:hover { background: #dbeafe; box-shadow: 0 4px 12px rgba(37,99,235,0.15); transform: translateY(-1px); }
+        .task-item.done    { border-color: #bbf7d0; background: #f0fdf4; }
+        .task-item.locked  { opacity: 0.45; }
+        .task-num  { width: 28px; height: 28px; border-radius: 50%; background: var(--border); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85em; flex-shrink: 0; }
+        .task-item.current .task-num { background: var(--primary); color: white; }
+        .task-item.done    .task-num { background: var(--success); color: white; }
+        .task-name { flex: 1; margin: 0 12px; font-size: 0.9em; font-weight: 500; }
+        .task-badge { font-size: 0.75em; padding: 3px 8px; border-radius: 99px; font-weight: 600; }
+        .badge-done    { background: #dcfce7; color: var(--success); }
+        .badge-current { background: #dbeafe; color: var(--primary); }
+        .badge-locked  { background: #f1f5f9; color: var(--muted); }
+
+        /* ===== START SCREEN ===== */
+        .instr-section {
+            background: #eff6ff; border-left: 4px solid var(--primary);
+            border-radius: 8px; padding: 16px 20px; margin-bottom: 24px;
+        }
+        .instr-heading {
+            font-size: 0.75em; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.08em; color: var(--primary); margin-bottom: 8px;
+        }
+        .instr-section p {
+            font-size: 0.93em; line-height: 1.75; color: var(--text);
+            white-space: pre-line;
+        }
+        .example-block { margin-bottom: 24px; }
+        .ex-heading {
+            font-size: 0.75em; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.08em; color: var(--muted); margin-bottom: 12px;
+        }
+        .example-images { display: flex; flex-direction: column; gap: 12px; align-items: center; }
+        .example-images img {
+            max-width: 100%; border-radius: 10px;
+            border: 2px solid var(--border);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+        }
+        .ex-note {
+            margin-top: 16px; padding: 14px 18px;
+            background: #f8fafc; border-radius: 8px;
+            font-size: 0.88em; line-height: 1.75; color: var(--muted);
+            white-space: pre-line;
+        }
+        .start-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+
+        /* welcome */
+        .welcome     { font-size: 1.1em; font-weight: 700; margin-bottom: 4px; }
+        .welcome-sub { font-size: 0.85em; color: var(--muted); margin-bottom: 20px; }
+
+        /* ===== TEST ENGINE ===== */
+        #topBar {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 20px; gap: 12px; flex-wrap: wrap;
+        }
+        .top-title    { font-weight: 700; color: var(--primary); font-size: 1em; }
+        #progressInfo { color: var(--muted); font-size: 0.85em; }
+
+        .progress-wrap { background: var(--border); border-radius: 99px; height: 5px; margin-bottom: 24px; }
+        #progressBar   { height: 100%; background: var(--primary); border-radius: 99px; transition: width 0.4s; }
+
+        /* question area */
+        #questionContent { min-height: 120px; }
+        .q-label { font-size: 0.8em; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-bottom: 8px; }
+        .q-text  { font-size: 1.05em; line-height: 1.7; color: var(--text); margin-bottom: 24px; font-weight: 500; }
+
+        /* ===== OPTIONS LIST (vertikal, key di samping) ===== */
+        .options-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .opt-grid-btn {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            width: 100%;
+            padding: 13px 18px;
+            text-align: left;
+            background: white;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.18s;
+            font-size: 0.93em;
+            font-weight: 500;
+            font-family: inherit;
+            color: var(--text);
+            line-height: 1.5;
+        }
+        .opt-grid-btn:hover {
+            border-color: var(--primary);
+            background: #eff6ff;
+            color: var(--primary);
+            transform: translateX(3px);
+            box-shadow: 0 3px 12px rgba(37,99,235,0.12);
+        }
+        .opt-grid-btn .opt-key {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: var(--bg);
+            border: 2px solid var(--border);
+            font-size: 0.82em;
+            color: var(--muted);
+            font-weight: 700;
+            text-transform: uppercase;
+            flex-shrink: 0;
+            transition: all 0.18s;
+        }
+        .opt-grid-btn:hover .opt-key {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+
+        /* action bar */
+        .action-bar { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 12px; }
+        .action-bar .btn { width: auto; }
+
+        /* done screen */
+        #screenDone { text-align: center; }
+        .done-icon { font-size: 3.5em; margin-bottom: 12px; }
+
+        .hidden { display: none !important; }
+
+        /* ── Bottom bar HP ── */
+        #bottomBar { display: none; }
+
+        /* ═══════════════════════════════
+           MOBILE — max 600px
+        ═══════════════════════════════ */
+        @media (max-width: 600px) {
+            body { padding: 8px 4px; }
+            .card { padding: 16px 12px; border-radius: 12px; }
+            .progress-wrap { margin-bottom: 8px; }
+            #testCard { padding-bottom: 70px; }
+            #topBar { margin-bottom: 6px; gap: 6px; flex-wrap: nowrap; align-items: center; }
+            .top-title    { font-size: 0.82em; }
+            #progressInfo { font-size: 0.78em; white-space: nowrap; }
+            #topBar > .btn { display: none; }
+
+            #bottomBar {
+                display: flex;
+                position: fixed;
+                bottom: 0; left: 0; right: 0;
+                align-items: center;
+                justify-content: space-between;
+                gap: 8px;
+                padding: 10px 12px;
+                padding-bottom: calc(10px + env(safe-area-inset-bottom));
+                background: white;
+                border-top: 1px solid var(--border);
+                box-shadow: 0 -2px 12px rgba(0,0,0,0.08);
+                z-index: 100;
+            }
+            .bb-info { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+            .bb-title    { font-size: 0.8em; font-weight: 700; color: var(--primary); }
+            .bb-progress { font-size: 0.72em; color: var(--muted); }
+            .btn-logout-bottom {
+                padding: 7px 14px; font-size: 0.8em;
+                width: auto; border-radius: 8px;
+                background: white; color: var(--muted);
+                border: 2px solid var(--border);
+                cursor: pointer; font-weight: 600;
+                display: inline-flex; align-items: center; gap: 4px;
+                font-family: inherit;
+            }
+            .opt-grid-btn { padding: 11px 14px; font-size: 0.88em; }
+            .instr-section { padding: 12px 14px; margin-bottom: 14px; }
+            .ex-note { padding: 10px 13px; font-size: 0.84em; }
+            .page-title { font-size: 1.25em; }
+        }
+
+        @media (min-width: 601px) {
+            #bottomBar { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- LOADER -->
+<div id="globalLoader" class="hidden">
+    <div class="spinner"></div>
+    <p id="loaderText">Memuat...</p>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SCREEN: LOGIN
+══════════════════════════════════════════ -->
+<div id="screenLogin" class="screen">
+    <div class="card">
+        <div class="page-title">Portal Tes</div>
+        <p class="page-sub">Masukkan nomor token Anda untuk memulai.</p>
+        <div class="form-group">
+            <label>Token</label>
+            <input type="text" id="tokenInput" placeholder="Contoh: TKN-001"
+                   onkeyup="if(event.key==='Enter') handleLogin()">
+        </div>
+        <button class="btn btn-primary" id="btnLogin" onclick="handleLogin()">Masuk</button>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SCREEN: BIODATA
+══════════════════════════════════════════ -->
+<div id="screenBio" class="screen">
+    <div class="card">
+        <div class="page-title">Biodata Peserta</div>
+        <p class="page-sub">Lengkapi data diri sebelum memulai tes.</p>
+        <div id="bioFormFields"></div>
+        <button class="btn btn-primary" id="btnBio" onclick="saveBiodata()">Simpan &amp; Lanjutkan</button>
+        <button class="btn btn-outline" style="margin-top:10px" onclick="logout()">Logout</button>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SCREEN: DASHBOARD
+══════════════════════════════════════════ -->
+<div id="screenDash" class="screen">
+    <div class="card">
+        <div class="welcome" id="welcomeName">Halo!</div>
+        <div class="welcome-sub" id="welcomeSub">Selesaikan semua tes berikut secara berurutan.</div>
+        <div class="task-grid" id="taskGrid"></div>
+        <button class="btn btn-outline" style="margin-top:4px" onclick="confirmLogout()">⏻ Logout</button>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SCREEN: START (intro sebelum tes)
+══════════════════════════════════════════ -->
+<div id="screenStart" class="screen">
+    <div class="card card-wide">
+        <div class="page-title" id="startTitle" style="margin-bottom:20px"></div>
+
+        <div class="instr-section">
+            <div class="instr-heading">📋 Instruksi Pengerjaan</div>
+            <p id="startInstructions"></p>
+        </div>
+
+        <div class="example-block" id="exampleBlock">
+            <div class="ex-heading">📖 Contoh &amp; Keterangan</div>
+            <div class="example-images">
+                <img id="exImgTop"    src="" alt="Contoh Soal"   style="display:none">
+                <img id="exImgBottom" src="" alt="Contoh Jawaban" style="display:none">
+            </div>
+            <div class="ex-note" id="exNote"></div>
+        </div>
+
+        <div class="start-actions">
+            <button class="btn btn-primary" id="btnStart" onclick="startTest()">▶ Mulai Tes</button>
+            <button class="btn btn-outline btn-sm" style="width:auto;align-self:center;margin-top:6px" onclick="confirmLogout()">⏻ Logout</button>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SCREEN: TEST ENGINE
+══════════════════════════════════════════ -->
+<div id="screenTest" class="screen">
+    <div class="card card-wide" id="testCard">
+        <div id="topBar">
+            <span class="top-title" id="testTitle"></span>
+            <span id="progressInfo"></span>
+            <button class="btn btn-outline btn-sm" style="width:auto;padding:5px 14px;font-size:0.8em" onclick="confirmLogout()">⏻ Logout</button>
+        </div>
+        <div class="progress-wrap"><div id="progressBar" style="width:0%"></div></div>
+        <div id="questionContent"></div>
+        <div class="action-bar" id="actionBar"></div>
+        <!-- Bottom bar HP -->
+        <div id="bottomBar">
+            <div class="bb-info">
+                <span class="bb-title" id="bbTitle"></span>
+                <span class="bb-progress" id="bbProgress"></span>
+            </div>
+            <button class="btn-logout-bottom" onclick="confirmLogout()">⏻ Logout</button>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SCREEN: DONE
+══════════════════════════════════════════ -->
+<div id="screenDone" class="screen">
+    <div class="card" style="text-align:center">
+        <div class="done-icon" id="doneIcon">✅</div>
+        <div class="page-title" id="doneTitle" style="justify-content:center">Tes Selesai!</div>
+        <p class="page-sub" id="doneDesc" style="text-align:center;margin-top:8px"></p>
+        <button class="btn btn-primary" id="btnDoneNext" onclick="afterTest()">Lanjut</button>
+    </div>
+</div>
+
+<script>
+/* ╔══════════════════════════════════════════════════════════════════╗
+   ║  API CONFIG — sesuaikan dengan kebutuhan                        ║
+   ╚══════════════════════════════════════════════════════════════════╝ */
+const API_URL    = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis6';
+const TABLE_NAME = 'nilai1';
+const AUTH_KEY   = 'admin';
+
+/* ══════════════════════════════════════════════════════════════════
+   DAFTAR TES — ubah isi "p" sesuai kebutuhan
+   Pisahkan beberapa tes dengan tanda | contoh: "verbal|numerik|logika"
+══════════════════════════════════════════════════════════════════ */
+const TES_CONFIG = {
+    p: "0|1|2"   // ← ganti nama file di sini (tanpa .txt), pisah | untuk multi-tes
+};
+
+/* ══════════════════════════════════════════════════════════════════
+   BIODATA CONFIG
+══════════════════════════════════════════════════════════════════ */
+const BIODATA_CONFIG = [
+    { id: 'bioNama',   label: 'Nama Lengkap',       type: 'text',   placeholder: 'Nama Lengkap',  index: 0, required: true },
+    { id: 'bioUsia',   label: 'Usia',                type: 'number', placeholder: 'Usia',           index: 4, required: true },
+    { id: 'bioPend',   label: 'Pendidikan Terakhir', type: 'text',   placeholder: 'S1, SMA, dll',   index: 7, required: true },
+    { id: 'bioGender', label: 'Jenis Kelamin',       type: 'select', index: 8, required: true,
+      options: [{ value: 'L', label: 'Laki-laki' }, { value: 'P', label: 'Perempuan' }] }
+];
+
+/* ══════════════════════════════════════════════════════════════════
+   STATE
+══════════════════════════════════════════════════════════════════ */
+let currentUser  = null;
+let babakList    = [];   // array of { fileKey, dataUrl, data (loaded), saveField, saveIndex, logField, logIndex, _taskId }
+let babakIndex   = 0;   // babak aktif saat ini
+let cfg          = null; // cfg babak aktif
+let questions    = [];
+let qIndex       = 0;
+let userAnswers  = [];
+let skippedIndices  = [];
+let answeredIndices = [];
+
+/* ══════════════════════════════════════════════════════════════════
+   BOOT
+══════════════════════════════════════════════════════════════════ */
+window.onload = async () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlToken  = urlParams.get('token');
+
+    if (urlToken) {
+        localStorage.setItem('token', urlToken);
+        const cleanUrl = window.location.pathname;
+        window.history.replaceState({}, document.title, cleanUrl);
+        await fetchAndRoute(urlToken);
+        return;
+    }
+
+    const token = localStorage.getItem('token');
+    if (!token) { hideLoader(); showScreen('screenLogin'); return; }
+    await fetchAndRoute(token);
+};
+
+/* ── Bangun babakList dari TES_CONFIG.p ── */
+function buildBabakList(pParam) {
+    const baseUrl = 'https://cipta.my.id/who1/';
+    const keys = pParam.split('|').map(k => k.trim()).filter(Boolean);
+    return keys.map((k, i) => ({
+        fileKey:  k,
+        dataUrl:  baseUrl + k + '.txt',
+        data:     null,   // akan diisi saat load
+        _taskId:  'who_' + k
+    }));
+}
+
+async function fetchAndRoute(token) {
+    showLoader('Memeriksa sesi...');
+    try {
+        const result = await apiFetch(`${API_URL}?table=${TABLE_NAME}&x_01_eq=${encodeURIComponent(token)}`,
+            { headers: { 'X-Custom-Auth': AUTH_KEY } });
+
+        if (!result.success || result.count === 0) { logout(); return; }
+
+        currentUser = result.data[0];
+        localStorage.setItem('db_id', currentUser.id_x);
+
+        const bioIncomplete = BIODATA_CONFIG.some(f => f.required && !getBio(f.id).trim());
+        if (bioIncomplete) {
+            renderBioForm();
+            showScreen('screenBio');
+        } else {
+            // Siapkan babak list dari TES_CONFIG
+            babakList = buildBabakList(TES_CONFIG.p);
+
+            if (babakList.length === 0) { showAllDone(); return; }
+
+            if (babakList.length === 1) {
+                // Satu babak — langsung ke tes, tanpa dashboard
+                babakIndex = 0;
+                await openBabak(0);
+            } else {
+                // Multi babak — tampilkan dashboard
+                await renderDashboard();
+            }
+        }
+    } catch(e) { console.error(e); logout(); }
+    finally { hideLoader(); }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   LOGIN
+══════════════════════════════════════════════════════════════════ */
+async function handleLogin() {
+    const token = document.getElementById('tokenInput').value.trim();
+    if (!token) return alert('Token tidak boleh kosong.');
+    const btn = document.getElementById('btnLogin');
+    setLoading(btn, true);
+    try {
+        const result = await apiFetch(`${API_URL}?table=${TABLE_NAME}&x_01_eq=${encodeURIComponent(token)}`,
+            { headers: { 'X-Custom-Auth': AUTH_KEY } });
+        if (result.success && result.count > 0) {
+            localStorage.setItem('token', token);
+            localStorage.setItem('db_id', result.data[0].id_x);
+            currentUser = result.data[0];
+            const bioIncomplete = BIODATA_CONFIG.some(f => f.required && !getBio(f.id).trim());
+            if (bioIncomplete) { renderBioForm(); showScreen('screenBio'); }
+            else {
+                babakList = buildBabakList(TES_CONFIG.p);
+                if (babakList.length === 1) { babakIndex = 0; await openBabak(0); }
+                else await renderDashboard();
+            }
+        } else {
+            alert('Token salah atau tidak terdaftar.');
+        }
+    } catch(e) { alert('Koneksi gagal.'); }
+    finally { setLoading(btn, false); }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   BIODATA
+══════════════════════════════════════════════════════════════════ */
+function getBio(fieldId) {
+    const f = BIODATA_CONFIG.find(c => c.id === fieldId);
+    if (!f) return '';
+    const pipe0   = currentUser.x_02 ? currentUser.x_02.split('|')[0] : '';
+    const semiArr = pipe0 ? pipe0.split(';') : [];
+    return semiArr[f.index] || '';
+}
+
+function renderBioForm() {
+    const container = document.getElementById('bioFormFields');
+    container.innerHTML = '';
+    const sorted = [...BIODATA_CONFIG].sort((a, b) => a.index - b.index);
+    for (const f of sorted) {
+        const div = document.createElement('div');
+        div.className = 'form-group';
+        let input = '';
+        if (f.type === 'select') {
+            const opts = f.options.map(o => `<option value="${o.value}">${o.label}</option>`).join('');
+            input = `<select id="${f.id}"><option value="">Pilih...</option>${opts}</select>`;
+        } else {
+            input = `<input type="${f.type}" id="${f.id}" placeholder="${f.placeholder||''}">`;
+        }
+        div.innerHTML = `<label>${f.label}</label>${input}`;
+        container.appendChild(div);
+    }
+}
+
+async function saveBiodata() {
+    const pipes   = currentUser.x_02 ? currentUser.x_02.split('|') : [];
+    while (pipes.length < 4) pipes.push('');
+    const semiArr = pipes[0] ? pipes[0].split(';') : [];
+    const maxIndex = Math.max(...BIODATA_CONFIG.map(f => f.index));
+    while (semiArr.length <= maxIndex) semiArr.push('');
+    for (const f of BIODATA_CONFIG) {
+        const el  = document.getElementById(f.id);
+        const val = el ? el.value.trim() : '';
+        if (f.required && !val) return alert(`Mohon lengkapi field: ${f.label}`);
+        semiArr[f.index] = val;
+    }
+    pipes[0] = semiArr.join(';');
+    const btn = document.getElementById('btnBio');
+    setLoading(btn, true);
+    try {
+        const idX = localStorage.getItem('db_id');
+        await apiFetch(`${API_URL}?table=${TABLE_NAME}&id_x=${idX}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'X-Custom-Auth': AUTH_KEY },
+            body: JSON.stringify({ x_02: pipes.join('|') })
+        });
+        await fetchAndRoute(localStorage.getItem('token'));
+    } catch(e) { alert('Gagal menyimpan data.'); }
+    finally { setLoading(btn, false); }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   DASHBOARD (multi-babak)
+══════════════════════════════════════════════════════════════════ */
+async function renderDashboard() {
+    showLoader('Memuat daftar tes...');
+    // Load metadata tiap babak (hanya ambil field header, bukan soal)
+    for (let i = 0; i < babakList.length; i++) {
+        if (!babakList[i].data) {
+            try {
+                const resp = await fetch(babakList[i].dataUrl + '?v=' + Date.now());
+                babakList[i].data = await resp.json();
+            } catch(e) { babakList[i].data = { title: 'Tes ' + babakList[i].fileKey }; }
+        }
+    }
+    hideLoader();
+
+    document.getElementById('welcomeName').innerText = 'Halo, ' + (getBio('bioNama') || 'Peserta') + '!';
+
+    const grid = document.getElementById('taskGrid');
+    grid.innerHTML = '';
+    let firstPending = null;
+
+    babakList.forEach((b, i) => {
+        const d       = b.data || {};
+        const sf      = d.saveField || 'x_07';
+        const si      = (d.saveIndex !== undefined) ? d.saveIndex : i;
+        const parts   = (currentUser[sf] || '').split('|');
+        const val     = parts[si] || '';
+        const done    = val.trim() !== '';
+
+        if (!done && !firstPending) firstPending = i;
+
+        const isCurrent = (!done && firstPending === i);
+        const isLocked  = (!done && !isCurrent);
+
+        const div = document.createElement('div');
+        div.className = 'task-item' + (done ? ' done' : isCurrent ? ' current' : ' locked');
+        div.innerHTML = `
+            <div class="task-num">${done ? '✓' : i + 1}</div>
+            <div class="task-name">${d.title || ('Tes ' + b.fileKey)}</div>
+            <span class="task-badge ${done ? 'badge-done' : isCurrent ? 'badge-current' : 'badge-locked'}">
+                ${done ? 'Selesai' : isCurrent ? '▶ Mulai' : 'Terkunci'}
+            </span>`;
+        if (isCurrent) {
+            div.onclick = () => { babakIndex = i; openBabak(i); };
+        }
+        grid.appendChild(div);
+    });
+
+    if (firstPending === null) {
+        document.getElementById('welcomeSub').innerText = '🎉 Semua tes telah selesai. Terima kasih!';
+    } else {
+        document.getElementById('welcomeSub').innerText = 'Klik tes yang bertanda ▶ Mulai untuk memulai.';
+    }
+    showScreen('screenDash');
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   BUKA BABAK
+══════════════════════════════════════════════════════════════════ */
+async function openBabak(idx) {
+    showLoader('Memuat tes...');
+    try {
+        const b = babakList[idx];
+        if (!b.data) {
+            const resp = await fetch(b.dataUrl + '?v=' + Date.now());
+            b.data = await resp.json();
+        }
+        const d = b.data;
+
+        // Bangun cfg dari data .txt
+        cfg = {
+            _taskId:    b._taskId,
+            title:      d.title      || 'Tes',
+            desc:       d.desc       || '',
+            instructions: d.instructions || '',
+            exImgTop:   d.exImgTop   || '',
+            exImgBottom: d.exImgBottom || '',
+            exNote:     d.exNote     || '',
+            saveField:  d.saveField  || 'x_07',
+            saveIndex:  (d.saveIndex !== undefined) ? d.saveIndex : idx,
+            logField:   d.logField   || null,
+            logIndex:   (d.logIndex  !== undefined) ? d.logIndex  : idx,
+            dataUrl:    b.dataUrl
+        };
+
+        hideLoader();
+
+        // Tampilkan start screen
+        document.getElementById('startTitle').innerText        = cfg.title;
+        document.getElementById('startInstructions').innerText = cfg.instructions || cfg.desc;
+        document.getElementById('exNote').innerText            = cfg.exNote;
+
+        // Gambar contoh
+        const imgTop = document.getElementById('exImgTop');
+        const imgBot = document.getElementById('exImgBottom');
+        imgTop.style.display = cfg.exImgTop    ? '' : 'none';
+        imgBot.style.display = cfg.exImgBottom ? '' : 'none';
+        if (cfg.exImgTop)    imgTop.src = cfg.exImgTop;
+        if (cfg.exImgBottom) imgBot.src = cfg.exImgBottom;
+
+        // Sembunyikan exampleBlock jika tidak ada gambar & exNote kosong
+        const hasExample = cfg.exImgTop || cfg.exImgBottom || cfg.exNote;
+        document.getElementById('exampleBlock').style.display = hasExample ? '' : 'none';
+
+        showScreen('screenStart');
+    } catch(e) {
+        alert('Gagal memuat tes: ' + e.message);
+        hideLoader();
+        if (babakList.length > 1) renderDashboard();
+    }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   START TEST
+══════════════════════════════════════════════════════════════════ */
+async function startTest() {
+    showLoader('Memuat soal...');
+    try {
+        // Ambil soal dari data yang sudah di-cache
+        const d = babakList[babakIndex].data;
+        questions = d.questions || [];
+        if (questions.length === 0) throw new Error('Soal kosong.');
+
+        // Restore / reset state
+        const saved = localStorage.getItem('_st_' + cfg._taskId);
+        if (saved) {
+            const s = JSON.parse(saved);
+            qIndex          = s.qIndex          || 0;
+            userAnswers     = s.userAnswers      || [];
+            skippedIndices  = s.skippedIndices   || [];
+            answeredIndices = s.answeredIndices  || [];
+        } else {
+            qIndex = 0; userAnswers = [];
+            skippedIndices = []; answeredIndices = [];
+        }
+
+        document.getElementById('testTitle').innerText = cfg.title;
+        showScreen('screenTest');
+        renderQuestion();
+    } catch(e) {
+        alert('Gagal memuat soal: ' + e.message);
+        if (babakList.length > 1) renderDashboard();
+    } finally { hideLoader(); }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   STATE SAVE / LOAD
+══════════════════════════════════════════════════════════════════ */
+function saveState() {
+    localStorage.setItem('_st_' + cfg._taskId, JSON.stringify(
+        { qIndex, userAnswers, skippedIndices, answeredIndices }
+    ));
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   RENDER QUESTION
+══════════════════════════════════════════════════════════════════ */
+function renderQuestion() {
+    updateProgress();
+
+    if (qIndex < 0 || qIndex >= questions.length) {
+        if (skippedIndices.length > 0) {
+            qIndex = skippedIndices.shift();
+            saveState();
+        } else {
+            endTest();
+            return;
+        }
+    }
+
+    const q = questions[qIndex];
+    renderDynChoice(q);
+}
+
+/* ── Dynamic choice renderer (A–G, horizontal grid) ── */
+function renderDynChoice(q) {
+    const opts = q.options || {};
+    const keys = Object.keys(opts);
+
+    const skippedBadge = skippedIndices.includes(qIndex)
+        ? ' <span style="background:#fef3c7;color:#92400e;font-size:0.75em;padding:2px 8px;border-radius:99px;font-weight:600;">⟳ Dilewati</span>'
+        : '';
+
+    let btns = '';
+    for (const k of keys) {
+        if (!opts[k]) continue;
+        btns += `<button class="opt-grid-btn" onclick="submitChoice('${k}')">
+                    <span class="opt-key">${k}</span>
+                    ${escHtml(opts[k])}
+                 </button>`;
+    }
+
+    document.getElementById('questionContent').innerHTML =
+        `<div class="q-label">Soal No. ${qIndex + 1}${skippedBadge}</div>
+         <div class="q-text">${escHtml(q.question)}</div>
+         <div class="options-grid">${btns}</div>`;
+
+    document.getElementById('actionBar').innerHTML =
+        `<button class="btn btn-outline btn-sm" onclick="skipQ()">Lewati</button>`;
+}
+
+function submitChoice(key) {
+    markAnswered(qIndex);
+    userAnswers.push(key);
+    saveState();
+    goNext();
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   NAVIGATION
+══════════════════════════════════════════════════════════════════ */
+function goNext() {
+    let found = -1;
+    for (let i = qIndex + 1; i < questions.length; i++) {
+        if (!answeredIndices.includes(i) && !skippedIndices.includes(i)) { found = i; break; }
+    }
+    if (found !== -1) {
+        qIndex = found;
+    } else if (skippedIndices.length > 0) {
+        qIndex = skippedIndices.shift();
+    } else {
+        saveState(); endTest(); return;
+    }
+    saveState(); renderQuestion();
+}
+
+function skipQ() {
+    if (!skippedIndices.includes(qIndex) && !answeredIndices.includes(qIndex)) {
+        skippedIndices.push(qIndex);
+        userAnswers.push('SKIP');
+    }
+    let found = -1;
+    for (let i = qIndex + 1; i < questions.length; i++) {
+        if (!answeredIndices.includes(i) && !skippedIndices.includes(i)) { found = i; break; }
+    }
+    if (found !== -1) {
+        qIndex = found;
+    } else if (skippedIndices.length > 0) {
+        qIndex = skippedIndices.shift();
+    } else {
+        saveState(); endTest(); return;
+    }
+    saveState(); renderQuestion();
+}
+
+function markAnswered(idx) {
+    if (!answeredIndices.includes(idx)) answeredIndices.push(idx);
+    const pos = skippedIndices.indexOf(idx);
+    if (pos !== -1) {
+        skippedIndices.splice(pos, 1);
+        const skipTag = (idx + 1) + 'SKIP';
+        const ua = userAnswers.indexOf(skipTag);
+        if (ua !== -1) userAnswers.splice(ua, 1);
+    }
+}
+
+function updateProgress() {
+    const total = questions.length;
+    const done  = answeredIndices.length;
+    const pct   = total ? Math.round((done / total) * 100) : 0;
+    document.getElementById('progressBar').style.width = pct + '%';
+    let info = `Soal ${qIndex + 1} / ${total}`;
+    if (skippedIndices.length > 0) info += ` · ⟳ ${skippedIndices.length} dilewati`;
+    document.getElementById('progressInfo').innerText = info;
+    const bbTitle = document.getElementById('bbTitle');
+    const bbProg  = document.getElementById('bbProgress');
+    if (bbTitle) bbTitle.innerText = cfg.title || '';
+    if (bbProg)  bbProg.innerText  = info;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   END TEST — simpan ke DB
+══════════════════════════════════════════════════════════════════ */
+async function endTest() {
+    showLoader('Menyimpan hasil...');
+    const idX = localStorage.getItem('db_id');
+    try {
+        const cur = await apiGet(idX);
+        const upd = {};
+
+        // Jawaban → x_07 (saveField dari .txt)
+        const sf = cfg.saveField;
+        let sp   = (cur.data[sf] || '').split('|');
+        while (sp.length <= cfg.saveIndex) sp.push('');
+        sp[cfg.saveIndex] = userAnswers.join(';') + ';';
+        upd[sf] = sp.join('|');
+
+
+
+        await apiPut(idX, upd);
+        localStorage.removeItem('_st_' + cfg._taskId);
+
+        // Update currentUser lokal
+        currentUser = cur.data;
+        currentUser[sf] = upd[sf];
+
+        console.log('[TES SELESAI] ' + cfg.title + ' | Jawaban: ' + userAnswers.length);
+        hideLoader();
+        afterTest();
+    } catch(e) {
+        alert('Gagal menyimpan: ' + e.message);
+        hideLoader();
+    }
+}
+
+function afterTest() {
+    if (babakList.length === 1) {
+        // Satu babak — tampilkan layar done
+        showAllDone();
+    } else {
+        // Multi babak — cari babak berikutnya
+        const nextIdx = findNextBabak();
+        if (nextIdx !== -1) {
+            babakIndex = nextIdx;
+            openBabak(nextIdx);
+        } else {
+            showAllDone();
+        }
+    }
+}
+
+function findNextBabak() {
+    for (let i = 0; i < babakList.length; i++) {
+        const d  = babakList[i].data || {};
+        const sf = d.saveField || 'x_07';
+        const si = (d.saveIndex !== undefined) ? d.saveIndex : i;
+        const parts = (currentUser[sf] || '').split('|');
+        const val   = parts[si] || '';
+        if (val.trim() === '') return i;
+    }
+    return -1;
+}
+
+function showAllDone() {
+    document.getElementById('doneIcon').innerText  = '🎉';
+    document.getElementById('doneTitle').innerText = 'Semua Tes Selesai!';
+    document.getElementById('doneDesc').innerText  = 'Terima kasih sudah mengikuti tes. Hasil Anda telah tersimpan.';
+    const btn = document.getElementById('btnDoneNext');
+    btn.innerText = 'Logout';
+    btn.onclick   = logout;
+    showScreen('screenDone');
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   API HELPERS
+══════════════════════════════════════════════════════════════════ */
+async function apiFetch(url, opts = {}) {
+    const r = await fetch(url, opts);
+    return r.json();
+}
+async function apiGet(idX) {
+    return apiFetch(`${API_URL}?table=${TABLE_NAME}&id_x=${idX}`,
+        { headers: { 'X-Custom-Auth': AUTH_KEY } });
+}
+async function apiPut(idX, body) {
+    return fetch(`${API_URL}?table=${TABLE_NAME}&id_x=${idX}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'X-Custom-Auth': AUTH_KEY },
+        body: JSON.stringify(body)
+    });
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   UI HELPERS
+══════════════════════════════════════════════════════════════════ */
+function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+}
+function showLoader(txt) {
+    document.getElementById('loaderText').innerText = txt || 'Memuat...';
+    document.getElementById('globalLoader').classList.remove('hidden');
+}
+function hideLoader() { document.getElementById('globalLoader').classList.add('hidden'); }
+function setLoading(btn, on) {
+    btn.disabled = on;
+    if (on) { btn.dataset.txt = btn.innerHTML; btn.innerHTML = '<span class="spinner" style="width:18px;height:18px;border-width:3px"></span>'; }
+    else btn.innerHTML = btn.dataset.txt;
+}
+function logout() { localStorage.clear(); location.reload(); }
+function confirmLogout() {
+    if (confirm('Yakin ingin logout?')) logout();
+}
+function escHtml(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+</script>
+</body>
+</html>
