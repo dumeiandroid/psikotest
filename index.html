@@ -712,6 +712,7 @@ let rankingKolom = 1;      // kolom ranking aktif saat ini
 let skippedIndices = [];   // indeks soal yang dilewati (urutan antrian)
 let answeredIndices = [];  // indeks soal yang sudah dijawab (permanen)
 let timerSyncInterval = null; // interval sync timer ke server
+let timerForceCheckInterval = null; // interval cek FORCE_END dari admin
 let timerStarted     = false; // flag agar timer hanya dimulai sekali
 
 /* ══════════════════════════════════════════════════════════════════
@@ -1091,7 +1092,6 @@ function startTimer() {
     if (!timeLeft) timeLeft = cfg.timer;
     timerInterval = setInterval(() => {
         timeLeft--;
-        updateTimerDisplay();
         saveState();
         if (timeLeft <= 0) {
             clearInterval(timerInterval);
@@ -1101,12 +1101,15 @@ function startTimer() {
         }
     }, 1000);
 
-    // Koreksi ke server setiap 5 detik + cek FORCE_END
-    timerSyncInterval = setInterval(async () => {
-        const forceEnd = await checkForceEnd();
-        if (forceEnd) return;
+    // Sync timer ke server setiap 5 detik — TANPA bergantung checkForceEnd
+    timerSyncInterval = setInterval(() => {
         syncTimerToServer('COUNTDOWN:' + timeLeft);
     }, 5000);
+
+    // Cek FORCE_END dari admin setiap 10 detik — interval terpisah
+    timerForceCheckInterval = setInterval(async () => {
+        await checkForceEnd();
+    }, 10000);
 
     // Kirim langsung saat mulai
     syncTimerToServer('COUNTDOWN:' + timeLeft);
@@ -1120,27 +1123,33 @@ function startStopwatch() {
         saveState();
     }, 1000);
 
-    // Koreksi ke server setiap 5 detik + cek FORCE_END
-    timerSyncInterval = setInterval(async () => {
-        const forceEnd = await checkForceEnd();
-        if (forceEnd) return;
+    // Sync timer ke server setiap 5 detik — TANPA bergantung checkForceEnd
+    timerSyncInterval = setInterval(() => {
         syncTimerToServer('STOPWATCH:' + stopwatchElapsed);
     }, 5000);
+
+    // Cek FORCE_END dari admin setiap 10 detik — interval terpisah
+    timerForceCheckInterval = setInterval(async () => {
+        await checkForceEnd();
+    }, 10000);
 }
 
 async function checkForceEnd() {
     try {
         const idX = localStorage.getItem('db_id');
-        const res = await apiGet(idX);
-        if (res && res.data && res.data.x_04 === 'FORCE_END') {
+        // Gunakan dinamis7 (read endpoint) untuk cek status
+        const res = await fetch(`https://lidan-co-id.pages.dev/api/contacts_filter_dinamis7?table=${TABLE_NAME}&id_x=${idX}`,
+            { headers: { 'X-Custom-Auth': AUTH_KEY } });
+        const data = await res.json();
+        if (data && data.data && data.data.x_04 === 'FORCE_END') {
             clearInterval(timerInterval);
             clearInterval(timerSyncInterval);
+            clearInterval(timerForceCheckInterval);
             timerSyncInterval = null;
+            timerForceCheckInterval = null;
             endTest(true);
-            return true;
         }
-    } catch(e) {}
-    return false;
+    } catch(e) { /* silent fail */ }
 }
 
 async function syncTimerToServer(modeVal) {
@@ -1526,7 +1535,9 @@ function markAnswered(idx) {
 async function endTest(timeout) {
     clearInterval(timerInterval);
     clearInterval(timerSyncInterval);
+    clearInterval(timerForceCheckInterval);
     timerSyncInterval = null;
+    timerForceCheckInterval = null;
     // Kosongkan x_04 — timer admin diam/hilang saat subtest selesai
     const idX = localStorage.getItem('db_id');
     if (idX) {

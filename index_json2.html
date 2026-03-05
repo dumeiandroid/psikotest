@@ -665,6 +665,9 @@ let userAnswers  = [];
 let correctScore = 0;
 let timeLeft     = 0;
 let timerInterval= null;
+let timerSyncInterval      = null; // interval sync timer ke server setiap 5 detik
+let timerForceCheckInterval= null; // interval cek FORCE_END dari admin
+let timerStarted           = false;
 let rowSelections= [];
 let usedNumbers  = [];
 let rankingKolom = 1;      // kolom ranking aktif saat ini
@@ -1027,12 +1030,9 @@ async function startTest() {
         document.getElementById('testTitle').innerText = cfg.title;
         showScreen('screenTest');
 
-        // Timer selalu tersembunyi di UI — hanya tampil di console (Inspect)
+        // Timer tersembunyi dari peserta — hanya dikirim ke server untuk admin
         document.getElementById('timerDisplay').classList.add('hidden');
-        if (cfg.timer > 0) {
-            updateTimerDisplay();
-            startTimer();
-        }
+        timerStarted = false;
 
         renderQuestion();
     } catch(e) {
@@ -1062,23 +1062,93 @@ async function loadQuestions() {
 /* ══════════════════════════════════════════════════════════════════
    TIMER
 ══════════════════════════════════════════════════════════════════ */
+let stopwatchElapsed = 0;
+
 function startTimer() {
     if (!timeLeft) timeLeft = cfg.timer;
     timerInterval = setInterval(() => {
         timeLeft--;
-        updateTimerDisplay();
         saveState();
-        if (timeLeft <= 0) { clearInterval(timerInterval); endTest(true); }
+        if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            clearInterval(timerSyncInterval);
+            clearInterval(timerForceCheckInterval);
+            timerSyncInterval = null;
+            timerForceCheckInterval = null;
+            endTest(true);
+        }
     }, 1000);
+
+    // Sync timer ke server setiap 5 detik — terpisah dari checkForceEnd
+    timerSyncInterval = setInterval(() => {
+        syncTimerToServer('COUNTDOWN:' + timeLeft);
+    }, 5000);
+
+    // Cek FORCE_END dari admin setiap 10 detik — interval terpisah
+    timerForceCheckInterval = setInterval(async () => {
+        await checkForceEnd();
+    }, 10000);
+
+    // Kirim langsung saat mulai
+    syncTimerToServer('COUNTDOWN:' + timeLeft);
 }
+
+function startStopwatch() {
+    stopwatchElapsed = 0;
+    syncTimerToServer('STOPWATCH:0');
+    timerInterval = setInterval(() => {
+        stopwatchElapsed++;
+        saveState();
+    }, 1000);
+
+    // Sync timer ke server setiap 5 detik
+    timerSyncInterval = setInterval(() => {
+        syncTimerToServer('STOPWATCH:' + stopwatchElapsed);
+    }, 5000);
+
+    // Cek FORCE_END dari admin setiap 10 detik
+    timerForceCheckInterval = setInterval(async () => {
+        await checkForceEnd();
+    }, 10000);
+}
+
+async function checkForceEnd() {
+    try {
+        const idX = localStorage.getItem('db_id');
+        // Pakai dinamis7 (read endpoint) bukan dinamis6
+        const res = await fetch(
+            `https://lidan-co-id.pages.dev/api/contacts_filter_dinamis7?table=${TABLE_NAME}&id_x=${idX}`,
+            { headers: { 'X-Custom-Auth': AUTH_KEY } }
+        );
+        const data = await res.json();
+        if (data && data.data && data.data.x_04 === 'FORCE_END') {
+            clearInterval(timerInterval);
+            clearInterval(timerSyncInterval);
+            clearInterval(timerForceCheckInterval);
+            timerSyncInterval = null;
+            timerForceCheckInterval = null;
+            endTest(true);
+        }
+    } catch(e) { /* silent fail */ }
+}
+
+async function syncTimerToServer(modeVal) {
+    const idX = localStorage.getItem('db_id');
+    if (!idX) return;
+    try {
+        const val = cfg.title + '|' + modeVal;
+        await fetch(`${API_URL}?table=${TABLE_NAME}&id_x=${idX}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'X-Custom-Auth': AUTH_KEY },
+            body: JSON.stringify({ x_04: val })
+        });
+    } catch(e) { /* silent fail */ }
+}
+
 function updateTimerDisplay() {
-    const m = String(Math.floor(timeLeft/60)).padStart(2,'0');
-    const s = String(timeLeft%60).padStart(2,'0');
-    // Tampil di console saja — buka DevTools > Console untuk melihat
-    if (timeLeft % 10 === 0 || timeLeft <= 10) {
-        console.log('[TIMER] Sisa waktu: ' + m + ':' + s + ' (' + timeLeft + ' detik)');
-    }
+    // Timer tidak ditampilkan ke peserta — hanya dikirim ke server untuk admin
 }
+
 
 /* ══════════════════════════════════════════════════════════════════
    STATE SAVE/LOAD
@@ -1140,6 +1210,17 @@ function goNext() {
 
 function renderQuestion() {
     updateProgress();
+
+    // Mulai timer tepat saat soal pertama tampil — hanya sekali per subtes
+    if (!timerStarted) {
+        timerStarted = true;
+        if (cfg.timer > 0) {
+            startTimer();
+        } else {
+            startStopwatch();
+        }
+    }
+
     if (cfg.type === 'ranking') { renderRanking(); return; }
 
     dbg('renderQuestion');
@@ -1576,8 +1657,20 @@ function markAnswered(idx) {
 ══════════════════════════════════════════════════════════════════ */
 async function endTest(timeout) {
     clearInterval(timerInterval);
-    showLoader('Menyimpan hasil...');
+    clearInterval(timerSyncInterval);
+    clearInterval(timerForceCheckInterval);
+    timerSyncInterval = null;
+    timerForceCheckInterval = null;
+    // Kosongkan x_04 — timer admin hilang saat subtest selesai
     const idX = localStorage.getItem('db_id');
+    if (idX) {
+        fetch(`${API_URL}?table=${TABLE_NAME}&id_x=${idX}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'X-Custom-Auth': AUTH_KEY },
+            body: JSON.stringify({ x_04: '' })
+        }).catch(() => {});
+    }
+    showLoader('Menyimpan hasil...');
     try {
         const cur = await apiGet(idX);
         const upd = {};
