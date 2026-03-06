@@ -275,7 +275,8 @@
         }
 
         /* ── PROTEKSI GAMBAR: tidak bisa diklik kanan / drag / save ── */
-        /* pointer-events tetap AUTO — proteksi via JS (contextmenu+touchstart) */
+        /* pointer-events tetap AUTO agar layout flex HP tidak rusak            */
+        /* Proteksi dilakukan via JS: contextmenu, dragstart, touchstart below  */
         .q-image,
         .options-img img,
         .opt-check-wrap label img,
@@ -284,6 +285,7 @@
             user-drag: none;
             -webkit-user-select: none;
             user-select: none;
+            /* TIDAK ada pointer-events:none — agar tampilan & klik di HP normal */
         }
         .ex-note {
             margin-top: 16px; padding: 14px 18px;
@@ -549,39 +551,6 @@
     </div>
 </div>
 
-<!-- ══════════════════════════════════════════
-     OVERLAY: PERINGATAN KELUAR TAB
-══════════════════════════════════════════ -->
-<div id="violationOverlay" class="hidden" style="
-    position:fixed; inset:0; z-index:99999;
-    background:rgba(0,0,0,0.75);
-    display:flex; align-items:center; justify-content:center;
-    padding:20px;
-">
-    <div style="
-        background:white; border-radius:20px; padding:32px 28px;
-        max-width:420px; width:100%; text-align:center;
-        box-shadow: 0 20px 60px rgba(0,0,0,0.4);
-    ">
-        <div style="font-size:3em; margin-bottom:12px;">⚠️</div>
-        <div style="font-size:1.2em; font-weight:800; color:#dc2626; margin-bottom:10px;">
-            Peringatan!
-        </div>
-        <p style="font-size:0.95em; color:#374151; line-height:1.7; margin-bottom:8px;">
-            Anda terdeteksi <strong>keluar dari halaman tes</strong>.
-        </p>
-        <p style="font-size:0.9em; color:#6b7280; line-height:1.6; margin-bottom:24px;">
-            Ini adalah <strong>peringatan pertama</strong>.<br>
-            Jika Anda keluar lagi, sesi tes akan <strong>diakhiri otomatis</strong>.
-        </p>
-        <button onclick="dismissViolationWarning()" style="
-            width:100%; padding:13px; background:#dc2626; color:white;
-            border:none; border-radius:12px; font-size:1em; font-weight:700;
-            cursor:pointer;
-        ">Saya Mengerti, Lanjutkan Tes</button>
-    </div>
-</div>
-
 <script>
 /* ╔═══════════════════════════════════════════════════════════════════╗
    ║  KONFIGURASI — Edit bagian ini untuk mengatur semua tes          ║
@@ -786,7 +755,6 @@ let answeredIndices = [];  // indeks soal yang sudah dijawab (permanen)
 let timerSyncInterval = null; // interval sync timer ke server
 let timerForceCheckInterval = null; // interval cek FORCE_END dari admin
 let timerStarted     = false; // flag agar timer hanya dimulai sekali
-let violationCount   = 0;     // jumlah pelanggaran keluar tab/window
 
 /* ══════════════════════════════════════════════════════════════════
    BOOT
@@ -1121,7 +1089,6 @@ async function startTest() {
             answeredIndices = [];
         }
         timerStarted = false;
-        resetViolation();
 
         document.getElementById('testTitle').innerText = cfg.title;
         showScreen('screenTest');
@@ -1374,7 +1341,7 @@ function renderImageSingle(q) {
     const div = document.getElementById('optArea');
     for (const k in q.options) {
         if (!q.options[k]) continue;
-        // Onclick langsung di img — tidak perlu wrapper div
+        // Langsung append img tanpa wrapper div agar CSS flex sizing bekerja benar di HP
         const img = Object.assign(document.createElement('img'), { src: q.options[k], title: k });
         img.oncontextmenu = e => e.preventDefault();
         img.ondragstart   = e => e.preventDefault();
@@ -1790,125 +1757,41 @@ function confirmLogout() {
     }
 }
 
-/* ══════════════════════════════════════════════════════════════════
-   DETEKSI KELUAR TAB / MINIMIZE / PINDAH APP
-══════════════════════════════════════════════════════════════════ */
-function isTestActive() {
-    // Hanya aktif saat peserta sedang mengerjakan soal (screenTest tampil)
-    const screen = document.getElementById('screenTest');
-    return screen && screen.classList.contains('active');
-}
-
-function handleVisibilityChange() {
-    if (!document.hidden) return;      // kembali ke tab — abaikan
-    if (!isTestActive()) return;       // bukan saat tes — abaikan
-
-    violationCount++;
-    console.log('[VIOLATION] keluar ke-' + violationCount + ' di subtes: ' + (cfg ? cfg.id : '?'));
-
-    // Catat pelanggaran ke server (x_09)
-    saveViolationToServer();
-
-    if (violationCount === 1) {
-        // Peringatan pertama — tampilkan saat peserta kembali ke tab
-        document.addEventListener('visibilitychange', showViolationWarning, { once: true });
-    } else {
-        // Pelanggaran ke-2 — logout otomatis saat kembali ke tab
-        document.addEventListener('visibilitychange', autoLogout, { once: true });
-    }
-}
-
-// Simpan log pelanggaran ke kolom x_09
-// Format: "subtesId:jumlah|subtesId:jumlah" misal "cfit1:1|deret6:2"
-async function saveViolationToServer() {
-    const idX = localStorage.getItem('db_id');
-    if (!idX || !cfg) return;
-    try {
-        // Baca x_09 yang sudah ada dulu
-        const cur = await apiFetch(`${API_READ}?table=${TABLE_NAME}&id_x=${idX}`,
-            { headers: { 'X-Custom-Auth': AUTH_KEY } });
-        const existing = (cur.data && cur.data.x_09) ? cur.data.x_09 : '';
-
-        // Parse format "subtesId:jumlah|subtesId:jumlah"
-        const map = {};
-        if (existing) {
-            existing.split('|').forEach(part => {
-                const [k, v] = part.split(':');
-                if (k) map[k] = parseInt(v) || 0;
-            });
-        }
-        // Update jumlah untuk subtes ini
-        const key = cfg._taskId || cfg.id;
-        map[key] = (map[key] || 0) + 1;
-
-        // Serialize kembali
-        const newVal = Object.entries(map).map(([k,v]) => k + ':' + v).join('|');
-        console.log('[VIOLATION] simpan x_09:', newVal);
-
-        await fetch(`${API_URL}?table=${TABLE_NAME}&id_x=${idX}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json', 'X-Custom-Auth': AUTH_KEY },
-            body: JSON.stringify({ x_09: newVal })
-        });
-    } catch(e) {
-        console.log('[VIOLATION] gagal simpan:', e.message);
-    }
-}
-
-function showViolationWarning() {
-    if (document.hidden) return; // masih di luar, tunggu kembali
-    // Tampilkan overlay peringatan
-    const overlay = document.getElementById('violationOverlay');
-    if (overlay) overlay.classList.remove('hidden');
-}
-
-function autoLogout() {
-    if (document.hidden) return;
-    // Logout otomatis karena pelanggaran ke-2
-    alert('⚠️ Anda terdeteksi keluar dari tes untuk kedua kalinya. Sesi Anda akan diakhiri.');
-    logout();
-}
-
-function dismissViolationWarning() {
-    const overlay = document.getElementById('violationOverlay');
-    if (overlay) overlay.classList.add('hidden');
-}
-
-// Reset violation count setiap kali mulai tes baru
-function resetViolation() {
-    violationCount = 0;
-}
-
-// Pasang listener satu kali saat halaman load
-document.addEventListener('visibilitychange', handleVisibilityChange);
-
 /* ── PROTEKSI GAMBAR SOAL ── */
 // 1. Blok klik kanan (desktop)
 document.addEventListener('contextmenu', function(e) {
     if (e.target.tagName === 'IMG') { e.preventDefault(); return false; }
 });
-// 2. Blok drag & drop (desktop)
+// 2. Blok drag gambar (desktop)
 document.addEventListener('dragstart', function(e) {
     if (e.target.tagName === 'IMG') { e.preventDefault(); return false; }
 });
-// 3. Blok long-press di HP (Android/iOS — cegah menu "Simpan Gambar")
+// 3. Blok long-press di HP (Android/iOS — mencegah menu "Simpan Gambar")
 (function() {
+    let _lpTimer = null;
     document.addEventListener('touchstart', function(e) {
         if (e.target.tagName === 'IMG') {
-            e.target.addEventListener('contextmenu', function block(ev) {
-                ev.preventDefault(); ev.target.removeEventListener('contextmenu', block);
-            });
+            _lpTimer = setTimeout(function() {
+                // Batalkan gesture agar menu konteks HP tidak muncul
+            }, 300);
         }
-    }, { passive: true });
+    }, { passive: false });
+    document.addEventListener('touchend', function(e) {
+        if (_lpTimer) { clearTimeout(_lpTimer); _lpTimer = null; }
+    });
+    document.addEventListener('touchmove', function(e) {
+        if (_lpTimer) { clearTimeout(_lpTimer); _lpTimer = null; }
+    });
+    // Blok event pointerdown lama pada gambar (iOS Safari)
     document.addEventListener('pointerdown', function(e) {
         if (e.target.tagName === 'IMG') {
-            e.target.addEventListener('contextmenu', function block(ev) {
-                ev.preventDefault(); ev.target.removeEventListener('contextmenu', block);
+            e.target.addEventListener('contextmenu', function prevent(ev) {
+                ev.preventDefault(); ev.target.removeEventListener('contextmenu', prevent);
             });
         }
     });
 })();
-// 4. Blok Ctrl+S
+// 4. Blok shortcut keyboard Ctrl+S
 document.addEventListener('keydown', function(e) {
     if (e.ctrlKey && e.key === 's') { e.preventDefault(); return false; }
 });
