@@ -1410,36 +1410,14 @@ function submitTextChoice(k, ans) {
 function numpadPress(val) {
     const inp = document.getElementById('userAnswer');
     if (!inp) return;
-
     if (val === 'DEL') {
         inp.value = inp.value.slice(0, -1);
-    } else if (val === ' ') {
-        // Spasi hanya boleh ditambah jika:
-        // - ada angka sebelumnya, dan
-        // - belum ada spasi di dalam nilai (hanya 1 spasi diperbolehkan)
-        const cur = inp.value;
-        if (cur.trim() !== '' && !cur.includes(' ')) {
-            inp.value = cur + ' ';
-        }
-        // jika sudah ada spasi, abaikan tombol spasi
     } else {
-        // Angka: jika sudah ada spasi, angka ditambah di bagian kanan
-        // Batasi agar setiap bagian (kiri/kanan spasi) max 6 digit
-        const cur = inp.value;
-        const parts = cur.split(' ');
-        if (parts.length === 2 && parts[1].length >= 6) return; // batas digit kanan
-        if (parts.length === 1 && parts[0].length >= 6) return; // batas digit kiri
-        inp.value = cur + val;
+        inp.value += val;
     }
-
-    // Validasi: tombol Jawab aktif HANYA jika format = "angka spasi angka"
-    // contoh: "28 32", "100 105", "7 14"
+    // update tombol Jawab
     const btn = document.getElementById('btnNext');
-    if (btn) {
-        const v = inp.value;
-        const valid = /^\d+\s+\d+$/.test(v);
-        btn.disabled = !valid;
-    }
+    if (btn) btn.disabled = inp.value.trim() === '';
 }
 
 function renderTextInput(q) {
