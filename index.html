@@ -192,6 +192,32 @@
         }
         #userAnswer:focus { border-color: var(--primary); }
 
+        /* ── NUMPAD (Deret Angka) ── */
+        .numpad-wrap {
+            display: flex; flex-direction: column; align-items: center; gap: 8px;
+            margin-top: 4px;
+        }
+        .numpad-row { display: flex; gap: 8px; justify-content: center; }
+        .numpad-btn {
+            width: 54px; height: 54px;
+            border: 2px solid var(--border); border-radius: 12px;
+            background: white; color: var(--text);
+            font-size: 1.2em; font-weight: 700;
+            cursor: pointer; transition: all 0.15s;
+            display: flex; align-items: center; justify-content: center;
+            font-family: inherit;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+        .numpad-btn:active { background: var(--primary); color: white; border-color: var(--primary); transform: scale(0.93); }
+        .numpad-btn.btn-space { width: 120px; font-size: 0.9em; }
+        .numpad-btn.btn-del   { background: #fff1f2; border-color: #fecdd3; color: #e11d48; }
+        .numpad-btn.btn-del:active { background: #e11d48; color: white; border-color: #e11d48; }
+        @media (max-width: 600px) {
+            .numpad-btn { width: 46px; height: 46px; font-size: 1.05em; border-radius: 10px; }
+            .numpad-btn.btn-space { width: 100px; }
+        }
+
         /* action bar */
         .action-bar { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 12px; }
         .action-bar .btn { width: auto; }
@@ -692,6 +718,7 @@ const CONFIG = [
    ║  API CONFIG                                                      ║
    ╚═══════════════════════════════════════════════════════════════════╝ */
 const API_URL    = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis6';
+const API_READ   = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis7';
 const TABLE_NAME = 'nilai1';
 const AUTH_KEY   = 'admin';
 
@@ -745,7 +772,7 @@ window.onload = async () => {
 async function fetchAndRoute(token) {
     showLoader('Memeriksa sesi...');
     try {
-        const result = await apiFetch(`${API_URL}?table=${TABLE_NAME}&x_01_eq=${token}`,
+        const result = await apiFetch(`${API_READ}?table=${TABLE_NAME}&x_01_eq=${token}`,
             { headers: { 'X-Custom-Auth': AUTH_KEY } });
 
         if (!result.success || result.count === 0) { logout(); return; }
@@ -773,7 +800,7 @@ async function handleLogin() {
     const btn = document.getElementById('btnLogin');
     setLoading(btn, true);
     try {
-        const result = await apiFetch(`${API_URL}?table=${TABLE_NAME}&x_01_eq=${token}`,
+        const result = await apiFetch(`${API_READ}?table=${TABLE_NAME}&x_01_eq=${token}`,
             { headers: { 'X-Custom-Auth': AUTH_KEY } });
         if (result.success && result.count > 0) {
             localStorage.setItem('token', token);
@@ -1116,29 +1143,21 @@ function startTimer() {
 }
 
 function startStopwatch() {
+    // Tes tanpa timer (RMIB, EPPS) — tidak perlu sync ke server sama sekali
     stopwatchElapsed = 0;
-    syncTimerToServer('STOPWATCH:0');
     timerInterval = setInterval(() => {
         stopwatchElapsed++;
         saveState();
     }, 1000);
-
-    // Sync timer ke server setiap 5 detik — TANPA bergantung checkForceEnd
-    timerSyncInterval = setInterval(() => {
-        syncTimerToServer('STOPWATCH:' + stopwatchElapsed);
-    }, 5000);
-
-    // Cek FORCE_END dari admin setiap 10 detik — interval terpisah
-    timerForceCheckInterval = setInterval(async () => {
-        await checkForceEnd();
-    }, 10000);
+    // timerSyncInterval dan timerForceCheckInterval sengaja tidak dijalankan
+    // agar tidak ada request ke server yang bisa mengganggu alur penyimpanan
 }
 
 async function checkForceEnd() {
     try {
         const idX = localStorage.getItem('db_id');
         // Gunakan dinamis7 (read endpoint) untuk cek status
-        const res = await fetch(`https://lidan-co-id.pages.dev/api/contacts_filter_dinamis7?table=${TABLE_NAME}&id_x=${idX}`,
+        const res = await fetch(`${API_READ}?table=${TABLE_NAME}&id_x=${idX}`,
             { headers: { 'X-Custom-Auth': AUTH_KEY } });
         const data = await res.json();
         if (data && data.data && data.data.x_04 === 'FORCE_END') {
@@ -1367,21 +1386,61 @@ function submitTextChoice(k, ans) {
 }
 
 /* ── text_input ──────────────────────────────────────────────── */
+function numpadPress(val) {
+    const inp = document.getElementById('userAnswer');
+    if (!inp) return;
+    if (val === 'DEL') {
+        inp.value = inp.value.slice(0, -1);
+    } else {
+        inp.value += val;
+    }
+    // update tombol Jawab
+    const btn = document.getElementById('btnNext');
+    if (btn) btn.disabled = inp.value.trim() === '';
+}
+
 function renderTextInput(q) {
+    const isDeret = cfg.id === 'deret6';
     const skippedBadgeTI = skippedIndices.includes(qIndex) ? ' <span style="background:#fef3c7;color:#92400e;font-size:0.75em;padding:2px 8px;border-radius:99px;font-weight:600;">⟳ Dilewati</span>' : '';
+    const numpadHtml = isDeret ? `
+        <div class="numpad-wrap">
+            <div class="numpad-row">
+                <button class="numpad-btn" onclick="numpadPress('1')">1</button>
+                <button class="numpad-btn" onclick="numpadPress('2')">2</button>
+                <button class="numpad-btn" onclick="numpadPress('3')">3</button>
+                <button class="numpad-btn" onclick="numpadPress('4')">4</button>
+                <button class="numpad-btn" onclick="numpadPress('5')">5</button>
+            </div>
+            <div class="numpad-row">
+                <button class="numpad-btn" onclick="numpadPress('6')">6</button>
+                <button class="numpad-btn" onclick="numpadPress('7')">7</button>
+                <button class="numpad-btn" onclick="numpadPress('8')">8</button>
+                <button class="numpad-btn" onclick="numpadPress('9')">9</button>
+                <button class="numpad-btn" onclick="numpadPress('0')">0</button>
+            </div>
+            <div class="numpad-row">
+                <button class="numpad-btn btn-space" onclick="numpadPress(' ')">SPASI</button>
+                <button class="numpad-btn btn-del" onclick="numpadPress('DEL')">⌫</button>
+            </div>
+        </div>` : '';
     document.getElementById('questionContent').innerHTML =
         `<div class="q-label">Soal No. ${qIndex+1}${skippedBadgeTI}</div>
          <div class="q-text">${q.question}</div>
          <div class="input-wrap">
              <input type="text" id="userAnswer" placeholder="Jawaban..."
-                    autocomplete="off" oninput="document.getElementById('btnNext').disabled=this.value.trim()===''">
+                    autocomplete="off"
+                    ${isDeret ? 'readonly' : ''}
+                    oninput="document.getElementById('btnNext').disabled=this.value.trim()===''">
+             ${numpadHtml}
          </div>`;
     document.getElementById('actionBar').innerHTML =
         `<button class="btn btn-primary btn-sm" id="btnNext" onclick="submitTextInput()" disabled>Jawab</button>
          <button class="btn btn-outline btn-sm" onclick="skipQ()">Lewati</button>`;
     const inp = document.getElementById('userAnswer');
-    inp.focus();
-    inp.addEventListener('keyup', e => { if(e.key==='Enter'&&inp.value.trim()) submitTextInput(); });
+    if (!isDeret) {
+        inp.focus();
+        inp.addEventListener('keyup', e => { if(e.key==='Enter'&&inp.value.trim()) submitTextInput(); });
+    }
 }
 function submitTextInput() {
     const q   = questions[qIndex];
@@ -1431,15 +1490,26 @@ function renderRanking() {
 }
 
 function rankSel(r, v) {
-    if (rowSelections[r]===v) {
-        rowSelections[r]=null; usedNumbers=usedNumbers.filter(n=>n!==v);
+    const prev = (rowSelections[r] !== undefined && rowSelections[r] !== null) ? rowSelections[r] : null;
+
+    if (prev === v) {
+        // Klik tombol yang sama → deselect
+        rowSelections[r] = null;
     } else {
-        if (usedNumbers.includes(v)) return;
-        if (rowSelections[r]!==null) usedNumbers=usedNumbers.filter(n=>n!==rowSelections[r]);
-        rowSelections[r]=v; usedNumbers.push(v);
+        // Cek apakah nomor v sudah dipakai baris LAIN (bukan baris r sendiri)
+        const usedByOther = rowSelections.some((sel, idx) => idx !== r && sel === v);
+        if (usedByOther) return;
+        // Ganti pilihan baris r
+        rowSelections[r] = v;
     }
+
+    // Selalu rebuild usedNumbers dari rowSelections agar tidak pernah korup
+    usedNumbers = rowSelections.filter(n => n !== null && n !== undefined);
+
     updateRankingUI(); saveState();
-    if (rowSelections.filter(n=>n!==null).length===12) saveRanking(rowSelections.join(';'));
+
+    const filled = rowSelections.filter(n => n !== null && n !== undefined).length;
+    if (filled === 12) saveRanking(rowSelections.join(';'));
 }
 
 function updateRankingUI() {
@@ -1456,8 +1526,17 @@ function updateRankingUI() {
 }
 
 async function saveRanking(dataStr) {
+    // Hentikan timer lokal
+    clearInterval(timerInterval);
+    clearInterval(timerSyncInterval);
+    clearInterval(timerForceCheckInterval);
+    timerInterval = null;
+    timerSyncInterval = null;
+    timerForceCheckInterval = null;
+
     showLoader('Menyimpan kolom ' + cfg.kolom + '...');
     const idX = localStorage.getItem('db_id');
+
     try {
         // Fetch data terbaru dari server dulu agar tidak ada pipe yang tertimpa
         const cur = await apiGet(idX);
@@ -1465,6 +1544,7 @@ async function saveRanking(dataStr) {
         while(parts.length<=cfg.saveIndex) parts.push('');
         parts[cfg.saveIndex] = dataStr;
         const newVal = parts.join('|');
+        // Satu PUT saja — tidak ada fire-and-forget terpisah
         await apiPut(idX, { [cfg.saveField]: newVal });
         // Update currentUser lokal
         currentUser = cur.data;
@@ -1538,16 +1618,9 @@ async function endTest(timeout) {
     clearInterval(timerForceCheckInterval);
     timerSyncInterval = null;
     timerForceCheckInterval = null;
-    // Kosongkan x_04 — timer admin diam/hilang saat subtest selesai
-    const idX = localStorage.getItem('db_id');
-    if (idX) {
-        fetch(`${API_URL}?table=${TABLE_NAME}&id_x=${idX}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json', 'X-Custom-Auth': AUTH_KEY },
-            body: JSON.stringify({ x_04: '' })
-        }).catch(() => {});
-    }
+
     showLoader('Menyimpan hasil...');
+    const idX = localStorage.getItem('db_id');
     try {
         const cur = await apiGet(idX);
         const upd = {};
@@ -1573,6 +1646,9 @@ async function endTest(timeout) {
             upd[lf] = lp.join('|');
         }
 
+        // Kosongkan x_04 hanya untuk tes berwaktu (CFIT, TKD, Deret)
+        if (cfg.timer > 0) upd.x_04 = '';
+
         await apiPut(idX, upd);
         localStorage.removeItem('_st_' + cfg._taskId);
 
@@ -1583,7 +1659,7 @@ async function endTest(timeout) {
 
         // Log ke console
         console.log('[TES SELESAI] ' + cfg.title + (cfg.type!=='ab_choice'&&cfg.type!=='ranking' ? ' | Skor: '+correctScore : ''));
-        
+
         // Langsung lanjut ke tes berikutnya tanpa tampilkan layar selesai
         hideLoader();
         afterTest();
@@ -1606,7 +1682,7 @@ async function apiFetch(url, opts={}) {
     return r.json();
 }
 async function apiGet(idX) {
-    return apiFetch(`${API_URL}?table=${TABLE_NAME}&id_x=${idX}`,
+    return apiFetch(`${API_READ}?table=${TABLE_NAME}&id_x=${idX}`,
         { headers: { 'X-Custom-Auth': AUTH_KEY } });
 }
 async function apiPut(idX, body) {
