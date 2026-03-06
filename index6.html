@@ -275,8 +275,6 @@
         }
 
         /* ── PROTEKSI GAMBAR: tidak bisa diklik kanan / drag / save ── */
-        /* pointer-events tetap AUTO agar layout flex HP tidak rusak            */
-        /* Proteksi dilakukan via JS: contextmenu, dragstart, touchstart below  */
         .q-image,
         .options-img img,
         .opt-check-wrap label img,
@@ -285,8 +283,11 @@
             user-drag: none;
             -webkit-user-select: none;
             user-select: none;
-            /* TIDAK ada pointer-events:none — agar tampilan & klik di HP normal */
+            pointer-events: none;  /* blok klik kanan & drag langsung pada gambar */
         }
+        /* Wrapper gambar pilihan tetap bisa diklik (onclick ada di wrapper/div) */
+        .options-img      { pointer-events: auto; }
+        .opt-check-wrap label { pointer-events: auto; cursor: pointer; }
         .ex-note {
             margin-top: 16px; padding: 14px 18px;
             background: #f8fafc; border-radius: 8px;
@@ -1341,12 +1342,15 @@ function renderImageSingle(q) {
     const div = document.getElementById('optArea');
     for (const k in q.options) {
         if (!q.options[k]) continue;
-        // Langsung append img tanpa wrapper div agar CSS flex sizing bekerja benar di HP
+        // Bungkus gambar dalam div agar onclick tidak bergantung pointer-events gambar
+        const wrap = document.createElement('div');
+        wrap.style.cssText = 'display:inline-block;cursor:pointer;';
         const img = Object.assign(document.createElement('img'), { src: q.options[k], title: k });
         img.oncontextmenu = e => e.preventDefault();
         img.ondragstart   = e => e.preventDefault();
-        img.onclick = () => { markAnswered(qIndex); userAnswers.push(`${qIndex+1}${k}${k===q.answer?'v':'x'}`); if(k===q.answer)correctScore++; saveState(); goNext(); };
-        div.appendChild(img);
+        wrap.onclick = () => { markAnswered(qIndex); userAnswers.push(`${qIndex+1}${k}${k===q.answer?'v':'x'}`); if(k===q.answer)correctScore++; saveState(); goNext(); };
+        wrap.appendChild(img);
+        div.appendChild(wrap);
     }
 }
 
@@ -1758,42 +1762,25 @@ function confirmLogout() {
 }
 
 /* ── PROTEKSI GAMBAR SOAL ── */
-// 1. Blok klik kanan (desktop)
+// Blok klik kanan pada semua gambar soal
 document.addEventListener('contextmenu', function(e) {
-    if (e.target.tagName === 'IMG') { e.preventDefault(); return false; }
+    if (e.target.tagName === 'IMG') {
+        e.preventDefault();
+        return false;
+    }
 });
-// 2. Blok drag gambar (desktop)
+// Blok drag gambar
 document.addEventListener('dragstart', function(e) {
-    if (e.target.tagName === 'IMG') { e.preventDefault(); return false; }
+    if (e.target.tagName === 'IMG') {
+        e.preventDefault();
+        return false;
+    }
 });
-// 3. Blok long-press di HP (Android/iOS — mencegah menu "Simpan Gambar")
-(function() {
-    let _lpTimer = null;
-    document.addEventListener('touchstart', function(e) {
-        if (e.target.tagName === 'IMG') {
-            _lpTimer = setTimeout(function() {
-                // Batalkan gesture agar menu konteks HP tidak muncul
-            }, 300);
-        }
-    }, { passive: false });
-    document.addEventListener('touchend', function(e) {
-        if (_lpTimer) { clearTimeout(_lpTimer); _lpTimer = null; }
-    });
-    document.addEventListener('touchmove', function(e) {
-        if (_lpTimer) { clearTimeout(_lpTimer); _lpTimer = null; }
-    });
-    // Blok event pointerdown lama pada gambar (iOS Safari)
-    document.addEventListener('pointerdown', function(e) {
-        if (e.target.tagName === 'IMG') {
-            e.target.addEventListener('contextmenu', function prevent(ev) {
-                ev.preventDefault(); ev.target.removeEventListener('contextmenu', prevent);
-            });
-        }
-    });
-})();
-// 4. Blok shortcut keyboard Ctrl+S
+// Blok shortcut keyboard umum untuk save (Ctrl+S, Ctrl+U, F12 tidak diblok karena terlalu agresif)
 document.addEventListener('keydown', function(e) {
+    // Ctrl+S (save page)
     if (e.ctrlKey && e.key === 's') { e.preventDefault(); return false; }
+    // Ctrl+Shift+I / F12 dibiarkan (DevTools tetap bisa — hanya gambar yang diproteksi)
 });
 </script>
 </body>
