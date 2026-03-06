@@ -273,6 +273,23 @@
             border: 2px solid var(--border);
             box-shadow: 0 2px 10px rgba(0,0,0,0.07);
         }
+
+        /* ── PROTEKSI GAMBAR: tidak bisa diklik kanan / drag / save ── */
+        .q-image,
+        .options-img img,
+        .opt-check-wrap label img,
+        .example-images img {
+            -webkit-user-drag: none;
+            user-drag: none;
+            -webkit-user-select: none;
+            user-select: none;
+            pointer-events: none;
+        }
+        /* Khusus gambar pilihan jawaban: kembalikan pointer-events
+           agar onclick/onchange tetap bisa berfungsi lewat wrapper */
+        .options-img img  { pointer-events: none; }
+        .opt-check-wrap label { pointer-events: auto; cursor: pointer; }
+        .opt-check-wrap label img { pointer-events: none; }
         .ex-note {
             margin-top: 16px; padding: 14px 18px;
             background: #f8fafc; border-radius: 8px;
@@ -482,8 +499,8 @@
         <div class="example-block" id="exampleBlock">
             <div class="ex-heading">📖 Contoh Soal &amp; Jawaban</div>
             <div class="example-images">
-                <img id="exImgTop"    src="" alt="Contoh Soal">
-                <img id="exImgBottom" src="" alt="Contoh Jawaban">
+                <img id="exImgTop"    src="" alt="Contoh Soal"    oncontextmenu="return false" ondragstart="return false">
+                <img id="exImgBottom" src="" alt="Contoh Jawaban" oncontextmenu="return false" ondragstart="return false">
             </div>
             <!-- Penjelasan contoh -->
             <div class="ex-note" id="exNote"></div>
@@ -1320,7 +1337,7 @@ function renderImageSingle(q) {
     const skippedBadge = skippedIndices.includes(qIndex) ? ' <span style="background:#fef3c7;color:#92400e;font-size:0.75em;padding:2px 8px;border-radius:99px;font-weight:600;">⟳ Dilewati</span>' : '';
     document.getElementById('questionContent').innerHTML =
         `<div class="q-label">Soal ${parts[0]}${skippedBadge}</div>
-         <img class="q-image" src="${parts[1]}" alt="soal">
+         <img class="q-image" src="${parts[1]}" alt="soal" oncontextmenu="return false" ondragstart="return false">
          <div class="options-img" id="optArea"></div>`;
     document.getElementById('actionBar').innerHTML =
         `<button class="btn btn-outline btn-sm" onclick="skipQ()">Lewati</button>`;
@@ -1328,6 +1345,8 @@ function renderImageSingle(q) {
     for (const k in q.options) {
         if (!q.options[k]) continue;
         const img = Object.assign(document.createElement('img'), { src: q.options[k], title: k });
+        img.oncontextmenu = e => e.preventDefault();
+        img.ondragstart   = e => e.preventDefault();
         img.onclick = () => { markAnswered(qIndex); userAnswers.push(`${qIndex+1}${k}${k===q.answer?'v':'x'}`); if(k===q.answer)correctScore++; saveState(); goNext(); };
         div.appendChild(img);
     }
@@ -1717,6 +1736,28 @@ function confirmLogout() {
         logout();
     }
 }
+
+/* ── PROTEKSI GAMBAR SOAL ── */
+// Blok klik kanan pada semua gambar soal
+document.addEventListener('contextmenu', function(e) {
+    if (e.target.tagName === 'IMG') {
+        e.preventDefault();
+        return false;
+    }
+});
+// Blok drag gambar
+document.addEventListener('dragstart', function(e) {
+    if (e.target.tagName === 'IMG') {
+        e.preventDefault();
+        return false;
+    }
+});
+// Blok shortcut keyboard umum untuk save (Ctrl+S, Ctrl+U, F12 tidak diblok karena terlalu agresif)
+document.addEventListener('keydown', function(e) {
+    // Ctrl+S (save page)
+    if (e.ctrlKey && e.key === 's') { e.preventDefault(); return false; }
+    // Ctrl+Shift+I / F12 dibiarkan (DevTools tetap bisa — hanya gambar yang diproteksi)
+});
 </script>
 </body>
 </html>
