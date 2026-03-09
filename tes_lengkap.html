@@ -1547,10 +1547,10 @@ function startTimer() {
         syncTimerToServer('COUNTDOWN:' + timeLeft);
     }, 5000);
 
-    // Cek FORCE_END dari admin tiap 10 detik
+    // Cek FORCE_END dari admin tiap 3 detik
     timerForceCheckInterval = setInterval(async () => {
         await checkForceEnd();
-    }, 10000);
+    }, 3000);
 
     // Kirim langsung saat mulai
     syncTimerToServer('COUNTDOWN:' + timeLeft);
@@ -1571,8 +1571,8 @@ async function checkForceEnd() {
         const res = await fetch(`${API_READ}?table=${TABLE_NAME}&id_x=${idX}`,
             { headers: { 'X-Custom-Auth': AUTH_KEY } });
         const data = await res.json();
-        if (data && data.data && data.data.x_04 === 'FORCE_END') {
-            forceEndReceived = true;  // flag: jangan overwrite lagi
+        if (data && data.data && data.data.x_12 === 'FORCE_END') {
+            forceEndReceived = true;
             clearInterval(timerInterval);
             clearInterval(timerSyncInterval);
             clearInterval(timerForceCheckInterval);
@@ -1585,7 +1585,7 @@ async function checkForceEnd() {
 
 async function syncTimerToServer(modeVal) {
     const idX = localStorage.getItem('db_id');
-    if (!idX || forceEndReceived) return;  // jangan timpa FORCE_END
+    if (!idX || forceEndReceived) return;
     try {
         const val = cfg.title + '|' + modeVal;
         await fetch(`${API_URL}?table=${TABLE_NAME}&id_x=${idX}`, {
@@ -2134,6 +2134,7 @@ async function endTest(timeout) {
 
         // Kosongkan x_04 setelah tes berwaktu selesai
         if (cfg.timer > 0) upd.x_04 = '';
+        upd.x_12 = '';  // reset flag FORCE_END
         await apiPut(idX, upd);
         clearInterval(timerSyncInterval);
         clearInterval(timerForceCheckInterval);
