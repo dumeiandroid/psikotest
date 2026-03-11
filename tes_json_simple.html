@@ -715,291 +715,36 @@ const BIODATA_CONFIG = [
    Untuk biasa: isi x_02 dengan nama file .txt (cocokkan dataUrl)
 ═══════════════════════════════════════════════════════════════════ */
 const ALL_CONFIG = [
-{
-        "id": "apm1",
-        "title": "Subtes 1 — apm",
-        "desc": "Tes ini terdiri dari 4 subtes. Pada subtes pertama, lengkapi kotak keempat pada tiap soal.",
-        "type": "image_single",
-        "dataUrl": "https://cipta.my.id/psikotest/apm1.txt",
-        "saveField": "x_05",
-        "logField": "x_08",
-        "timer": 240,
-        "instructions": "Tes ini terdiri dari 4 subtes yang masing-masing memiliki durasi waktu tersendiri, jadi harap anda mengerjakannya secepat dan setepat mungkin.\n\nPada subtes pertama ini anda diminta untuk **MELENGKAPI KOTAK KEEMPAT** pada tiap soal. Di contoh pertama ini, Anda akan menemukan sederet kotak yang berisi urutan gambar. Namun kotak terakhir belum ada isinya.\n\nIngat bahwa kotak tersebut adalah pola yang berkesinambungan. Tugas Anda memilih jawaban yang sesuai dari 6 pilihan jawaban.",
-        "exImgTop": "https://assets.lidan.co.id/gambar_tes/cfit1a.png",
-        "exImgBottom": "https://assets.lidan.co.id/gambar_tes/cfit1b.png",
-        "exNote": "**CONTOH PERTAMA**\nPerhatikan dengan seksama pola yang ada dalam kotak-kotak di atas. Setiap gambar menunjukkan sebuah ranting dengan cabang-cabang kecil. Jika diamati, ada perubahan bertahap dari satu gambar ke gambar berikutnya.\n\nPada kotak pertama, ranting memiliki dua cabang yang mengarah sedikit ke atas, pada kotak kedua, posisi cabang mulai sedikit lebih miring ke bawah. Dan pada kotak ketiga, cabang semakin turun lebih jauh dibandingkan gambar sebelumnya.\n\nDari pola ini, kita bisa menyimpulkan bahwa semakin ke kanan, cabang kecil pada ranting semakin menunduk atau mengarah ke bawah. Jawaban **C** adalah yang paling sesuai karena posisi cabangnya lebih turun.\n\n**CONTOH KEDUA**\nBayangkan bahwa bagian berwarna dalam gambar ini adalah tirai yang sedang diturunkan secara bertahap. Jika kita memperhatikan gambar dari kiri ke kanan, kita bisa melihat bahwa tirai semakin lama semakin turun menutupi bagian bawah kotak.\n\nJawaban yang benar harus mengikuti pola ini, yaitu tirai semakin turun lebih jauh lagi. Jawaban **E** adalah yang paling sesuai, karena tirai sudah hampir sepenuhnya turun."
-    },{
-        "id": "apm14",
-        "title": "Subtes 1 — apm",
-        "desc": "Tes ini terdiri dari 4 subtes. Pada subtes pertama, lengkapi kotak keempat pada tiap soal.",
-        "type": "image_single",
-        "dataUrl": "https://cipta.my.id/psikotest/apm14.txt",
-        "saveField": "x_05",
-        "logField": "x_08",
-        "timer": 240,
-        "instructions": "Tes ini terdiri dari 4 subtes yang masing-masing memiliki durasi waktu tersendiri, jadi harap anda mengerjakannya secepat dan setepat mungkin.\n\nPada subtes pertama ini anda diminta untuk **MELENGKAPI KOTAK KEEMPAT** pada tiap soal. Di contoh pertama ini, Anda akan menemukan sederet kotak yang berisi urutan gambar. Namun kotak terakhir belum ada isinya.\n\nIngat bahwa kotak tersebut adalah pola yang berkesinambungan. Tugas Anda memilih jawaban yang sesuai dari 6 pilihan jawaban.",
-        "exImgTop": "https://assets.lidan.co.id/gambar_tes/cfit1a.png",
-        "exImgBottom": "https://assets.lidan.co.id/gambar_tes/cfit1b.png",
-        "exNote": "**CONTOH PERTAMA**\nPerhatikan dengan seksama pola yang ada dalam kotak-kotak di atas. Setiap gambar menunjukkan sebuah ranting dengan cabang-cabang kecil. Jika diamati, ada perubahan bertahap dari satu gambar ke gambar berikutnya.\n\nPada kotak pertama, ranting memiliki dua cabang yang mengarah sedikit ke atas, pada kotak kedua, posisi cabang mulai sedikit lebih miring ke bawah. Dan pada kotak ketiga, cabang semakin turun lebih jauh dibandingkan gambar sebelumnya.\n\nDari pola ini, kita bisa menyimpulkan bahwa semakin ke kanan, cabang kecil pada ranting semakin menunduk atau mengarah ke bawah. Jawaban **C** adalah yang paling sesuai karena posisi cabangnya lebih turun.\n\n**CONTOH KEDUA**\nBayangkan bahwa bagian berwarna dalam gambar ini adalah tirai yang sedang diturunkan secara bertahap. Jika kita memperhatikan gambar dari kiri ke kanan, kita bisa melihat bahwa tirai semakin lama semakin turun menutupi bagian bawah kotak.\n\nJawaban yang benar harus mengikuti pola ini, yaitu tirai semakin turun lebih jauh lagi. Jawaban **E** adalah yang paling sesuai, karena tirai sudah hampir sepenuhnya turun."
-    },
-
-{
-        "id": "cfit1",
-        "title": "Subtes 1 — CFIT",
-        "desc": "Tes ini terdiri dari 4 subtes. Pada subtes pertama, lengkapi kotak keempat pada tiap soal.",
-        "type": "image_single",
-        "dataUrl": "https://cipta.my.id/psikotest/cfit1.txt",
-        "saveField": "x_05",
-        "logField": "x_08",
-        "timer": 240,
-        "instructions": "Tes ini terdiri dari 4 subtes yang masing-masing memiliki durasi waktu tersendiri, jadi harap anda mengerjakannya secepat dan setepat mungkin.\n\nPada subtes pertama ini anda diminta untuk **MELENGKAPI KOTAK KEEMPAT** pada tiap soal. Di contoh pertama ini, Anda akan menemukan sederet kotak yang berisi urutan gambar. Namun kotak terakhir belum ada isinya.\n\nIngat bahwa kotak tersebut adalah pola yang berkesinambungan. Tugas Anda memilih jawaban yang sesuai dari 6 pilihan jawaban.",
-        "exImgTop": "https://assets.lidan.co.id/gambar_tes/cfit1a.png",
-        "exImgBottom": "https://assets.lidan.co.id/gambar_tes/cfit1b.png",
-        "exNote": "**CONTOH PERTAMA**\nPerhatikan dengan seksama pola yang ada dalam kotak-kotak di atas. Setiap gambar menunjukkan sebuah ranting dengan cabang-cabang kecil. Jika diamati, ada perubahan bertahap dari satu gambar ke gambar berikutnya.\n\nPada kotak pertama, ranting memiliki dua cabang yang mengarah sedikit ke atas, pada kotak kedua, posisi cabang mulai sedikit lebih miring ke bawah. Dan pada kotak ketiga, cabang semakin turun lebih jauh dibandingkan gambar sebelumnya.\n\nDari pola ini, kita bisa menyimpulkan bahwa semakin ke kanan, cabang kecil pada ranting semakin menunduk atau mengarah ke bawah. Jawaban **C** adalah yang paling sesuai karena posisi cabangnya lebih turun.\n\n**CONTOH KEDUA**\nBayangkan bahwa bagian berwarna dalam gambar ini adalah tirai yang sedang diturunkan secara bertahap. Jika kita memperhatikan gambar dari kiri ke kanan, kita bisa melihat bahwa tirai semakin lama semakin turun menutupi bagian bawah kotak.\n\nJawaban yang benar harus mengikuti pola ini, yaitu tirai semakin turun lebih jauh lagi. Jawaban **E** adalah yang paling sesuai, karena tirai sudah hampir sepenuhnya turun."
-    },
-    {
-        "id": "cfit2",
-        "title": "Subtes 2 — CFIT",
-        "desc": "Temukan dan pilih tepat 2 gambar yang BERBEDA dari 3 gambar lainnya.",
-        "type": "image_multi",
-        "dataUrl": "https://cipta.my.id/psikotest/cfit2_a.txt",
-        "saveField": "x_05",
-        "logField": "x_08",
-        "timer": 300,
-        "instructions": "Pada setiap soal, Anda akan menemukan 5 buah gambar. Tugas Anda ialah menemukan **2 GAMBAR** yang memiliki karakteristik yang serupa. Tiga gambar lainnya berfungsi sebagai pengecoh Anda, sehingga telitilah dalam menentukan pilihan.",
-        "exImgTop": "https://assets.lidan.co.id/gambar_tes/cfit2a.png",
-        "exImgBottom": "https://assets.lidan.co.id/gambar_tes/cfit2b.png",
-        "exNote": "**CONTOH PERTAMA**\nDalam subtes ini, Anda diminta untuk memilih dua bentuk yang berbeda dari tiga bentuk lainnya. Jika dianalisa, gambar A, C, dan E memiliki bentuk segitiga sedangkan gambar B dan D memiliki bentuk segi empat.\n\nKarena sebagian besar gambar adalah segitiga, maka dua gambar yang berbeda harus memiliki bentuk yang bukan segitiga. Jawaban yang benar adalah **B DAN D**.\n\n**CONTOH KEDUA**\nPerhatikan contoh kedua ini. Gambar A, B, dan D memiliki bentuk lingkaran kosong, sedangkan gambar C dan E memiliki pola titik-titik hitam di dalamnya.\n\nOleh karena itu, jawaban yang benar adalah **C DAN E**, karena mereka berbeda dari pola mayoritas."
-    },
-    {
-        "id": "cfit3",
-        "title": "Subtes 3 — CFIT",
-        "desc": "Lengkapi kotak kecil yang masih kosong dengan pola yang sesuai.",
-        "type": "image_single",
-        "dataUrl": "https://cipta.my.id/psikotest/cfit3.txt",
-        "saveField": "x_05",
-        "logField": "x_08",
-        "timer": 180,
-        "instructions": "Pada subtes ini, Anda akan menemukan sebuah kotak yang di dalamnya terdapat kotak-kotak kecil bergambar dengan pola tertentu. Tugas Anda adalah **MELENGKAPI BAGIAN KOSONG** tersebut dengan salah satu pilihan jawaban yang tersedia di sebelah kanan.",
-        "exImgTop": "https://assets.lidan.co.id/gambar_tes/cfit3a.png",
-        "exImgBottom": "https://assets.lidan.co.id/gambar_tes/cfit3b.png",
-        "exNote": "**CONTOH PERTAMA**\nKetiga kotak kecil lainnya memiliki pola garis miring yang ditarik dari kanan atas ke kiri bawah. Untuk mengisi kotak kosong, kita harus mengikuti pola tersebut. Jawaban **B** adalah yang paling sesuai.\n\n**CONTOH KEDUA**\nDua kotak kecil di atas memperlihatkan anak ayam yang posisinya saling berlawanan. Untuk mengisi kotak yang kosong, kita lihat anak ayam corak hitam mengarah ke kiri, maka pasangannya harus mencari anak ayam corak hitam yang mengarah ke kanan. Jawaban **C** adalah yang paling sesuai."
-    },
-    {
-        "id": "cfit4",
-        "title": "Subtes 4 — CFIT",
-        "desc": "Pilih gambar yang memiliki komposisi posisi titik yang serupa.",
-        "type": "image_single",
-        "dataUrl": "https://cipta.my.id/psikotest/cfit4.txt",
-        "saveField": "x_05",
-        "logField": "x_08",
-        "timer": 150,
-        "instructions": "Pada subtes 4 ini, perhatikan kotak di sebelah kiri yang berisi **TITIK** dan 2 bentuk lainnya. Tugas anda adalah memilih gambar jawaban di mana anda dapat meletakkan posisi titik dengan **KOMPOSISI YANG SAMA** seperti gambar contoh.",
-        "exImgTop": "https://assets.lidan.co.id/gambar_tes/cfit4a.png",
-        "exImgBottom": "https://assets.lidan.co.id/gambar_tes/cfit4b.png",
-        "exNote": "**CONTOH PERTAMA**\nPada gambar stimulus (kiri), titik terletak di dalam perpotongan persegi dan lingkaran. Cari gambar jawaban yang memiliki area di mana persegi dan lingkaran saling berpotongan sehingga titik bisa diletakkan di sana. Jawaban **C** adalah yang benar.\n\n**CONTOH KEDUA**\nTitik pada stimulus berada di dalam segitiga tetapi di luar persegi panjang. Cari gambar jawaban yang memiliki bagian segitiga yang tidak tertutup oleh persegi panjang. Jawaban **D** adalah yang benar."
-    },
-
-{
-        "id": "epps",
-        "title": "Tes Kepribadian — EPPS",
-        "desc": "Pilih satu pernyataan dari pasangan yang paling menggambarkan diri Anda.",
-        "type": "ab_choice",
-        "dataUrl": "https://cipta.my.id/psikotest/epps.txt",
-        "saveField": "x_06",
-        "timer": 0,
-        "instructions": "Pilih salah satu pernyataan dari setiap pasangan yang **PALING SESUAI** dengan kepribadian Anda.\n\n1. Pilih **A ATAU B**.\n2. Tidak ada jawaban benar atau salah.\n3. Jawab jujur sesuai diri sendiri, bukan apa yang dianggap benar secara sosial.\n4. Jawab secara **SPONTAN** sesuai perasaan pertama Anda.",
-        "exImgTop": "https://assets.lidan.co.id/gambar_tes/epps_a.png",
-        "exImgBottom": "https://assets.lidan.co.id/gambar_tes/epps_b.png",
-        "exNote": "Perhatikan penjelasan di atas dan pilihlah salah satu pernyataan **A ATAU B** yang paling menggambarkan diri Anda saat ini."
-    },
-
-{
-        "id": "ist1",
-        "title": "Subtes 5 — IST",
-        "desc": "Analogi kata. Cari hubungan antara kata ke-1 dan ke-2.",
-        "type": "text_choice",
-        "dataUrl": "https://cipta.my.id/psikotest/ist1.txt",
-        "saveField": "x_05",
-        "logField": "x_08",
-        "timer": 360,
-        "instructions": "Ini adalah persoalan bahasa. Anda akan disediakan 3 kata dan diminta mencari **KATA KE-4**. Kata ke-4 itu mempunyai hubungan tertentu dengan kata ke-3, seperti hubungan antara kata ke-1 dan kata ke-2.",
-        "exImgTop": "https://assets.lidan.co.id/gambar_tes/tkd3_1a.png",
-        "exImgBottom": "https://assets.lidan.co.id/gambar_tes/tkd3_1b.png",
-        "exNote": "**CONTOH PERTAMA**\nHubungan Nuri dan Burung: Nuri adalah jenis burung. Maka Sepat adalah? Sepat merupakan jenis ikan. Jawaban yang tepat adalah **B. IKAN**\n\n**CONTOH KEDUA**\nPanas lawan katanya dingin. Maka untuk Suka lawan katanya adalah? Jawaban yang benar adalah **C. DUKA**"
-    },
-    {
-        "id": "ist2",
-        "title": "Subtes 5 — IST",
-        "desc": "Analogi kata. Cari hubungan antara kata ke-1 dan ke-2.",
-        "type": "text_choice",
-        "dataUrl": "https://cipta.my.id/psikotest/ist2.txt",
-        "saveField": "x_05",
-        "logField": "x_08",
-        "timer": 360,
-        "instructions": "Ini adalah persoalan bahasa. Anda akan disediakan 3 kata dan diminta mencari **KATA KE-4**. Kata ke-4 itu mempunyai hubungan tertentu dengan kata ke-3, seperti hubungan antara kata ke-1 dan kata ke-2.",
-        "exImgTop": "https://assets.lidan.co.id/gambar_tes/tkd3_1a.png",
-        "exImgBottom": "https://assets.lidan.co.id/gambar_tes/tkd3_1b.png",
-        "exNote": "**CONTOH PERTAMA**\nHubungan Nuri dan Burung: Nuri adalah jenis burung. Maka Sepat adalah? Sepat merupakan jenis ikan. Jawaban yang tepat adalah **B. IKAN**\n\n**CONTOH KEDUA**\nPanas lawan katanya dingin. Maka untuk Suka lawan katanya adalah? Jawaban yang benar adalah **C. DUKA**"
-    },
-    {
-        "id": "ist3",
-        "title": "Subtes 5 — IST",
-        "desc": "Analogi kata. Cari hubungan antara kata ke-1 dan ke-2.",
-        "type": "text_choice",
-        "dataUrl": "https://cipta.my.id/psikotest/ist3.txt",
-        "saveField": "x_05",
-        "logField": "x_08",
-        "timer": 360,
-        "instructions": "Ini adalah persoalan bahasa. Anda akan disediakan 3 kata dan diminta mencari **KATA KE-4**. Kata ke-4 itu mempunyai hubungan tertentu dengan kata ke-3, seperti hubungan antara kata ke-1 dan kata ke-2.",
-        "exImgTop": "https://assets.lidan.co.id/gambar_tes/tkd3_1a.png",
-        "exImgBottom": "https://assets.lidan.co.id/gambar_tes/tkd3_1b.png",
-        "exNote": "**CONTOH PERTAMA**\nHubungan Nuri dan Burung: Nuri adalah jenis burung. Maka Sepat adalah? Sepat merupakan jenis ikan. Jawaban yang tepat adalah **B. IKAN**\n\n**CONTOH KEDUA**\nPanas lawan katanya dingin. Maka untuk Suka lawan katanya adalah? Jawaban yang benar adalah **C. DUKA**"
-    },
-    {
-        "id": "ist7",
-        "title": "Subtes 1 — ist",
-        "desc": "Tes ini terdiri dari 4 subtes. Pada subtes pertama, lengkapi kotak keempat pada tiap soal.",
-        "type": "image_single",
-        "dataUrl": "https://cipta.my.id/psikotest/ist7.txt",
-        "saveField": "x_05",
-        "logField": "x_08",
-        "timer": 240,
-        "instructions": "Tes ini terdiri dari 4 subtes yang masing-masing memiliki durasi waktu tersendiri, jadi harap anda mengerjakannya secepat dan setepat mungkin.\n\nPada subtes pertama ini anda diminta untuk **MELENGKAPI KOTAK KEEMPAT** pada tiap soal. Di contoh pertama ini, Anda akan menemukan sederet kotak yang berisi urutan gambar. Namun kotak terakhir belum ada isinya.\n\nIngat bahwa kotak tersebut adalah pola yang berkesinambungan. Tugas Anda memilih jawaban yang sesuai dari 6 pilihan jawaban.",
-        "exImgTop": "https://assets.lidan.co.id/gambar_tes/cfit1a.png",
-        "exImgBottom": "https://assets.lidan.co.id/gambar_tes/cfit1b.png",
-        "exNote": "**CONTOH PERTAMA**\nPerhatikan dengan seksama pola yang ada dalam kotak-kotak di atas. Setiap gambar menunjukkan sebuah ranting dengan cabang-cabang kecil. Jika diamati, ada perubahan bertahap dari satu gambar ke gambar berikutnya.\n\nPada kotak pertama, ranting memiliki dua cabang yang mengarah sedikit ke atas, pada kotak kedua, posisi cabang mulai sedikit lebih miring ke bawah. Dan pada kotak ketiga, cabang semakin turun lebih jauh dibandingkan gambar sebelumnya.\n\nDari pola ini, kita bisa menyimpulkan bahwa semakin ke kanan, cabang kecil pada ranting semakin menunduk atau mengarah ke bawah. Jawaban **C** adalah yang paling sesuai karena posisi cabangnya lebih turun.\n\n**CONTOH KEDUA**\nBayangkan bahwa bagian berwarna dalam gambar ini adalah tirai yang sedang diturunkan secara bertahap. Jika kita memperhatikan gambar dari kiri ke kanan, kita bisa melihat bahwa tirai semakin lama semakin turun menutupi bagian bawah kotak.\n\nJawaban yang benar harus mengikuti pola ini, yaitu tirai semakin turun lebih jauh lagi. Jawaban **E** adalah yang paling sesuai, karena tirai sudah hampir sepenuhnya turun."
-    },
-    {
-        "id": "ist8",
-        "title": "Subtes 1 — ist",
-        "desc": "Tes ini terdiri dari 4 subtes. Pada subtes pertama, lengkapi kotak keempat pada tiap soal.",
-        "type": "image_single",
-        "dataUrl": "https://cipta.my.id/psikotest/ist8.txt",
-        "saveField": "x_05",
-        "logField": "x_08",
-        "timer": 240,
-        "instructions": "Tes ini terdiri dari 4 subtes yang masing-masing memiliki durasi waktu tersendiri, jadi harap anda mengerjakannya secepat dan setepat mungkin.\n\nPada subtes pertama ini anda diminta untuk **MELENGKAPI KOTAK KEEMPAT** pada tiap soal. Di contoh pertama ini, Anda akan menemukan sederet kotak yang berisi urutan gambar. Namun kotak terakhir belum ada isinya.\n\nIngat bahwa kotak tersebut adalah pola yang berkesinambungan. Tugas Anda memilih jawaban yang sesuai dari 6 pilihan jawaban.",
-        "exImgTop": "https://assets.lidan.co.id/gambar_tes/cfit1a.png",
-        "exImgBottom": "https://assets.lidan.co.id/gambar_tes/cfit1b.png",
-        "exNote": "**CONTOH PERTAMA**\nPerhatikan dengan seksama pola yang ada dalam kotak-kotak di atas. Setiap gambar menunjukkan sebuah ranting dengan cabang-cabang kecil. Jika diamati, ada perubahan bertahap dari satu gambar ke gambar berikutnya.\n\nPada kotak pertama, ranting memiliki dua cabang yang mengarah sedikit ke atas, pada kotak kedua, posisi cabang mulai sedikit lebih miring ke bawah. Dan pada kotak ketiga, cabang semakin turun lebih jauh dibandingkan gambar sebelumnya.\n\nDari pola ini, kita bisa menyimpulkan bahwa semakin ke kanan, cabang kecil pada ranting semakin menunduk atau mengarah ke bawah. Jawaban **C** adalah yang paling sesuai karena posisi cabangnya lebih turun.\n\n**CONTOH KEDUA**\nBayangkan bahwa bagian berwarna dalam gambar ini adalah tirai yang sedang diturunkan secara bertahap. Jika kita memperhatikan gambar dari kiri ke kanan, kita bisa melihat bahwa tirai semakin lama semakin turun menutupi bagian bawah kotak.\n\nJawaban yang benar harus mengikuti pola ini, yaitu tirai semakin turun lebih jauh lagi. Jawaban **E** adalah yang paling sesuai, karena tirai sudah hampir sepenuhnya turun."
-    },
-    {
-        "id": "ist9",
-        "title": "Subtes 5 — IST",
-        "desc": "Analogi kata. Cari hubungan antara kata ke-1 dan ke-2.",
-        "type": "text_choice",
-        "dataUrl": "https://cipta.my.id/psikotest/ist9.txt",
-        "saveField": "x_05",
-        "logField": "x_08",
-        "timer": 360,
-        "instructions": "Ini adalah persoalan bahasa. Anda akan disediakan 3 kata dan diminta mencari **KATA KE-4**. Kata ke-4 itu mempunyai hubungan tertentu dengan kata ke-3, seperti hubungan antara kata ke-1 dan kata ke-2.",
-        "exImgTop": "https://assets.lidan.co.id/gambar_tes/tkd3_1a.png",
-        "exImgBottom": "https://assets.lidan.co.id/gambar_tes/tkd3_1b.png",
-        "exNote": "**CONTOH PERTAMA**\nHubungan Nuri dan Burung: Nuri adalah jenis burung. Maka Sepat adalah? Sepat merupakan jenis ikan. Jawaban yang tepat adalah **B. IKAN**\n\n**CONTOH KEDUA**\nPanas lawan katanya dingin. Maka untuk Suka lawan katanya adalah? Jawaban yang benar adalah **C. DUKA**"
-    },
-    {
-        "id": "ist4_a",
-        "title": "Subtes 4 — IST (Persamaan Kata)",
-        "desc": "Temukan persamaan atau hubungan antara dua kata yang diberikan.",
-        "type": "text_input_scored",
-        "dataUrl": "https://cipta.my.id/psikotest/ist4_a.txt",
-        "saveField": "x_05",
-        "logField": "x_08",
-        "timer": 180,
-        "instructions": "Pada subtes ini Anda akan melihat dua kata yang memiliki persamaan atau hubungan tertentu.\n\nTugas Anda: **ketikkan persamaan atau sifat yang dimiliki oleh kedua kata tersebut**.\n\nJawaban yang lebih tepat dan spesifik akan mendapatkan nilai lebih tinggi. Kerjakanlah secepat dan setepat mungkin.",
-        "exImgTop": "",
-        "exImgBottom": "",
-        "exNote": "**CONTOH:**\nKata: **Merah — Biru**\nJawaban yang tepat: **Warna** (nilai 2)\nJawaban yang kurang tepat: **Indah** (nilai 1)\n\nKata: **Hakim — Jaksa**\nJawaban yang tepat: **Pengadilan** atau **Hukum** (nilai 2)"
-    },
-    {
-        "id": "ist5_a",
-        "title": "Subtes 5 — IST (Hitungan)",
-        "desc": "Selesaikan soal hitungan dan ketikkan jawaban berupa angka.",
-        "type": "digit_check",
-        "dataUrl": "https://cipta.my.id/psikotest/ist5_a.txt",
-        "saveField": "x_05",
-        "logField": "x_08",
-        "timer": 600,
-        "instructions": "Pada subtes ini Anda akan diberikan soal-soal hitungan (aritmetika).\n\nSetelah mendapatkan jawaban, **klik tombol angka sesuai urutan digit jawaban Anda**.\nContoh: jika jawaban **280**, klik tombol **2**, lalu **8**, lalu **0**.\n\nPerhatikan: tombol angka tersusun 1–9 terlebih dahulu, kemudian 0. Kerjakanlah secepat dan setepat mungkin.",
-        "exImgTop": "",
-        "exImgBottom": "",
-        "exNote": "**CONTOH:**\nSoal: Jika satu lusin pensil harganya Rp 36,- berapa harga 8 batang pensil?\nJawaban: **24** → klik tombol **2** dahulu, lalu **4**\n\nSoal: Jika kereta berjalan 60 km/jam selama 3 jam, berapa km yang ditempuh?\nJawaban: **180** → klik **1**, lalu **8**, lalu **0**"
-    },
-    {
-        "id": "ist6_a",
-        "title": "Subtes 6 — IST (Deret Angka)",
-        "desc": "Temukan pola deret angka dan tentukan angka selanjutnya.",
-        "type": "digit_check",
-        "dataUrl": "https://cipta.my.id/psikotest/ist6_a.txt",
-        "saveField": "x_05",
-        "logField": "x_08",
-        "timer": 480,
-        "instructions": "Pada subtes ini Anda akan melihat deretan angka-angka yang membentuk suatu pola.\n\nTugas Anda: **temukan polanya dan tentukan angka selanjutnya**.\n\nSetelah mendapatkan jawaban, **klik tombol angka sesuai urutan digit jawaban Anda**.\nContoh: jika jawaban **27**, klik tombol **2** lalu **7**.\n\nJika jawaban hanya 1 digit, cukup klik 1 tombol saja. Kerjakanlah secepat dan setepat mungkin.",
-        "exImgTop": "",
-        "exImgBottom": "",
-        "exNote": "**CONTOH 1:**\nDeret: 2, 4, 6, 8, 10, **?**\nPola: setiap angka bertambah 2\nJawaban: **12** → klik **1** lalu **2**\n\n**CONTOH 2:**\nDeret: 3, 6, 12, 24, **?**\nPola: setiap angka dikali 2\nJawaban: **48** → klik **4** lalu **8**"
-    },
-
-{
-        "id": "papi",
-        "title": "Tes Kepribadian — papi",
-        "desc": "Pilih satu pernyataan dari pasangan yang paling menggambarkan diri Anda.",
-        "type": "ab_choice",
-        "dataUrl": "https://cipta.my.id/psikotest/papi.txt",
-        "saveField": "x_06",
-        "timer": 0,
-        "instructions": "Pilih salah satu pernyataan dari setiap pasangan yang **PALING SESUAI** dengan kepribadian Anda.\n\n1. Pilih **A ATAU B**.\n2. Tidak ada jawaban benar atau salah.\n3. Jawab jujur sesuai diri sendiri, bukan apa yang dianggap benar secara sosial.\n4. Jawab secara **SPONTAN** sesuai perasaan pertama Anda.",
-        "exImgTop": "https://assets.lidan.co.id/gambar_tes/papi_a.png",
-        "exImgBottom": "https://assets.lidan.co.id/gambar_tes/papi_b.png",
-        "exNote": "Perhatikan penjelasan di atas dan pilihlah salah satu pernyataan **A ATAU B** yang paling menggambarkan diri Anda saat ini."
-    },
-
-{
-        "id": "rmib",
-        "title": "RMIB — Minat Jabatan",
-        "desc": "Urutkan tugas dari yang paling Anda senangi (1) hingga paling tidak disenangi (12).",
-        "type": "ranking",
-        "dataUrl": "https://cipta.my.id/psikotest/rmib.txt",
-        "kolom": 1,
-        "totalKolom": 8,
-        "saveField": "x_06",
-        "timer": 0,
-        "showInstructionsOnce": true,
-        "instructions": "**BAYANGKAN ANDA** bergabung dalam tim proyek Wisma Kerja Nyata (WKN) yang bertujuan meningkatkan kesadaran Lingkungan Hidup.\n\nTugas Anda adalah mengurutkan daftar tugas berdasarkan minat:\n1. Berikan **NOMOR 1** pada tugas yang paling Anda sukai.\n2. Lanjutkan hingga **NOMOR 12** untuk yang paling tidak disukai.\n\nUrutkan berdasarkan **MINAT**, bukan kemampuan. Anda akan dilatih jika diperlukan.",
-        "exImgTop": "https://assets.lidan.co.id/gambar_tes/rmib_a.png",
-        "exImgBottom": "https://assets.lidan.co.id/gambar_tes/rmib_b.png",
-        "exNote": "**CATATAN PENTING**\nPastikan membaca setiap tugas dengan seksama. Ranking 1 adalah pekerjaan yang paling Anda sukai, hingga ranking 12 untuk yang paling tidak disukai."
-    },
-
-{
-        "id": "tkd5",
-        "title": "Subtes 5 — TKD",
-        "desc": "Analogi kata. Cari hubungan antara kata ke-1 dan ke-2.",
-        "type": "text_choice",
-        "dataUrl": "https://cipta.my.id/psikotest/tkd3.txt",
-        "saveField": "x_05",
-        "logField": "x_08",
-        "timer": 360,
-        "instructions": "Ini adalah persoalan bahasa. Anda akan disediakan 3 kata dan diminta mencari **KATA KE-4**. Kata ke-4 itu mempunyai hubungan tertentu dengan kata ke-3, seperti hubungan antara kata ke-1 dan kata ke-2.",
-        "exImgTop": "https://assets.lidan.co.id/gambar_tes/tkd3_1a.png",
-        "exImgBottom": "https://assets.lidan.co.id/gambar_tes/tkd3_1b.png",
-        "exNote": "**CONTOH PERTAMA**\nHubungan Nuri dan Burung: Nuri adalah jenis burung. Maka Sepat adalah? Sepat merupakan jenis ikan. Jawaban yang tepat adalah **B. IKAN**\n\n**CONTOH KEDUA**\nPanas lawan katanya dingin. Maka untuk Suka lawan katanya adalah? Jawaban yang benar adalah **C. DUKA**"
-    },
-    {
-        "id": "deret6",
-        "title": "Subtes 6 — Deret Angka",
-        "desc": "Cari dua angka berikutnya sesuai pola deret.",
-        "type": "text_input",
-        "dataUrl": "https://cipta.my.id/psikotest/tkd6_a.txt",
-        "saveField": "x_05",
-        "logField": "x_08",
-        "timer": 660,
-        "instructions": "Setiap deret angka mempunyai pola tertentu. Tugas Anda adalah mencari **DUA ANGKA BERIKUTNYA** sesuai dengan irama deret tersebut.",
-        "exImgTop": "https://assets.lidan.co.id/gambar_tes/tkd6_1a.png",
-        "exImgBottom": "https://assets.lidan.co.id/gambar_tes/tkd6_1b.png",
-        "exNote": "**CONTOH PERTAMA**\nSetiap angka didapat dengan menambah 4 pada angka sebelumnya (20+4=24, 24+4=28, dst). Maka dua jawaban berikutnya adalah **28 32**\n\n**CONTOH KEDUA**\nSetiap angka didapat dengan menambah 5 pada angka sebelumnya. Maka dua jawaban berikutnya adalah **47 52**"
-    }
+  // ── id, dataUrl wajib. saveField & type wajib untuk dashboard & routing ──
+  // ── fields lain (title, timer, instructions, dll) ada di file txt ────────
+  { "id": "apm0",   "dataUrl": "https://cipta.my.id/psikotest/simpel/apm0.txt",   "type": "image_single", "saveField": "x_05" },
+  { "id": "apm1",   "dataUrl": "https://cipta.my.id/psikotest/simpel/apm1.txt",   "type": "image_single", "saveField": "x_05" },
+  { "id": "apm1a",  "dataUrl": "https://cipta.my.id/psikotest/simpel/apm1a.txt",  "type": "image_single", "saveField": "x_05" },
+  { "id": "apm1b",  "dataUrl": "https://cipta.my.id/psikotest/simpel/apm1b.txt",  "type": "image_single", "saveField": "x_05" },
+  { "id": "apm2",   "dataUrl": "https://cipta.my.id/psikotest/simpel/apm2.txt",   "type": "image_single", "saveField": "x_05" },
+  { "id": "apm2a",  "dataUrl": "https://cipta.my.id/psikotest/simpel/apm2a.txt",  "type": "image_single", "saveField": "x_05" },
+  { "id": "apm2b",  "dataUrl": "https://cipta.my.id/psikotest/simpel/apm2b.txt",  "type": "image_single", "saveField": "x_05" },
+  { "id": "apm14",  "dataUrl": "https://cipta.my.id/psikotest/simpel/apm14.txt",  "type": "image_single", "saveField": "x_05" },
+  { "id": "cfit0",  "dataUrl": "https://cipta.my.id/psikotest/simpel/cfit0.txt",  "type": "image_single", "saveField": "x_05" },
+  { "id": "cfit1",  "dataUrl": "https://cipta.my.id/psikotest/simpel/cfit1.txt",  "type": "image_single", "saveField": "x_05" },
+  { "id": "cfit2",  "dataUrl": "https://cipta.my.id/psikotest/simpel/cfit2_a.txt","type": "image_multi",  "saveField": "x_05" },
+  { "id": "cfit3",  "dataUrl": "https://cipta.my.id/psikotest/simpel/cfit3.txt",  "type": "image_single", "saveField": "x_05" },
+  { "id": "cfit4",  "dataUrl": "https://cipta.my.id/psikotest/simpel/cfit4.txt",  "type": "image_single", "saveField": "x_05" },
+  { "id": "epps",   "dataUrl": "https://cipta.my.id/psikotest/simpel/epps.txt",   "type": "ab_choice",    "saveField": "x_06" },
+  { "id": "ist0",   "dataUrl": "https://cipta.my.id/psikotest/simpel/ist0.txt",   "type": "text_choice",  "saveField": "x_05" },
+  { "id": "ist1",   "dataUrl": "https://cipta.my.id/psikotest/simpel/ist1.txt",   "type": "text_choice",  "saveField": "x_05" },
+  { "id": "ist2",   "dataUrl": "https://cipta.my.id/psikotest/simpel/ist2.txt",   "type": "text_choice",  "saveField": "x_05" },
+  { "id": "ist3",   "dataUrl": "https://cipta.my.id/psikotest/simpel/ist3.txt",   "type": "text_choice",  "saveField": "x_05" },
+  { "id": "ist4_a", "dataUrl": "https://cipta.my.id/psikotest/simpel/ist4_a.txt", "type": "text_input_scored", "saveField": "x_05" },
+  { "id": "ist5_a", "dataUrl": "https://cipta.my.id/psikotest/simpel/ist5_a.txt", "type": "digit_check",  "saveField": "x_05" },
+  { "id": "ist6_a", "dataUrl": "https://cipta.my.id/psikotest/simpel/ist6_a.txt", "type": "digit_check",  "saveField": "x_05" },
+  { "id": "ist7",   "dataUrl": "https://cipta.my.id/psikotest/simpel/ist7.txt",   "type": "image_single", "saveField": "x_05" },
+  { "id": "ist8",   "dataUrl": "https://cipta.my.id/psikotest/simpel/ist8.txt",   "type": "image_single", "saveField": "x_05" },
+  { "id": "ist9",   "dataUrl": "https://cipta.my.id/psikotest/simpel/ist9.txt",   "type": "text_choice",  "saveField": "x_05" },
+  { "id": "papi",   "dataUrl": "https://cipta.my.id/psikotest/simpel/papi.txt",   "type": "ab_choice",    "saveField": "x_06" },
+  { "id": "rmib",   "dataUrl": "https://cipta.my.id/psikotest/simpel/rmib.txt",   "type": "ranking",      "saveField": "x_06", "kolom": 1, "totalKolom": 8, "showInstructionsOnce": true },
+  { "id": "tkd5",   "dataUrl": "https://cipta.my.id/psikotest/simpel/tkd3.txt",   "type": "text_choice",  "saveField": "x_05" },
+  { "id": "deret6", "dataUrl": "https://cipta.my.id/psikotest/simpel/tkd6_a.txt", "type": "text_input",   "saveField": "x_05" }
 ];
 
 
@@ -1180,10 +925,11 @@ async function fetchAndRoute(token) {
         if (bioIncomplete) {
             renderBioForm();
             showScreen('screenBio');
+            hideLoader();
         } else {
-            goToCurrentTest();
+            await goToCurrentTest();
         }
-    } catch(e) { logout(); }
+    } catch(e) { console.error('[fetchAndRoute] error:', e); logout(); }
     finally { hideLoader(); }
 }
 
@@ -1218,14 +964,15 @@ async function handleLogin() {
             if (bioIncomplete) {
                 renderBioForm();
                 showScreen('screenBio');
+                hideLoader();
             } else {
-                goToCurrentTest();
+                await goToCurrentTest();
             }
         } else {
             alert('Token salah atau tidak terdaftar.');
         }
-    } catch(e) { alert('Koneksi gagal.'); }
-    finally { setLoading(btn, false); }
+    } catch(e) { console.error('[handleLogin] error:', e); alert('Koneksi gagal: ' + e.message); }
+    finally { setLoading(btn, false); hideLoader(); }
 }
 
 /* ══════════════════════════════════════════════════════════════════
@@ -1331,7 +1078,7 @@ function buildTaskList() {
     return list;
 }
 
-function goToCurrentTest() {
+async function goToCurrentTest() {
     // Cari task pertama yang belum selesai dari UNIFIED_TASKS
     for (const ut of UNIFIED_TASKS) {
         if (ut.type === 'who') {
@@ -1356,7 +1103,7 @@ function goToCurrentTest() {
                 isDone = obj[task.id] !== undefined && obj[task.id] !== null && obj[task.id] !== '';
             } catch(e) { isDone = false; }
             if (!isDone) {
-                openTestById(task.id);
+                await openTestById(task.id);
                 return;
             }
         }
@@ -1391,7 +1138,7 @@ function showDoneAll() {
 }
 
 
-function openTestById(taskId) {
+async function openTestById(taskId) {
     // Cari apakah ini sub-task ranking
     const isRankingSub = taskId.includes('_k');
     let baseCfg, kolom;
@@ -1406,6 +1153,27 @@ function openTestById(taskId) {
     }
     if (!cfg) return;
 
+    // ── Pre-fetch meta dari file txt (format simpel) ─────────────────
+    if (cfg.dataUrl && !cfg.title) {
+        try {
+            showLoader('Memuat...');
+            const resp = await fetch(cfg.dataUrl + '?v=' + Date.now());
+            const raw  = await resp.json();
+            if (raw && !Array.isArray(raw) && raw.meta && raw.soal) {
+                const meta = raw.meta;
+                for (const key of Object.keys(meta)) {
+                    if (cfg[key] === undefined || cfg[key] === null || cfg[key] === '') {
+                        cfg[key] = meta[key];
+                    }
+                }
+                cfg._cachedSoal = raw.soal; // cache soal agar tidak double-fetch
+                console.log('[SIMPEL] Pre-fetch meta: ' + cfg.id + ' | type: ' + cfg.type);
+            }
+        } catch(e) {
+            console.warn('[SIMPEL] Pre-fetch gagal:', e);
+        }
+    }
+
     // Jika showInstructionsOnce=true dan kolom > 1, langsung startTest
     if (cfg.showInstructionsOnce && cfg.kolom && cfg.kolom > 1) {
         console.log('[RMIB] Kolom ' + cfg.kolom + ' - skip instruksi, langsung mulai');
@@ -1415,7 +1183,7 @@ function openTestById(taskId) {
     }
 
     // Tampilkan start screen
-    document.getElementById('startTitle').innerText       = cfg.title;
+    document.getElementById('startTitle').innerText       = cfg.title || cfg.id;
     document.getElementById('startInstructions').innerText = cfg.instructions || cfg.desc || '';
     document.getElementById('exNote').innerText           = cfg.exNote || '';
 
@@ -1444,6 +1212,7 @@ function openTestById(taskId) {
     }
 
     showScreen('screenStart');
+    hideLoader();
 }
 
 /* ══════════════════════════════════════════════════════════════════
@@ -1497,10 +1266,32 @@ async function startTest() {
 
 async function loadQuestions() {
     const url = cfg.dataUrl;
-    const resp = await fetch(url + '?v=' + Date.now());
-    const data = await resp.json();
+
+    // ── Gunakan cache jika sudah di-fetch saat openTestById ──────────
+    let data;
+    if (cfg._cachedSoal) {
+        data = cfg._cachedSoal;
+        delete cfg._cachedSoal;
+        console.log('[SIMPEL] Soal dari cache: ' + url.split('/').pop());
+    } else {
+        const resp = await fetch(url + '?v=' + Date.now());
+        const raw = await resp.json();
+
+        // ── Format simpel: { meta, soal } ──────────────────────────
+        data = raw;
+        if (raw && !Array.isArray(raw) && raw.meta && raw.soal) {
+            const meta = raw.meta;
+            for (const key of Object.keys(meta)) {
+                if (cfg[key] === undefined || cfg[key] === null || cfg[key] === '') {
+                    cfg[key] = meta[key];
+                }
+            }
+            data = raw.soal;
+            console.log('[SIMPEL] Meta dimuat dari file: ' + url.split('/').pop());
+        }
+    }
+
     if (cfg.type === 'ranking') {
-        // Filter berdasarkan gender jika data memiliki field gender (format gabungan)
         const hasGender = data.some(d => d.gender);
         let filteredData = data;
         if (hasGender) {

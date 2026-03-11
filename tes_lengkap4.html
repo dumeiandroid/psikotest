@@ -661,7 +661,7 @@
    │             │   "text_input_scored" | "digit_check" | "ranking"  │
    │ dataUrl     │ URL file .txt (JSON) soal                          │
    │ saveField   │ Kolom DB: "x_05" | "x_06" | "x_07"               │
-   │ (saveIndex tidak digunakan lagi — format JSON per cfg.id)          │
+   │ saveIndex   │ Index pipe (0, 1, 2, …)                            │
    │ logField    │ Kolom log jawaban, null = tidak disimpan           │
    │ logIndex    │ Index pipe untuk log                               │
    │ timer       │ Detik (0 / null = tanpa timer)                     │
@@ -679,7 +679,7 @@
    │ type     │ "text" | "number" | "select"                             │
    │ placeholder │ Teks placeholder (untuk text/number)                 │
    │ options  │ Array {value, label} — hanya untuk type "select"        │
-   │ index    │ Posisi penyimpanan di x_02 (JSON), key = id.toLowerCase() │
+   │ index    │ Posisi penyimpanan di x_02 (pipe-separated), mulai 0    │
    │ required │ true = wajib diisi                                       │
    └──────────┴──────────────────────────────────────────────────────────┘
 */
@@ -721,8 +721,8 @@ const ALL_CONFIG = [
         "desc": "Tes ini terdiri dari 4 subtes. Pada subtes pertama, lengkapi kotak keempat pada tiap soal.",
         "type": "image_single",
         "dataUrl": "https://cipta.my.id/psikotest/apm1.txt",
-        "saveField": "x_05",
-        "logField": "x_08",
+        "saveField": "x_05", "saveIndex": 13,
+        "logField": "x_08", "logIndex": 13,
         "timer": 240,
         "instructions": "Tes ini terdiri dari 4 subtes yang masing-masing memiliki durasi waktu tersendiri, jadi harap anda mengerjakannya secepat dan setepat mungkin.\n\nPada subtes pertama ini anda diminta untuk **MELENGKAPI KOTAK KEEMPAT** pada tiap soal. Di contoh pertama ini, Anda akan menemukan sederet kotak yang berisi urutan gambar. Namun kotak terakhir belum ada isinya.\n\nIngat bahwa kotak tersebut adalah pola yang berkesinambungan. Tugas Anda memilih jawaban yang sesuai dari 6 pilihan jawaban.",
         "exImgTop": "https://assets.lidan.co.id/gambar_tes/cfit1a.png",
@@ -734,8 +734,8 @@ const ALL_CONFIG = [
         "desc": "Tes ini terdiri dari 4 subtes. Pada subtes pertama, lengkapi kotak keempat pada tiap soal.",
         "type": "image_single",
         "dataUrl": "https://cipta.my.id/psikotest/apm14.txt",
-        "saveField": "x_05",
-        "logField": "x_08",
+        "saveField": "x_05", "saveIndex": 0,
+        "logField": "x_08", "logIndex": 0,
         "timer": 240,
         "instructions": "Tes ini terdiri dari 4 subtes yang masing-masing memiliki durasi waktu tersendiri, jadi harap anda mengerjakannya secepat dan setepat mungkin.\n\nPada subtes pertama ini anda diminta untuk **MELENGKAPI KOTAK KEEMPAT** pada tiap soal. Di contoh pertama ini, Anda akan menemukan sederet kotak yang berisi urutan gambar. Namun kotak terakhir belum ada isinya.\n\nIngat bahwa kotak tersebut adalah pola yang berkesinambungan. Tugas Anda memilih jawaban yang sesuai dari 6 pilihan jawaban.",
         "exImgTop": "https://assets.lidan.co.id/gambar_tes/cfit1a.png",
@@ -749,8 +749,8 @@ const ALL_CONFIG = [
         "desc": "Tes ini terdiri dari 4 subtes. Pada subtes pertama, lengkapi kotak keempat pada tiap soal.",
         "type": "image_single",
         "dataUrl": "https://cipta.my.id/psikotest/cfit1.txt",
-        "saveField": "x_05",
-        "logField": "x_08",
+        "saveField": "x_05", "saveIndex": 0,
+        "logField": "x_08", "logIndex": 0,
         "timer": 240,
         "instructions": "Tes ini terdiri dari 4 subtes yang masing-masing memiliki durasi waktu tersendiri, jadi harap anda mengerjakannya secepat dan setepat mungkin.\n\nPada subtes pertama ini anda diminta untuk **MELENGKAPI KOTAK KEEMPAT** pada tiap soal. Di contoh pertama ini, Anda akan menemukan sederet kotak yang berisi urutan gambar. Namun kotak terakhir belum ada isinya.\n\nIngat bahwa kotak tersebut adalah pola yang berkesinambungan. Tugas Anda memilih jawaban yang sesuai dari 6 pilihan jawaban.",
         "exImgTop": "https://assets.lidan.co.id/gambar_tes/cfit1a.png",
@@ -763,8 +763,8 @@ const ALL_CONFIG = [
         "desc": "Temukan dan pilih tepat 2 gambar yang BERBEDA dari 3 gambar lainnya.",
         "type": "image_multi",
         "dataUrl": "https://cipta.my.id/psikotest/cfit2_a.txt",
-        "saveField": "x_05",
-        "logField": "x_08",
+        "saveField": "x_05", "saveIndex": 1,
+        "logField": "x_08", "logIndex": 1,
         "timer": 300,
         "instructions": "Pada setiap soal, Anda akan menemukan 5 buah gambar. Tugas Anda ialah menemukan **2 GAMBAR** yang memiliki karakteristik yang serupa. Tiga gambar lainnya berfungsi sebagai pengecoh Anda, sehingga telitilah dalam menentukan pilihan.",
         "exImgTop": "https://assets.lidan.co.id/gambar_tes/cfit2a.png",
@@ -777,8 +777,8 @@ const ALL_CONFIG = [
         "desc": "Lengkapi kotak kecil yang masih kosong dengan pola yang sesuai.",
         "type": "image_single",
         "dataUrl": "https://cipta.my.id/psikotest/cfit3.txt",
-        "saveField": "x_05",
-        "logField": "x_08",
+        "saveField": "x_05", "saveIndex": 2,
+        "logField": "x_08", "logIndex": 2,
         "timer": 180,
         "instructions": "Pada subtes ini, Anda akan menemukan sebuah kotak yang di dalamnya terdapat kotak-kotak kecil bergambar dengan pola tertentu. Tugas Anda adalah **MELENGKAPI BAGIAN KOSONG** tersebut dengan salah satu pilihan jawaban yang tersedia di sebelah kanan.",
         "exImgTop": "https://assets.lidan.co.id/gambar_tes/cfit3a.png",
@@ -791,8 +791,8 @@ const ALL_CONFIG = [
         "desc": "Pilih gambar yang memiliki komposisi posisi titik yang serupa.",
         "type": "image_single",
         "dataUrl": "https://cipta.my.id/psikotest/cfit4.txt",
-        "saveField": "x_05",
-        "logField": "x_08",
+        "saveField": "x_05", "saveIndex": 3,
+        "logField": "x_08", "logIndex": 3,
         "timer": 150,
         "instructions": "Pada subtes 4 ini, perhatikan kotak di sebelah kiri yang berisi **TITIK** dan 2 bentuk lainnya. Tugas anda adalah memilih gambar jawaban di mana anda dapat meletakkan posisi titik dengan **KOMPOSISI YANG SAMA** seperti gambar contoh.",
         "exImgTop": "https://assets.lidan.co.id/gambar_tes/cfit4a.png",
@@ -806,7 +806,7 @@ const ALL_CONFIG = [
         "desc": "Pilih satu pernyataan dari pasangan yang paling menggambarkan diri Anda.",
         "type": "ab_choice",
         "dataUrl": "https://cipta.my.id/psikotest/epps.txt",
-        "saveField": "x_06",
+        "saveField": "x_06", "saveIndex": 0,
         "timer": 0,
         "instructions": "Pilih salah satu pernyataan dari setiap pasangan yang **PALING SESUAI** dengan kepribadian Anda.\n\n1. Pilih **A ATAU B**.\n2. Tidak ada jawaban benar atau salah.\n3. Jawab jujur sesuai diri sendiri, bukan apa yang dianggap benar secara sosial.\n4. Jawab secara **SPONTAN** sesuai perasaan pertama Anda.",
         "exImgTop": "https://assets.lidan.co.id/gambar_tes/epps_a.png",
@@ -820,8 +820,8 @@ const ALL_CONFIG = [
         "desc": "Analogi kata. Cari hubungan antara kata ke-1 dan ke-2.",
         "type": "text_choice",
         "dataUrl": "https://cipta.my.id/psikotest/ist1.txt",
-        "saveField": "x_05",
-        "logField": "x_08",
+        "saveField": "x_05", "saveIndex": 4,
+        "logField": "x_08", "logIndex": 4,
         "timer": 360,
         "instructions": "Ini adalah persoalan bahasa. Anda akan disediakan 3 kata dan diminta mencari **KATA KE-4**. Kata ke-4 itu mempunyai hubungan tertentu dengan kata ke-3, seperti hubungan antara kata ke-1 dan kata ke-2.",
         "exImgTop": "https://assets.lidan.co.id/gambar_tes/tkd3_1a.png",
@@ -834,8 +834,8 @@ const ALL_CONFIG = [
         "desc": "Analogi kata. Cari hubungan antara kata ke-1 dan ke-2.",
         "type": "text_choice",
         "dataUrl": "https://cipta.my.id/psikotest/ist2.txt",
-        "saveField": "x_05",
-        "logField": "x_08",
+        "saveField": "x_05", "saveIndex": 5,
+        "logField": "x_08", "logIndex": 5,
         "timer": 360,
         "instructions": "Ini adalah persoalan bahasa. Anda akan disediakan 3 kata dan diminta mencari **KATA KE-4**. Kata ke-4 itu mempunyai hubungan tertentu dengan kata ke-3, seperti hubungan antara kata ke-1 dan kata ke-2.",
         "exImgTop": "https://assets.lidan.co.id/gambar_tes/tkd3_1a.png",
@@ -848,8 +848,8 @@ const ALL_CONFIG = [
         "desc": "Analogi kata. Cari hubungan antara kata ke-1 dan ke-2.",
         "type": "text_choice",
         "dataUrl": "https://cipta.my.id/psikotest/ist3.txt",
-        "saveField": "x_05",
-        "logField": "x_08",
+        "saveField": "x_05", "saveIndex": 6,
+        "logField": "x_08", "logIndex": 6,
         "timer": 360,
         "instructions": "Ini adalah persoalan bahasa. Anda akan disediakan 3 kata dan diminta mencari **KATA KE-4**. Kata ke-4 itu mempunyai hubungan tertentu dengan kata ke-3, seperti hubungan antara kata ke-1 dan kata ke-2.",
         "exImgTop": "https://assets.lidan.co.id/gambar_tes/tkd3_1a.png",
@@ -862,8 +862,8 @@ const ALL_CONFIG = [
         "desc": "Tes ini terdiri dari 4 subtes. Pada subtes pertama, lengkapi kotak keempat pada tiap soal.",
         "type": "image_single",
         "dataUrl": "https://cipta.my.id/psikotest/ist7.txt",
-        "saveField": "x_05",
-        "logField": "x_08",
+        "saveField": "x_05", "saveIndex": 10,
+        "logField": "x_08", "logIndex": 10,
         "timer": 240,
         "instructions": "Tes ini terdiri dari 4 subtes yang masing-masing memiliki durasi waktu tersendiri, jadi harap anda mengerjakannya secepat dan setepat mungkin.\n\nPada subtes pertama ini anda diminta untuk **MELENGKAPI KOTAK KEEMPAT** pada tiap soal. Di contoh pertama ini, Anda akan menemukan sederet kotak yang berisi urutan gambar. Namun kotak terakhir belum ada isinya.\n\nIngat bahwa kotak tersebut adalah pola yang berkesinambungan. Tugas Anda memilih jawaban yang sesuai dari 6 pilihan jawaban.",
         "exImgTop": "https://assets.lidan.co.id/gambar_tes/cfit1a.png",
@@ -876,8 +876,8 @@ const ALL_CONFIG = [
         "desc": "Tes ini terdiri dari 4 subtes. Pada subtes pertama, lengkapi kotak keempat pada tiap soal.",
         "type": "image_single",
         "dataUrl": "https://cipta.my.id/psikotest/ist8.txt",
-        "saveField": "x_05",
-        "logField": "x_08",
+        "saveField": "x_05", "saveIndex": 11,
+        "logField": "x_08", "logIndex": 11,
         "timer": 240,
         "instructions": "Tes ini terdiri dari 4 subtes yang masing-masing memiliki durasi waktu tersendiri, jadi harap anda mengerjakannya secepat dan setepat mungkin.\n\nPada subtes pertama ini anda diminta untuk **MELENGKAPI KOTAK KEEMPAT** pada tiap soal. Di contoh pertama ini, Anda akan menemukan sederet kotak yang berisi urutan gambar. Namun kotak terakhir belum ada isinya.\n\nIngat bahwa kotak tersebut adalah pola yang berkesinambungan. Tugas Anda memilih jawaban yang sesuai dari 6 pilihan jawaban.",
         "exImgTop": "https://assets.lidan.co.id/gambar_tes/cfit1a.png",
@@ -890,8 +890,8 @@ const ALL_CONFIG = [
         "desc": "Analogi kata. Cari hubungan antara kata ke-1 dan ke-2.",
         "type": "text_choice",
         "dataUrl": "https://cipta.my.id/psikotest/ist9.txt",
-        "saveField": "x_05",
-        "logField": "x_08",
+        "saveField": "x_05", "saveIndex": 12,
+        "logField": "x_08", "logIndex": 12,
         "timer": 360,
         "instructions": "Ini adalah persoalan bahasa. Anda akan disediakan 3 kata dan diminta mencari **KATA KE-4**. Kata ke-4 itu mempunyai hubungan tertentu dengan kata ke-3, seperti hubungan antara kata ke-1 dan kata ke-2.",
         "exImgTop": "https://assets.lidan.co.id/gambar_tes/tkd3_1a.png",
@@ -904,8 +904,8 @@ const ALL_CONFIG = [
         "desc": "Temukan persamaan atau hubungan antara dua kata yang diberikan.",
         "type": "text_input_scored",
         "dataUrl": "https://cipta.my.id/psikotest/ist4_a.txt",
-        "saveField": "x_05",
-        "logField": "x_08",
+        "saveField": "x_05", "saveIndex": 7,
+        "logField": "x_08", "logIndex": 7,
         "timer": 180,
         "instructions": "Pada subtes ini Anda akan melihat dua kata yang memiliki persamaan atau hubungan tertentu.\n\nTugas Anda: **ketikkan persamaan atau sifat yang dimiliki oleh kedua kata tersebut**.\n\nJawaban yang lebih tepat dan spesifik akan mendapatkan nilai lebih tinggi. Kerjakanlah secepat dan setepat mungkin.",
         "exImgTop": "",
@@ -918,8 +918,8 @@ const ALL_CONFIG = [
         "desc": "Selesaikan soal hitungan dan ketikkan jawaban berupa angka.",
         "type": "digit_check",
         "dataUrl": "https://cipta.my.id/psikotest/ist5_a.txt",
-        "saveField": "x_05",
-        "logField": "x_08",
+        "saveField": "x_05", "saveIndex": 8,
+        "logField": "x_08", "logIndex": 8,
         "timer": 600,
         "instructions": "Pada subtes ini Anda akan diberikan soal-soal hitungan (aritmetika).\n\nSetelah mendapatkan jawaban, **klik tombol angka sesuai urutan digit jawaban Anda**.\nContoh: jika jawaban **280**, klik tombol **2**, lalu **8**, lalu **0**.\n\nPerhatikan: tombol angka tersusun 1–9 terlebih dahulu, kemudian 0. Kerjakanlah secepat dan setepat mungkin.",
         "exImgTop": "",
@@ -932,8 +932,8 @@ const ALL_CONFIG = [
         "desc": "Temukan pola deret angka dan tentukan angka selanjutnya.",
         "type": "digit_check",
         "dataUrl": "https://cipta.my.id/psikotest/ist6_a.txt",
-        "saveField": "x_05",
-        "logField": "x_08",
+        "saveField": "x_05", "saveIndex": 9,
+        "logField": "x_08", "logIndex": 9,
         "timer": 480,
         "instructions": "Pada subtes ini Anda akan melihat deretan angka-angka yang membentuk suatu pola.\n\nTugas Anda: **temukan polanya dan tentukan angka selanjutnya**.\n\nSetelah mendapatkan jawaban, **klik tombol angka sesuai urutan digit jawaban Anda**.\nContoh: jika jawaban **27**, klik tombol **2** lalu **7**.\n\nJika jawaban hanya 1 digit, cukup klik 1 tombol saja. Kerjakanlah secepat dan setepat mungkin.",
         "exImgTop": "",
@@ -947,7 +947,7 @@ const ALL_CONFIG = [
         "desc": "Pilih satu pernyataan dari pasangan yang paling menggambarkan diri Anda.",
         "type": "ab_choice",
         "dataUrl": "https://cipta.my.id/psikotest/papi.txt",
-        "saveField": "x_06",
+        "saveField": "x_06", "saveIndex": 1,
         "timer": 0,
         "instructions": "Pilih salah satu pernyataan dari setiap pasangan yang **PALING SESUAI** dengan kepribadian Anda.\n\n1. Pilih **A ATAU B**.\n2. Tidak ada jawaban benar atau salah.\n3. Jawab jujur sesuai diri sendiri, bukan apa yang dianggap benar secara sosial.\n4. Jawab secara **SPONTAN** sesuai perasaan pertama Anda.",
         "exImgTop": "https://assets.lidan.co.id/gambar_tes/papi_a.png",
@@ -963,7 +963,7 @@ const ALL_CONFIG = [
         "dataUrl": "https://cipta.my.id/psikotest/rmib.txt",
         "kolom": 1,
         "totalKolom": 8,
-        "saveField": "x_06",
+        "saveField": "x_06", "saveIndex": 2,
         "timer": 0,
         "showInstructionsOnce": true,
         "instructions": "**BAYANGKAN ANDA** bergabung dalam tim proyek Wisma Kerja Nyata (WKN) yang bertujuan meningkatkan kesadaran Lingkungan Hidup.\n\nTugas Anda adalah mengurutkan daftar tugas berdasarkan minat:\n1. Berikan **NOMOR 1** pada tugas yang paling Anda sukai.\n2. Lanjutkan hingga **NOMOR 12** untuk yang paling tidak disukai.\n\nUrutkan berdasarkan **MINAT**, bukan kemampuan. Anda akan dilatih jika diperlukan.",
@@ -978,8 +978,8 @@ const ALL_CONFIG = [
         "desc": "Analogi kata. Cari hubungan antara kata ke-1 dan ke-2.",
         "type": "text_choice",
         "dataUrl": "https://cipta.my.id/psikotest/tkd3.txt",
-        "saveField": "x_05",
-        "logField": "x_08",
+        "saveField": "x_05", "saveIndex": 15,
+        "logField": "x_08", "logIndex": 15,
         "timer": 360,
         "instructions": "Ini adalah persoalan bahasa. Anda akan disediakan 3 kata dan diminta mencari **KATA KE-4**. Kata ke-4 itu mempunyai hubungan tertentu dengan kata ke-3, seperti hubungan antara kata ke-1 dan kata ke-2.",
         "exImgTop": "https://assets.lidan.co.id/gambar_tes/tkd3_1a.png",
@@ -992,8 +992,8 @@ const ALL_CONFIG = [
         "desc": "Cari dua angka berikutnya sesuai pola deret.",
         "type": "text_input",
         "dataUrl": "https://cipta.my.id/psikotest/tkd6_a.txt",
-        "saveField": "x_05",
-        "logField": "x_08",
+        "saveField": "x_05", "saveIndex": 17,
+        "logField": "x_08", "logIndex": 17,
         "timer": 660,
         "instructions": "Setiap deret angka mempunyai pola tertentu. Tugas Anda adalah mencari **DUA ANGKA BERIKUTNYA** sesuai dengan irama deret tersebut.",
         "exImgTop": "https://assets.lidan.co.id/gambar_tes/tkd6_1a.png",
@@ -1007,7 +1007,7 @@ const ALL_CONFIG = [
    ║  API CONFIG                                                      ║
    ╚═══════════════════════════════════════════════════════════════════╝ */
 const API_URL    = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis6';
-const TABLE_NAME = 'nilai1_json';
+const TABLE_NAME = 'nilai1';
 const ALAT_TES_TABLE = 'alat_tes';
 const AUTH_KEY   = 'admin';
 const WHO_BASE_URL = 'https://cipta.my.id/who1/';
@@ -1103,7 +1103,7 @@ async function loadActiveConfig() {
             }
         }
 
-        // Pre-load semua data .txt who agar saveField diketahui
+        // Pre-load semua data .txt who agar saveField/saveIndex diketahui
         // sebelum goToCurrentTest() mengecek status selesai/belum
         await Promise.all(WHO_TASK_LIST.map(async (w) => {
             try {
@@ -1114,7 +1114,7 @@ async function loadActiveConfig() {
 
         console.log('[loadActiveConfig] paket="' + pParam + '"',
             '→ config:', ACTIVE_CONFIG.map(c=>c.id),
-            '→ who:', WHO_TASK_LIST.map(w=>w.fileKey + ' sf=' + (w.data?.saveField||'?')));
+            '→ who:', WHO_TASK_LIST.map(w=>w.fileKey + ' sf=' + (w.data?.saveField||'?') + ' si=' + (w.data?.saveIndex??'?')));
 
     } catch(e) {
         console.error('[loadActiveConfig]', e);
@@ -1163,15 +1163,17 @@ async function fetchAndRoute(token) {
         currentUser = result.data[0];
         localStorage.setItem('db_id', currentUser.id_x);
 
-        // Load violationMap dari DB (format JSON)
+        // Load violationMap dari DB agar counter tidak reset saat reload
         violationMap = {};
         if (currentUser.x_09) {
-            try {
-                const vObj = JSON.parse(currentUser.x_09);
-                Object.entries(vObj).forEach(([k, v]) => {
-                    if (k && /^[a-zA-Z0-9_]+$/.test(k)) violationMap[k] = parseInt(v) || 0;
-                });
-            } catch(e) {}
+            currentUser.x_09.split('|').forEach(part => {
+                const [k, v] = part.split(':');
+                const key = (k || '').trim();
+                // Skip key kosong, whitespace, atau bukan alphanumeric
+                if (key && /^[a-zA-Z0-9_]+$/.test(key)) {
+                    violationMap[key] = parseInt(v) || 0;
+                }
+            });
         }
 
         await loadActiveConfig();
@@ -1203,15 +1205,17 @@ async function handleLogin() {
             localStorage.setItem('db_id', result.data[0].id_x);
             currentUser = result.data[0];
 
-        // Load violationMap dari DB (format JSON)
+        // Load violationMap dari DB agar counter tidak reset saat reload
         violationMap = {};
         if (currentUser.x_09) {
-            try {
-                const vObj = JSON.parse(currentUser.x_09);
-                Object.entries(vObj).forEach(([k, v]) => {
-                    if (k && /^[a-zA-Z0-9_]+$/.test(k)) violationMap[k] = parseInt(v) || 0;
-                });
-            } catch(e) {}
+            currentUser.x_09.split('|').forEach(part => {
+                const [k, v] = part.split(':');
+                const key = (k || '').trim();
+                // Skip key kosong, whitespace, atau bukan alphanumeric
+                if (key && /^[a-zA-Z0-9_]+$/.test(key)) {
+                    violationMap[key] = parseInt(v) || 0;
+                }
+            });
         }
             await loadActiveConfig();
             const bioIncomplete = BIODATA_CONFIG.some(f => f.required && !getBio(f.id).trim());
@@ -1231,40 +1235,30 @@ async function handleLogin() {
 /* ══════════════════════════════════════════════════════════════════
    BIODATA
 ══════════════════════════════════════════════════════════════════ */
-/* ── Biodata helper: baca nilai field dari x_02 (JSON) ── */
+/* ── Biodata helper: baca nilai field dari x_02 pipe[0] + semicolon ── */
 function getBio(fieldId) {
-    if (!currentUser || !currentUser.x_02) return '';
-    try {
-        const bioObj = JSON.parse(currentUser.x_02);
-        // fieldId contoh: 'bioNama' → key: 'nama'
-        const key = fieldId.replace(/^bio/, '').toLowerCase();
-        return bioObj[key] || '';
-    } catch(e) { return ''; }
+    const f = BIODATA_CONFIG.find(c => c.id === fieldId);
+    if (!f) return '';
+    const pipe0   = currentUser.x_02 ? currentUser.x_02.split('|')[0] : '';
+    const semiArr = pipe0 ? pipe0.split(';') : [];
+    return semiArr[f.index] || '';
 }
 
 function renderBioForm() {
     const container = document.getElementById('bioFormFields');
     container.innerHTML = '';
-    // Baca nilai existing dari JSON
-    let bioObj = {};
-    try { bioObj = JSON.parse(currentUser?.x_02 || '{}'); } catch(e) {}
-
     const sorted = [...BIODATA_CONFIG].sort((a, b) => a.index - b.index);
     for (const f of sorted) {
         const div = document.createElement('div');
         div.className = 'form-group';
-        const key = f.id.replace(/^bio/, '').toLowerCase();
-        const existingVal = bioObj[key] || '';
         let input = '';
         if (f.type === 'select') {
-            const opts = f.options.map(o =>
-                `<option value="${o.value}" ${existingVal === o.value ? 'selected' : ''}>${o.label}</option>`
-            ).join('');
+            const opts = f.options.map(o => `<option value="${o.value}">${o.label}</option>`).join('');
             input = `<select id="${f.id}" style="width:100%;padding:11px 14px;border:2px solid var(--border);border-radius:10px;font-size:0.95em;background:var(--bg)">
                         <option value="">Pilih...</option>${opts}
                      </select>`;
         } else {
-            input = `<input type="${f.type}" id="${f.id}" placeholder="${f.placeholder||''}" value="${existingVal}">`;
+            input = `<input type="${f.type}" id="${f.id}" placeholder="${f.placeholder||''}">`;
         }
         div.innerHTML = `<label>${f.label}</label>${input}`;
         container.appendChild(div);
@@ -1272,22 +1266,33 @@ function renderBioForm() {
 }
 
 async function saveBiodata() {
-    // Baca x_02 existing (JSON) atau buat baru
-    let bioObj = {};
-    try { bioObj = JSON.parse(currentUser.x_02 || '{}'); } catch(e) { bioObj = {}; }
+    // Baca x_02 existing, ambil pipe-nya
+    const pipes = currentUser.x_02 ? currentUser.x_02.split('|') : [];
+    // Pastikan minimal 4 pipe tersedia
+    while (pipes.length < 4) pipes.push('');
 
-    // Isi nilai dari form
+    // Baca semicolon array dari pipe[0] yang sudah ada
+    const semiArr = pipes[0] ? pipes[0].split(';') : [];
+    const maxIndex = Math.max(...BIODATA_CONFIG.map(f => f.index));
+    while (semiArr.length <= maxIndex) semiArr.push('');
+
+    // Isi nilai dari form ke posisi index masing-masing
     for (const f of BIODATA_CONFIG) {
         const el  = document.getElementById(f.id);
         const val = el ? el.value.trim() : '';
         if (f.required && !val) return alert(`Mohon lengkapi field: ${f.label}`);
-        bioObj[f.id.replace('bio', '').toLowerCase()] = val;
+        semiArr[f.index] = val;
     }
 
-    // Simpan tanggal tes (hanya sekali)
-    if (!bioObj.tgl_tes) {
+    // Tulis kembali ke pipe[0]
+    pipes[0] = semiArr.join(';');
+
+    // ── Simpan tanggal tes hari ini ke pipe ke-4 ──
+    // Format: YYYY-MM-DD — hanya diisi sekali, tidak overwrite jika sudah ada
+    while (pipes.length < 5) pipes.push('');
+    if (!pipes[4]) {
         const now = new Date();
-        bioObj.tgl_tes = now.getFullYear() + '-' +
+        pipes[4] = now.getFullYear() + '-' +
             String(now.getMonth()+1).padStart(2,'0') + '-' +
             String(now.getDate()).padStart(2,'0');
     }
@@ -1299,7 +1304,7 @@ async function saveBiodata() {
         await apiFetch(`${API_URL}?table=${TABLE_NAME}&id_x=${idX}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json', 'X-Custom-Auth': AUTH_KEY },
-            body: JSON.stringify({ x_02: JSON.stringify(bioObj) })
+            body: JSON.stringify({ x_02: pipes.join('|') })
         });
         await fetchAndRoute(localStorage.getItem('token'));
     } catch(e) { alert('Gagal menyimpan data.'); }
@@ -1321,11 +1326,12 @@ function buildTaskList() {
                     type:       c.type,
                     _baseId:    c.id,
                     _kolom:     k,
-                    saveField:  c.saveField
+                    saveField:  c.saveField,
+                    saveIndex:  c.saveIndex + (k - 1)   // saveIndex naik per kolom
                 });
             }
         } else {
-            list.push({ id: c.id, title: c.title, type: c.type, saveField: c.saveField });
+            list.push({ id: c.id, title: c.title, type: c.type, saveField: c.saveField, saveIndex: c.saveIndex });
         }
     }
     return list;
@@ -1349,12 +1355,15 @@ function goToCurrentTest() {
         } else {
             // Config task
             const task = ut.ref;
-            // Cek JSON: selesai jika key = task.id ada di kolom saveField
-            let isDone = false;
-            try {
-                const obj = JSON.parse(currentUser[task.saveField] || '{}');
-                isDone = obj[task.id] !== undefined && obj[task.id] !== null && obj[task.id] !== '';
-            } catch(e) { isDone = false; }
+            const raw    = currentUser[task.saveField] || '';
+            const parts  = raw.split('|');
+            const val    = parts[task.saveIndex] || '';
+            // Handle data lama: jika pipeCount < saveIndex tapi raw ada isi
+            // kemungkinan data tersimpan tanpa pipe (format lama)
+            // Hitung berapa nilai non-kosong yang ada
+            const nonEmpty = parts.filter(p => p.trim() !== '').length;
+            // Selesai jika: val tidak kosong ATAU (data lama: nonEmpty > saveIndex)
+            const isDone = val.trim() !== '' || nonEmpty > task.saveIndex;
             if (!isDone) {
                 openTestById(task.id);
                 return;
@@ -1366,16 +1375,14 @@ function goToCurrentTest() {
 
 function who_findNextUnfinished() {
     for (let i = 0; i < who_babakList.length; i++) {
-        const b   = who_babakList[i];
-        const d   = b.data || null;
-        const sf  = d ? (d.saveField || 'x_07') : 'x_07';
-        const key = b._taskId;
-        let done  = false;
-        try {
-            const obj = JSON.parse(currentUser[sf] || '{}');
-            done = obj[key] !== undefined && obj[key] !== null && obj[key] !== '';
-        } catch(e) { done = false; }
-        if (!done) return i;
+        const b  = who_babakList[i];
+        const d  = b.data || null;
+        // Jika data .txt belum di-cache, gunakan default x_07 pipe ke-i untuk cek DB
+        const sf = d ? (d.saveField || 'x_07') : 'x_07';
+        const si = d ? ((d.saveIndex !== undefined) ? d.saveIndex : i) : i;
+        const parts = (currentUser[sf] || '').split('|');
+        const val   = parts[si] || '';
+        if (val.trim() === '') return i;
     }
     return -1;
 }
@@ -1399,7 +1406,7 @@ function openTestById(taskId) {
         const base   = taskId.replace(/_k\d+$/, '');
         kolom        = parseInt(taskId.split('_k')[1]);
         baseCfg      = ACTIVE_CONFIG.find(c => c.id === base);
-        cfg = { ...baseCfg, kolom, _taskId: taskId };
+        cfg = { ...baseCfg, kolom, saveIndex: baseCfg.saveIndex + (kolom - 1), _taskId: taskId };
     } else {
         baseCfg = ACTIVE_CONFIG.find(c => c.id === taskId);
         cfg = { ...baseCfg, _taskId: taskId };
@@ -1496,19 +1503,18 @@ async function startTest() {
 }
 
 async function loadQuestions() {
-    const url = cfg.dataUrl;
+    // Pilih URL berdasarkan gender untuk ranking
+    let url = cfg.dataUrl;
+    if (cfg.type === 'ranking' && cfg.dataUrlP) {
+        const gender = getBio('bioGender') || 'L';
+        if (gender === 'P') url = cfg.dataUrlP;
+        console.log('[RMIB] Gender: ' + gender + ' | URL: ' + (gender==='P' ? 'Perempuan' : 'Laki-laki'));
+    }
+    
     const resp = await fetch(url + '?v=' + Date.now());
     const data = await resp.json();
     if (cfg.type === 'ranking') {
-        // Filter berdasarkan gender jika data memiliki field gender (format gabungan)
-        const hasGender = data.some(d => d.gender);
-        let filteredData = data;
-        if (hasGender) {
-            const gender = getBio('bioGender') || 'L';
-            filteredData = data.filter(d => d.gender === gender);
-            console.log('[RMIB] Gender: ' + gender + ' | Data: ' + filteredData.length + ' kolom');
-        }
-        const kd = filteredData.find(d => d.kolom === cfg.kolom);
+        const kd = data.find(d => d.kolom === cfg.kolom);
         if (!kd) throw new Error('Kolom ' + cfg.kolom + ' tidak ada');
         cfg._pembuka = kd.pembuka;
         questions = kd.soal.map((s, i) => ({ text: s, id: i }));
@@ -2024,13 +2030,13 @@ async function saveRanking(dataStr) {
     showLoader('Menyimpan kolom ' + cfg.kolom + '...');
     const idX = localStorage.getItem('db_id');
     try {
-        // Simpan ke JSON: key = cfg._taskId (misal "rmib_k1", "rmib_k2")
-        let sfObj = {};
-        try { sfObj = JSON.parse(currentUser[cfg.saveField] || '{}'); } catch(e) { sfObj = {}; }
-        sfObj[cfg._taskId] = dataStr;
-        const newVal = JSON.stringify(sfObj);
+        // Gunakan currentUser langsung — tidak perlu apiGet lagi
+        let parts = (currentUser[cfg.saveField]||'').split('|');
+        while(parts.length<=cfg.saveIndex) parts.push('');
+        parts[cfg.saveIndex] = dataStr;
+        const newVal = parts.join('|');
         await apiPut(idX, { [cfg.saveField]: newVal });
-        // Update currentUser lokal
+        // Update currentUser lokal agar kolom berikutnya pakai data terbaru
         currentUser[cfg.saveField] = newVal;
         localStorage.removeItem('_st_' + cfg._taskId);
         afterTest();
@@ -2103,36 +2109,27 @@ async function endTest(timeout) {
         const cur = await apiGet(idX);
         const upd = {};
 
-        // Skor / Jawaban → simpan ke JSON
+        // Skor / Jawaban
         const sf = cfg.saveField;
-        let sfObj = {};
-        try { sfObj = JSON.parse(cur.data[sf] || '{}'); } catch(e) { sfObj = {}; }
-
-        // ab_choice (EPPS/PAPI): simpan jawaban string ke x_06
-        // lainnya: simpan skor ke x_05
+        let sp = (cur.data[sf]||'').split('|');
+        while(sp.length<=cfg.saveIndex) sp.push('');
+        // Untuk ab_choice (EPPS): simpan jawaban A/B dipisah titik koma
         if (cfg.type === 'ab_choice') {
-            sfObj[cfg.id] = userAnswers.join(';') + ';';
-        } else if (cfg.type === 'ranking') {
-            sfObj[cfg.id] = userAnswers.join(';');
+            sp[cfg.saveIndex] = userAnswers.join(';') + ';';
         } else {
-            sfObj[cfg.id] = correctScore;
+            sp[cfg.saveIndex] = correctScore.toString();
         }
-        upd[sf] = JSON.stringify(sfObj);
+        // Pastikan trailing pipe ada agar index berikutnya tidak ambigu
+        // Contoh: "2" → "2|" sehingga split('|')[1] = '' bukan undefined
+        upd[sf] = sp.join('|') + '|';
 
-        // Log cross-check per soal → x_08 JSON: {"cfit1":"1.a✓;2.b✗;..."}
-        if (cfg.logField && cfg.questions) {
+        // Log
+        if (cfg.logField) {
             const lf = cfg.logField;
-            let lfObj = {};
-            try { lfObj = JSON.parse(cur.data[lf] || '{}'); } catch(e) { lfObj = {}; }
-            const crossCheck = userAnswers.map((ans, i) => {
-                const q = questions[i];
-                if (!q) return '';
-                const correct = q.answer || q.correctAnswer || '';
-                const isCorrect = String(ans).toLowerCase() === String(correct).toLowerCase();
-                return `${i+1}.${ans}${isCorrect ? '✓' : '✗'}`;
-            }).join(';');
-            lfObj[cfg.id] = crossCheck;
-            upd[lf] = JSON.stringify(lfObj);
+            let lp = (cur.data[lf]||'').split('|');
+            while(lp.length<=cfg.logIndex) lp.push('');
+            lp[cfg.logIndex] = JSON.stringify(userAnswers);
+            upd[lf] = lp.join('|');
         }
 
         // Kosongkan x_04 setelah tes berwaktu selesai
@@ -2195,7 +2192,9 @@ async function who_openBabak(idx) {
             exImgBottom: d.exImgBottom || '',
             exNote:     d.exNote     || '',
             saveField:  d.saveField  || 'x_07',
+            saveIndex:  (d.saveIndex !== undefined) ? d.saveIndex : idx,
             logField:   d.logField   || null,
+            logIndex:   (d.logIndex  !== undefined) ? d.logIndex  : idx,
             dataUrl:    b.dataUrl,
             _isWho:     true    // flag: engine who
         };
@@ -2249,13 +2248,11 @@ async function who_renderDashboard() {
 
     who_babakList.forEach((b, i) => {
         const d       = b.data || {};
-        const sf  = d.saveField || 'x_07';
-        const key = b._taskId;
-        let done  = false;
-        try {
-            const obj = JSON.parse(currentUser[sf] || '{}');
-            done = obj[key] !== undefined && obj[key] !== null && obj[key] !== '';
-        } catch(e) { done = false; }
+        const sf      = d.saveField || 'x_07';
+        const si      = (d.saveIndex !== undefined) ? d.saveIndex : i;
+        const parts   = (currentUser[sf] || '').split('|');
+        const val     = parts[si] || '';
+        const done    = val.trim() !== '';
 
         if (!done && !firstPending) firstPending = i;
 
@@ -2461,12 +2458,12 @@ async function who_endTest() {
         const cur = await apiGet(idX);
         const upd = {};
 
-        // Jawaban who → x_07 JSON: {"who_1":"A;B;A;B;..."}
+        // Jawaban → x_07 (saveField dari .txt)
         const sf = cfg.saveField;
-        let sfObj = {};
-        try { sfObj = JSON.parse(cur.data[sf] || '{}'); } catch(e) { sfObj = {}; }
-        sfObj[cfg._taskId] = who_userAnswers.join(';') + ';';
-        upd[sf] = JSON.stringify(sfObj);
+        let sp   = (cur.data[sf] || '').split('|');
+        while (sp.length <= cfg.saveIndex) sp.push('');
+        sp[cfg.saveIndex] = who_userAnswers.join(';') + ';';
+        upd[sf] = sp.join('|');
 
 
         await apiPut(idX, upd);
@@ -2553,7 +2550,8 @@ function handleVisibilityChange() {
     saveViolationToServer();
 }
 
-// Simpan log pelanggaran ke x_09 — format JSON {"cfit1":2,"ist1":1}
+// Simpan log pelanggaran ke x_09 — pakai map di memory, langsung PUT (tanpa GET dulu)
+// Format: "subtesId:jumlah|subtesId:jumlah"
 let violationMap = {};  // { subtesId: count } — di-load saat login, update di memory
 
 async function saveViolationToServer() {
@@ -2562,7 +2560,9 @@ async function saveViolationToServer() {
     try {
         const key = (cfg._taskId || cfg.id || '').trim();
         violationMap[key] = (violationMap[key] || 0) + 1;
-        const newVal = JSON.stringify(violationMap);
+        const newVal = Object.entries(violationMap)
+            .filter(([k]) => k && /^[a-zA-Z0-9_]+$/.test(k.trim()))
+            .map(([k,v]) => k + ':' + v).join('|');
         console.log('[VIOLATION] simpan x_09:', newVal);
         await fetch(`${API_URL}?table=${TABLE_NAME}&id_x=${idX}`, {
             method: 'PUT',

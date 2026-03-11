@@ -1496,19 +1496,18 @@ async function startTest() {
 }
 
 async function loadQuestions() {
-    const url = cfg.dataUrl;
+    // Pilih URL berdasarkan gender untuk ranking
+    let url = cfg.dataUrl;
+    if (cfg.type === 'ranking' && cfg.dataUrlP) {
+        const gender = getBio('bioGender') || 'L';
+        if (gender === 'P') url = cfg.dataUrlP;
+        console.log('[RMIB] Gender: ' + gender + ' | URL: ' + (gender==='P' ? 'Perempuan' : 'Laki-laki'));
+    }
+    
     const resp = await fetch(url + '?v=' + Date.now());
     const data = await resp.json();
     if (cfg.type === 'ranking') {
-        // Filter berdasarkan gender jika data memiliki field gender (format gabungan)
-        const hasGender = data.some(d => d.gender);
-        let filteredData = data;
-        if (hasGender) {
-            const gender = getBio('bioGender') || 'L';
-            filteredData = data.filter(d => d.gender === gender);
-            console.log('[RMIB] Gender: ' + gender + ' | Data: ' + filteredData.length + ' kolom');
-        }
-        const kd = filteredData.find(d => d.kolom === cfg.kolom);
+        const kd = data.find(d => d.kolom === cfg.kolom);
         if (!kd) throw new Error('Kolom ' + cfg.kolom + ' tidak ada');
         cfg._pembuka = kd.pembuka;
         questions = kd.soal.map((s, i) => ({ text: s, id: i }));
