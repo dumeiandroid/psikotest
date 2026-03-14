@@ -210,12 +210,12 @@
             user-select: none;
         }
         .numpad-btn:active { background: var(--primary); color: white; border-color: var(--primary); transform: scale(0.93); }
-        .numpad-btn.btn-space { width: 90px; font-size: 0.9em; }
+        .numpad-btn.btn-space { width: 120px; font-size: 0.9em; }
         .numpad-btn.btn-del   { background: #fff1f2; border-color: #fecdd3; color: #e11d48; }
         .numpad-btn.btn-del:active { background: #e11d48; color: white; border-color: #e11d48; }
         @media (max-width: 600px) {
             .numpad-btn { width: 46px; height: 46px; font-size: 1.05em; border-radius: 10px; }
-            .numpad-btn.btn-space { width: 80px; }
+            .numpad-btn.btn-space { width: 100px; }
         }
 
         /* action bar */
@@ -1432,18 +1432,16 @@ function numpadPress(val) {
         inp.value = cur + val;
     }
 
-    // Validasi: tombol Jawab aktif jika ada konten sebelum spasi DAN setelah spasi
-    // Format yang didukung: "angka spasi angka", "2 1/4", "2 1,4", dsb.
+    // Validasi: tombol Jawab aktif HANYA jika format = "angka spasi angka"
+    // contoh: "28 32", "100 105", "7 14"
     const btn = document.getElementById('btnNext');
     if (btn) {
         const v = inp.value;
-        const parts = v.split(' ');
-        const valid = parts.length >= 2 && parts[0].trim() !== '' && parts.slice(1).join(' ').trim() !== '';
+        const valid = /^\d+\s+\d+$/.test(v);
         btn.disabled = !valid;
     }
 }
 
-function numpadComma() { numpadPress(","); }
 function renderTextInput(q) {
     const isDeret = cfg.id === 'deret6';
     const skippedBadgeTI = skippedIndices.includes(qIndex) ? ' <span style="background:#fef3c7;color:#92400e;font-size:0.75em;padding:2px 8px;border-radius:99px;font-weight:600;">⟳ Dilewati</span>' : '';
@@ -1465,8 +1463,6 @@ function renderTextInput(q) {
             </div>
             <div class="numpad-row">
                 <button class="numpad-btn btn-space" onclick="numpadPress(' ')">SPASI</button>
-                <button class="numpad-btn" onclick="numpadPress('/')">/</button>
-                <button class="numpad-btn" onclick="numpadComma()">,</button>
                 <button class="numpad-btn btn-del" onclick="numpadPress('DEL')">⌫</button>
             </div>
         </div>` : '';
