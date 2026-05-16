@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Rekap Peserta Kreplin</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f3ef;
+    --surface: #ffffff;
+    --border: #ddd9d0;
+    --accent: #1a1a2e;
+    --accent2: #c0392b;
+    --accent3: #2980b9;
+    --text: #1a1a1a;
+    --muted: #888;
+    --tag: #e8e4dc;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'IBM Plex Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+  /* LOGIN */
+  #loginWrap {
+    min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .login-card {
+    background: var(--surface);
+    border: 2px solid var(--accent);
+    border-radius: 4px;
+    padding: 48px 44px;
+    width: 100%; max-width: 380px;
+    box-shadow: 6px 6px 0 var(--accent);
+  }
+  .login-card h2 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 22px;
+    margin-bottom: 4px;
+  }
+  .login-card p { font-size: 13px; color: var(--muted); margin-bottom: 28px; }
+  /* HEADER */
+  header {
+    background: var(--accent);
+    color: white;
+    padding: 0 32px;
+    height: 56px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100;
+  }
+  header h1 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+  }
+  header .hright { display: flex; gap: 12px; align-items: center; }
+  header button {
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: white; padding: 6px 14px;
+    border-radius: 4px; font-size: 13px;
+    cursor: pointer; transition: background 0.15s;
+    font-family: 'IBM Plex Sans', sans-serif;
+  }
+  header button:hover { background: rgba(255,255,255,0.22); }
+  /* MAIN */
+  main { padding: 28px 32px; max-width: 1200px; margin: 0 auto; }
+  .toolbar {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 20px; gap: 12px; flex-wrap: wrap;
+  }
+  .toolbar-left { display: flex; gap: 10px; align-items: center; }
+  .search-box {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 4px; padding: 8px 12px;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 14px; color: var(--text); outline: none;
+    width: 240px; transition: border-color 0.2s;
+  }
+  .search-box:focus { border-color: var(--accent); }
+  .btn { padding: 8px 16px; border-radius: 4px; font-size: 13px; cursor: pointer; border: none; transition: opacity 0.15s; font-family: 'IBM Plex Sans', sans-serif; font-weight: 500; }
+  .btn:hover { opacity: 0.85; }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-danger { background: var(--accent2); color: white; }
+  .btn-info { background: var(--accent3); color: white; }
+  .btn-sm { padding: 4px 10px; font-size: 12px; }
+  .stat-row { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
+  .stat {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 4px; padding: 14px 20px; flex: 1; min-width: 120px;
+  }
+  .stat .val { font-family: 'IBM Plex Mono', monospace; font-size: 28px; font-weight: 500; }
+  .stat .lbl { font-size: 12px; color: var(--muted); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.06em; }
+  /* TABLE */
+  .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead th {
+    background: var(--accent); color: white;
+    padding: 12px 14px; text-align: left;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px; font-weight: 500;
+    letter-spacing: 0.05em; white-space: nowrap;
+  }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--tag); }
+  td { padding: 11px 14px; vertical-align: middle; }
+  td a { color: var(--accent3); text-decoration: none; font-weight: 500; }
+  td a:hover { text-decoration: underline; }
+  .badge {
+    display: inline-block; padding: 3px 8px;
+    border-radius: 20px; font-size: 11px; font-weight: 500;
+  }
+  .badge-done { background: #d4edda; color: #1e7e34; }
+  .badge-partial { background: #fff3cd; color: #856404; }
+  .badge-none { background: #f8d7da; color: #721c24; }
+  .actions { display: flex; gap: 6px; }
+  /* PAGINATION */
+  .pagination { display: flex; gap: 6px; align-items: center; margin-top: 16px; flex-wrap: wrap; }
+  .page-btn {
+    width: 32px; height: 32px; border: 1px solid var(--border);
+    background: var(--surface); border-radius: 4px;
+    font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s; font-family: 'IBM Plex Mono', monospace;
+  }
+  .page-btn:hover, .page-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+  /* MODAL */
+  .overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.5); z-index: 200;
+    align-items: center; justify-content: center;
+  }
+  .overlay.show { display: flex; }
+  .modal {
+    background: var(--surface);
+    border: 2px solid var(--accent);
+    border-radius: 4px;
+    padding: 32px;
+    width: 100%; max-width: 500px;
+    box-shadow: 8px 8px 0 var(--accent);
+    max-height: 90vh; overflow-y: auto;
+    animation: modalIn 0.2s ease;
+  }
+  @keyframes modalIn { from { opacity:0; transform: scale(0.95); } to { opacity:1; transform:scale(1); } }
+  .modal h3 { font-family: 'IBM Plex Mono', monospace; font-size: 18px; margin-bottom: 20px; }
+  .form-group { margin-bottom: 14px; }
+  .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 5px; }
+  .form-group input, .form-group textarea {
+    width: 100%; background: var(--bg); border: 1px solid var(--border);
+    border-radius: 4px; padding: 9px 11px;
+    font-family: 'IBM Plex Sans', sans-serif; font-size: 14px; color: var(--text);
+    outline: none; transition: border-color 0.2s;
+  }
+  .form-group input:focus, .form-group textarea:focus { border-color: var(--accent); }
+  .form-group textarea { min-height: 70px; resize: vertical; }
+  .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+  /* INPUT general */
+  input[type=text], input[type=password] {
+    width: 100%; background: var(--bg); border: 1px solid var(--border);
+    border-radius: 4px; padding: 10px 12px;
+    font-family: 'IBM Plex Sans', sans-serif; font-size: 14px; color: var(--text);
+    outline: none; transition: border-color 0.2s;
+    margin-bottom: 14px;
+  }
+  input[type=text]:focus, input[type=password]:focus { border-color: var(--accent); }
+  .loading { text-align: center; padding: 40px; color: var(--muted); font-family: 'IBM Plex Mono', monospace; }
+  .empty { text-align: center; padding: 40px; color: var(--muted); }
+  .auto-badge { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--muted); }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginWrap">
+  <div class="login-card">
+    <h2>ADMIN PANEL</h2>
+    <p>Masuk untuk mengelola data peserta Kreplin</p>
+    <label style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;display:block;margin-bottom:5px;">Username</label>
+    <input type="text" id="loginUser" placeholder="admin" autocomplete="off">
+    <label style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;display:block;margin-bottom:5px;">Password</label>
+    <input type="password" id="loginPass" placeholder="••••••">
+    <button class="btn btn-primary" style="width:100%;padding:11px;" onclick="doLogin()">Masuk</button>
+    <div id="loginErr" style="display:none;margin-top:12px;font-size:13px;color:var(--accent2);text-align:center;"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="appWrap" style="display:none;">
+  <header>
+    <h1>⬡ KREPLIN ADMIN</h1>
+    <div class="hright">
+      <span style="font-size:13px;opacity:0.7;" id="autoRefreshLabel">auto-refresh: ON</span>
+      <button onclick="toggleAutoRefresh()">Pause</button>
+      <button onclick="logout()">Keluar</button>
+    </div>
+  </header>
+  <main>
+    <div class="stat-row">
+      <div class="stat"><div class="val" id="statTotal">—</div><div class="lbl">Total Peserta</div></div>
+      <div class="stat"><div class="val" id="statDone">—</div><div class="lbl">Selesai</div></div>
+      <div class="stat"><div class="val" id="statPartial">—</div><div class="lbl">Sebagian</div></div>
+      <div class="stat"><div class="val" id="statNone">—</div><div class="lbl">Belum Mulai</div></div>
+    </div>
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <input class="search-box" id="searchBox" placeholder="Cari token / nama…" oninput="onSearch()">
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-primary" onclick="openAdd()">+ Tambah Peserta</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th><th>Token (x_01)</th><th>Nama (x_02)</th>
+            <th>Dikerjakan (x_05)</th><th>Benar (x_06)</th><th>Salah (x_07)</th>
+            <th>Status</th><th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="tBody"><tr><td colspan="8" class="loading">Memuat data…</td></tr></tbody>
+      </table>
+    </div>
+    <div class="pagination" id="pagination"></div>
+  </main>
+</div>
+
+<!-- MODAL TAMBAH/EDIT -->
+<div class="overlay" id="modalOverlay">
+  <div class="modal">
+    <h3 id="modalTitle">Tambah Peserta</h3>
+    <input type="hidden" id="editId">
+    <div class="form-group"><label>Token (x_01)</label><input type="text" id="f01" placeholder="TK-20240001"></div>
+    <div class="form-group"><label>Nama & Data (x_02) — format: Nama;…</label><textarea id="f02" placeholder="Nama Lengkap;…"></textarea></div>
+    <div class="form-group"><label>Dikerjakan (x_05)</label><textarea id="f05" placeholder="data dipisah |"></textarea></div>
+    <div class="form-group"><label>Benar (x_06)</label><input type="text" id="f06"></div>
+    <div class="form-group"><label>Salah (x_07)</label><textarea id="f07" placeholder="data dipisah |"></textarea></div>
+    <div class="modal-footer">
+      <button class="btn" style="background:var(--border);color:var(--text);" onclick="closeModal()">Batal</button>
+      <button class="btn btn-primary" onclick="saveRecord()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL KONFIRMASI DELETE -->
+<div class="overlay" id="delOverlay">
+  <div class="modal" style="max-width:360px;">
+    <h3>Hapus Data?</h3>
+    <p style="font-size:14px;color:var(--muted);margin-top:8px;">Tindakan ini tidak dapat dibatalkan.</p>
+    <div class="modal-footer">
+      <button class="btn" style="background:var(--border);color:var(--text);" onclick="document.getElementById('delOverlay').classList.remove('show')">Batal</button>
+      <button class="btn btn-danger" onclick="confirmDelete()">Hapus</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis6';
+const TABLE = 'kreplin';
+const SECRET = 'admin';
+const PER_PAGE = 20;
+
+let allData = [];
+let filteredData = [];
+let currentPage = 1;
+let deleteId = null;
+let autoRefreshTimer = null;
+let autoRefreshOn = true;
+let isAdmin = false;
+
+// ── AUTH ──
+async function doLogin() {
+  const u = document.getElementById('loginUser').value.trim();
+  const p = document.getElementById('loginPass').value.trim();
+  const errEl = document.getElementById('loginErr');
+  errEl.style.display = 'none';
+
+  if (!u || !p) {
+    errEl.textContent = 'Username dan password tidak boleh kosong.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  const btn = document.querySelector('.login-card .btn');
+  btn.textContent = 'Memeriksa…';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch(
+      `${API}?table=admins&x_01_eq=${encodeURIComponent(u)}&x_02_eq=${encodeURIComponent(p)}`,
+      { headers: { 'X-Custom-Auth': SECRET } }
+    );
+    const json = await res.json();
+
+    if (json.success && json.count > 0) {
+      isAdmin = true;
+      document.getElementById('loginWrap').style.display = 'none';
+      document.getElementById('appWrap').style.display = 'block';
+      loadData();
+      startAutoRefresh();
+    } else {
+      errEl.textContent = 'Username atau password salah.';
+      errEl.style.display = 'block';
+    }
+  } catch(e) {
+    errEl.textContent = 'Gagal terhubung ke server. Coba lagi.';
+    errEl.style.display = 'block';
+  } finally {
+    btn.textContent = 'Masuk';
+    btn.disabled = false;
+  }
+}
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.getElementById('loginWrap').style.display !== 'none') doLogin();
+});
+function logout() {
+  isAdmin = false;
+  clearInterval(autoRefreshTimer);
+  document.getElementById('appWrap').style.display = 'none';
+  document.getElementById('loginWrap').style.display = 'flex';
+}
+
+// ── DATA ──
+async function loadData() {
+  try {
+    const res = await fetch(`${API}?table=${TABLE}`, {
+      headers: { 'X-Custom-Auth': SECRET }
+    });
+    const json = await res.json();
+    if (json.success) {
+      allData = json.data;
+      applyFilter();
+      updateStats();
+    }
+  } catch(e) { console.error(e); }
+}
+
+function applyFilter() {
+  const q = document.getElementById('searchBox').value.toLowerCase();
+  filteredData = q
+    ? allData.filter(r =>
+        (r.x_01||'').toLowerCase().includes(q) ||
+        (r.x_02||'').toLowerCase().includes(q)
+      )
+    : [...allData];
+  currentPage = 1;
+  renderTable();
+  renderPagination();
+}
+
+function onSearch() { applyFilter(); }
+
+function updateStats() {
+  let done=0, partial=0, none=0;
+  allData.forEach(r => {
+    const x05 = (r.x_05||'').split('|').map(s=>s.trim());
+    if (x05[0] && x05[1]) done++;
+    else if (x05[0]) partial++;
+    else none++;
+  });
+  document.getElementById('statTotal').textContent = allData.length;
+  document.getElementById('statDone').textContent = done;
+  document.getElementById('statPartial').textContent = partial;
+  document.getElementById('statNone').textContent = none;
+}
+
+function renderTable() {
+  const tbody = document.getElementById('tBody');
+  const start = (currentPage-1)*PER_PAGE;
+  const page = filteredData.slice(start, start+PER_PAGE);
+
+  if (!page.length) {
+    tbody.innerHTML = '<tr><td colspan="8" class="empty">Tidak ada data.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = page.map(r => {
+    const nama = (r.x_02||'').split(';')[0];
+    const x05 = (r.x_05||'').split('|').map(s=>s.trim());
+    const done = x05.filter(v=>v!=='').length;
+    const statusBadge = x05[0] && x05[1]
+      ? '<span class="badge badge-done">Selesai</span>'
+      : x05[0]
+      ? '<span class="badge badge-partial">Sebagian</span>'
+      : '<span class="badge badge-none">Belum</span>';
+
+    return `<tr>
+      <td class="auto-badge">${r.id_x}</td>
+      <td><code style="font-family:'IBM Plex Mono',monospace;font-size:12px;">${r.x_01||'-'}</code></td>
+      <td><a href="hasil_kreplin.html?id_x=${r.id_x}">${nama||'-'}</a></td>
+      <td>${done} kolom</td>
+      <td>${r.x_06||'0'}</td>
+      <td>${r.x_07||'0'}</td>
+      <td>${statusBadge}</td>
+      <td><div class="actions">
+        <button class="btn btn-info btn-sm" onclick="openEdit(${r.id_x})">Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="askDelete(${r.id_x})">Hapus</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+function renderPagination() {
+  const total = Math.ceil(filteredData.length / PER_PAGE);
+  const pg = document.getElementById('pagination');
+  if (total <= 1) { pg.innerHTML = ''; return; }
+  let html = '';
+  for (let i=1; i<=total; i++) {
+    html += `<button class="page-btn ${i===currentPage?'active':''}" onclick="goPage(${i})">${i}</button>`;
+  }
+  pg.innerHTML = html;
+}
+
+function goPage(n) { currentPage = n; renderTable(); renderPagination(); }
+
+// ── AUTO REFRESH ──
+function startAutoRefresh() {
+  autoRefreshTimer = setInterval(() => { if(autoRefreshOn) loadData(); }, 5000);
+}
+function toggleAutoRefresh() {
+  autoRefreshOn = !autoRefreshOn;
+  document.getElementById('autoRefreshLabel').textContent = `auto-refresh: ${autoRefreshOn?'ON':'OFF'}`;
+  document.querySelector('header .hright button').textContent = autoRefreshOn ? 'Pause' : 'Resume';
+}
+
+// ── CRUD ──
+function openAdd() {
+  document.getElementById('modalTitle').textContent = 'Tambah Peserta';
+  document.getElementById('editId').value = '';
+  ['f01','f02','f05','f06','f07'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('modalOverlay').classList.add('show');
+}
+
+function openEdit(id) {
+  const r = allData.find(x => x.id_x == id);
+  if (!r) return;
+  document.getElementById('modalTitle').textContent = 'Edit Peserta';
+  document.getElementById('editId').value = id;
+  document.getElementById('f01').value = r.x_01||'';
+  document.getElementById('f02').value = r.x_02||'';
+  document.getElementById('f05').value = r.x_05||'';
+  document.getElementById('f06').value = r.x_06||'';
+  document.getElementById('f07').value = r.x_07||'';
+  document.getElementById('modalOverlay').classList.add('show');
+}
+
+function closeModal() { document.getElementById('modalOverlay').classList.remove('show'); }
+
+async function saveRecord() {
+  const id = document.getElementById('editId').value;
+  const body = {
+    x_01: document.getElementById('f01').value,
+    x_02: document.getElementById('f02').value,
+    x_05: document.getElementById('f05').value,
+    x_06: document.getElementById('f06').value,
+    x_07: document.getElementById('f07').value,
+  };
+
+  try {
+    let res;
+    if (id) {
+      res = await fetch(`${API}?table=${TABLE}&id_x=${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type':'application/json', 'X-Custom-Auth': SECRET },
+        body: JSON.stringify(body)
+      });
+    } else {
+      res = await fetch(`${API}?table=${TABLE}`, {
+        method: 'POST',
+        headers: { 'Content-Type':'application/json', 'X-Custom-Auth': SECRET },
+        body: JSON.stringify(body)
+      });
+    }
+    const json = await res.json();
+    if (json.success) { closeModal(); loadData(); }
+    else alert('Gagal menyimpan: ' + (json.message||''));
+  } catch(e) { alert('Error: ' + e.message); }
+}
+
+function askDelete(id) {
+  deleteId = id;
+  document.getElementById('delOverlay').classList.add('show');
+}
+
+async function confirmDelete() {
+  document.getElementById('delOverlay').classList.remove('show');
+  if (!deleteId) return;
+  try {
+    const res = await fetch(`${API}?table=${TABLE}&id_x=${deleteId}`, {
+      method: 'DELETE',
+      headers: { 'X-Custom-Auth': SECRET }
+    });
+    const json = await res.json();
+    if (json.success) loadData();
+    else alert('Gagal hapus: ' + (json.message||''));
+  } catch(e) { alert('Error: ' + e.message); }
+  deleteId = null;
+}
+
+// Close modal on overlay click
+document.getElementById('modalOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+document.getElementById('delOverlay').addEventListener('click', function(e) {
+  if (e.target === this) this.classList.remove('show');
+});
+</script>
+</body>
+</html>

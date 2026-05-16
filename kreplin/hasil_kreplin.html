@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hasil Tes Kreplin</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Syne+Mono&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  :root {
+    --bg: #0d0d0d;
+    --surface: #161616;
+    --surface2: #1f1f1f;
+    --border: #2a2a2a;
+    --accent: #00ff88;
+    --accent2: #ff6b6b;
+    --accent3: #ffd93d;
+    --text: #f0f0f0;
+    --muted: #666;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+  .topbar {
+    display: flex; align-items: center; gap: 16px;
+    padding: 20px 32px;
+    border-bottom: 1px solid var(--border);
+  }
+  .topbar a {
+    color: var(--muted); text-decoration: none; font-size: 13px;
+    transition: color 0.2s;
+  }
+  .topbar a:hover { color: var(--accent); }
+  .topbar .sep { color: var(--border); }
+  .hero {
+    padding: 40px 32px 28px;
+    border-bottom: 1px solid var(--border);
+  }
+  .hero-tag {
+    font-family: 'Syne Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .hero h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: 36px;
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 6px;
+  }
+  .hero-meta { font-size: 14px; color: var(--muted); }
+  .hero-meta span { color: var(--text); }
+  .content { padding: 32px; max-width: 1100px; margin: 0 auto; }
+
+  /* STAT CARDS */
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+    margin-bottom: 32px;
+  }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .stat-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  }
+  .stat-card.green::before { background: var(--accent); }
+  .stat-card.red::before { background: var(--accent2); }
+  .stat-card.yellow::before { background: var(--accent3); }
+  .stat-card.blue::before { background: #58a6ff; }
+  .stat-card .val {
+    font-family: 'Syne', sans-serif;
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+  .stat-card.green .val { color: var(--accent); }
+  .stat-card.red .val { color: var(--accent2); }
+  .stat-card.yellow .val { color: var(--accent3); }
+  .stat-card.blue .val { color: #58a6ff; }
+  .stat-card .lbl { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; }
+
+  /* SECTION */
+  .section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+  .section-header {
+    padding: 16px 22px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .section-header h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+  }
+  .section-header .tag {
+    font-family: 'Syne Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+  }
+  .section-body { padding: 22px; }
+  .chart-wrap { position: relative; height: 260px; }
+
+  /* PERIOD GRID */
+  .period-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+  .period-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    text-align: center;
+  }
+  .period-card .p-val {
+    font-family: 'Syne', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--accent2);
+  }
+  .period-card .p-lbl { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .period-card .p-range { font-family: 'Syne Mono', monospace; font-size: 10px; color: var(--border); margin-top: 2px; letter-spacing: 0.08em; }
+
+  /* INTERPRETASI */
+  .interp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .interp-item {
+    background: var(--surface2);
+    border-radius: 8px;
+    padding: 14px 16px;
+    display: flex; gap: 12px; align-items: flex-start;
+  }
+  .interp-icon { font-size: 20px; flex-shrink: 0; }
+  .interp-title { font-size: 13px; font-weight: 500; margin-bottom: 2px; }
+  .interp-desc { font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+  .loading-screen {
+    display: flex; align-items: center; justify-content: center;
+    min-height: 60vh; flex-direction: column; gap: 16px;
+    color: var(--muted); font-family: 'Syne Mono', monospace; font-size: 13px;
+  }
+  .spinner {
+    width: 32px; height: 32px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .error-screen {
+    text-align: center; padding: 60px 32px;
+    color: var(--muted);
+  }
+  .error-screen h2 { font-family: 'Syne', sans-serif; color: var(--accent2); margin-bottom: 8px; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="index_admin.html">← Admin</a>
+  <span class="sep">/</span>
+  <span style="font-size:13px;color:var(--muted);">Hasil Kreplin</span>
+</div>
+
+<div id="loadingScreen" class="loading-screen">
+  <div class="spinner"></div>
+  <span>Memuat data…</span>
+</div>
+
+<div id="errorScreen" class="error-screen" style="display:none;">
+  <h2>Data Tidak Ditemukan</h2>
+  <p>Pastikan parameter id_x sudah benar.</p>
+</div>
+
+<div id="mainContent" style="display:none;">
+  <div class="hero">
+    <div class="hero-tag">● Hasil Tes Kraepelin / Kreplin</div>
+    <h1 id="namaHero">—</h1>
+    <div class="hero-meta">Token: <span id="tokenHero">—</span> &nbsp;|&nbsp; ID: <span id="idHero">—</span></div>
+  </div>
+
+  <div class="content">
+    <!-- STAT CARDS -->
+    <div class="stat-grid">
+      <div class="stat-card green">
+        <div class="val" id="statTotalDikerjakan">—</div>
+        <div class="lbl">Total Dikerjakan</div>
+      </div>
+      <div class="stat-card blue">
+        <div class="val" id="statRataRata">—</div>
+        <div class="lbl">Rata-rata / Kolom</div>
+      </div>
+      <div class="stat-card red">
+        <div class="val" id="statTotalSalah">—</div>
+        <div class="lbl">Total Salah</div>
+      </div>
+      <div class="stat-card yellow">
+        <div class="val" id="statAkurasi">—</div>
+        <div class="lbl">Akurasi</div>
+      </div>
+    </div>
+
+    <!-- GRAFIK DIKERJAKAN -->
+    <div class="section">
+      <div class="section-header">
+        <h2>Kurva Kerja — Jumlah Soal Dikerjakan</h2>
+        <span class="tag">45 KOLOM</span>
+      </div>
+      <div class="section-body">
+        <div class="chart-wrap">
+          <canvas id="chartDikerjakan"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- GRAFIK SALAH -->
+    <div class="section">
+      <div class="section-header">
+        <h2>Distribusi Kesalahan per Kolom</h2>
+        <span class="tag">x_07</span>
+      </div>
+      <div class="section-body">
+        <div class="chart-wrap">
+          <canvas id="chartSalah"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- GRAFIK GABUNGAN -->
+    <div class="section">
+      <div class="section-header">
+        <h2>Dikerjakan vs Benar</h2>
+        <span class="tag">PERBANDINGAN</span>
+      </div>
+      <div class="section-body">
+        <div class="chart-wrap">
+          <canvas id="chartGabungan"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- KESALAHAN 3 PERIODE -->
+    <div class="section">
+      <div class="section-header">
+        <h2>Kesalahan per Periode</h2>
+        <span class="tag">ANALISIS</span>
+      </div>
+      <div class="section-body">
+        <div class="period-grid">
+          <div class="period-card">
+            <div class="p-val" id="salah1">—</div>
+            <div class="p-lbl">Periode I</div>
+            <div class="p-range">KOLOM 6 — 10</div>
+          </div>
+          <div class="period-card">
+            <div class="p-val" id="salah2">—</div>
+            <div class="p-lbl">Periode II</div>
+            <div class="p-range">KOLOM 21 — 25</div>
+          </div>
+          <div class="period-card">
+            <div class="p-val" id="salah3">—</div>
+            <div class="p-lbl">Periode III</div>
+            <div class="p-range">KOLOM 36 — 40</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- INTERPRETASI -->
+    <div class="section">
+      <div class="section-header">
+        <h2>Interpretasi Kurva Kerja</h2>
+        <span class="tag">OTOMATIS</span>
+      </div>
+      <div class="section-body">
+        <div class="interp-grid" id="interpGrid"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const API = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis6';
+const TABLE = 'kreplin';
+
+function getParam(name) {
+  return new URLSearchParams(window.location.search).get(name);
+}
+
+async function loadData() {
+  const id_x = getParam('id_x');
+  if (!id_x) { showError(); return; }
+
+  try {
+    const res = await fetch(`${API}?table=${TABLE}&id_x=${id_x}`);
+    const json = await res.json();
+    if (!json.success || !json.data) { showError(); return; }
+
+    const r = json.data;
+    render(r);
+  } catch(e) { showError(); }
+}
+
+function showError() {
+  document.getElementById('loadingScreen').style.display = 'none';
+  document.getElementById('errorScreen').style.display = 'block';
+}
+
+function render(r) {
+  document.getElementById('loadingScreen').style.display = 'none';
+  document.getElementById('mainContent').style.display = 'block';
+
+  // Header
+  const nama = (r.x_02||'').split(';')[0] || '(Tanpa Nama)';
+  document.getElementById('namaHero').textContent = nama;
+  document.getElementById('tokenHero').textContent = r.x_01 || '-';
+  document.getElementById('idHero').textContent = r.id_x;
+
+  // Parse data
+  const dikerjakan = (r.x_05||'').split('|').map(v => parseInt(v.trim())||0);
+  const salah = (r.x_07||'').split('|').map(v => parseInt(v.trim())||0);
+  const benar = dikerjakan.map((d,i) => Math.max(0, d - (salah[i]||0)));
+
+  // Pastikan 45 elemen
+  while (dikerjakan.length < 45) dikerjakan.push(0);
+  while (salah.length < 45) salah.push(0);
+  while (benar.length < 45) benar.push(0);
+
+  const totalDikerjakan = dikerjakan.reduce((a,b)=>a+b,0);
+  const totalSalah = salah.reduce((a,b)=>a+b,0);
+  const totalBenar = benar.reduce((a,b)=>a+b,0);
+  const rataRata = (totalDikerjakan / 45).toFixed(1);
+  const akurasi = totalDikerjakan > 0 ? ((totalBenar/totalDikerjakan)*100).toFixed(1)+'%' : '—';
+
+  document.getElementById('statTotalDikerjakan').textContent = totalDikerjakan;
+  document.getElementById('statRataRata').textContent = rataRata;
+  document.getElementById('statTotalSalah').textContent = totalSalah;
+  document.getElementById('statAkurasi').textContent = akurasi;
+
+  // Periode salah
+  const s1 = salah.slice(5,10).reduce((a,b)=>a+b,0);
+  const s2 = salah.slice(20,25).reduce((a,b)=>a+b,0);
+  const s3 = salah.slice(35,40).reduce((a,b)=>a+b,0);
+  document.getElementById('salah1').textContent = s1;
+  document.getElementById('salah2').textContent = s2;
+  document.getElementById('salah3').textContent = s3;
+
+  const labels = Array.from({length:45},(_,i)=>i+1);
+
+  // Chart 1: Dikerjakan
+  new Chart(document.getElementById('chartDikerjakan'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Dikerjakan',
+        data: dikerjakan,
+        borderColor: '#00ff88',
+        backgroundColor: 'rgba(0,255,136,0.06)',
+        borderWidth: 2,
+        pointRadius: 3,
+        pointBackgroundColor: '#00ff88',
+        fill: true,
+        tension: 0.3
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: '#f0f0f0', font: { family: 'Inter' } } } },
+      scales: {
+        x: { grid: { color: '#1f1f1f' }, ticks: { color: '#666', font: { size: 10 } } },
+        y: { beginAtZero: true, grid: { color: '#1f1f1f' }, ticks: { color: '#666' } }
+      }
+    }
+  });
+
+  // Chart 2: Salah
+  new Chart(document.getElementById('chartSalah'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Salah',
+        data: salah,
+        backgroundColor: 'rgba(255,107,107,0.7)',
+        borderColor: '#ff6b6b',
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: '#f0f0f0' } } },
+      scales: {
+        x: { grid: { color: '#1f1f1f' }, ticks: { color: '#666', font: { size: 10 } } },
+        y: { beginAtZero: true, grid: { color: '#1f1f1f' }, ticks: { color: '#666', stepSize: 1 } }
+      }
+    }
+  });
+
+  // Chart 3: Gabungan
+  new Chart(document.getElementById('chartGabungan'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'Dikerjakan',
+          data: dikerjakan,
+          borderColor: '#00ff88',
+          borderWidth: 2,
+          pointRadius: 2,
+          fill: false,
+          tension: 0.3
+        },
+        {
+          label: 'Benar',
+          data: benar,
+          borderColor: '#58a6ff',
+          borderWidth: 2,
+          pointRadius: 2,
+          fill: false,
+          tension: 0.3
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: '#f0f0f0' } } },
+      scales: {
+        x: { grid: { color: '#1f1f1f' }, ticks: { color: '#666', font: { size: 10 } } },
+        y: { beginAtZero: true, grid: { color: '#1f1f1f' }, ticks: { color: '#666' } }
+      }
+    }
+  });
+
+  // Interpretasi otomatis
+  const first10 = dikerjakan.slice(0,10).reduce((a,b)=>a+b,0)/10;
+  const last10  = dikerjakan.slice(35,45).reduce((a,b)=>a+b,0)/10;
+  const mid10   = dikerjakan.slice(17,27).reduce((a,b)=>a+b,0)/10;
+  const trend = last10 > first10*0.95 ? 'stabil' : last10 > first10*0.8 ? 'sedikit menurun' : 'menurun';
+  const konsistensi = Math.abs(s1-s2) <= 2 && Math.abs(s2-s3) <= 2 ? 'konsisten' : 'bervariasi';
+
+  const interpItems = [
+    {
+      icon: trend === 'stabil' ? '📈' : trend === 'sedikit menurun' ? '📉' : '⚠️',
+      title: 'Kurva Kerja: ' + trend.charAt(0).toUpperCase()+trend.slice(1),
+      desc: trend === 'stabil'
+        ? 'Produktivitas terjaga dari awal hingga akhir. Menunjukkan daya tahan yang baik.'
+        : trend === 'sedikit menurun'
+        ? 'Ada penurunan kecil di akhir. Normal terjadi karena kelelahan ringan.'
+        : 'Terjadi penurunan signifikan. Indikasi kelelahan atau kurang konsentrasi.'
+    },
+    {
+      icon: konsistensi === 'konsisten' ? '✅' : '🔄',
+      title: 'Kesalahan: ' + konsistensi.charAt(0).toUpperCase()+konsistensi.slice(1),
+      desc: konsistensi === 'konsisten'
+        ? 'Jumlah kesalahan stabil di tiap periode. Menunjukkan kontrol diri yang baik.'
+        : 'Fluktuasi kesalahan antar periode. Perlu perhatian pada faktor konsentrasi.'
+    },
+    {
+      icon: parseFloat(akurasi) >= 90 ? '🎯' : parseFloat(akurasi) >= 75 ? '👍' : '💡',
+      title: 'Akurasi: ' + akurasi,
+      desc: parseFloat(akurasi) >= 90
+        ? 'Tingkat akurasi sangat baik. Ketelitian tinggi dalam pengerjaan.'
+        : parseFloat(akurasi) >= 75
+        ? 'Akurasi cukup baik. Masih ada ruang peningkatan ketelitian.'
+        : 'Akurasi perlu ditingkatkan. Perlu latihan konsentrasi lebih.'
+    },
+    {
+      icon: parseFloat(rataRata) >= 12 ? '⚡' : parseFloat(rataRata) >= 8 ? '⏱️' : '🐢',
+      title: `Kecepatan: ${rataRata} soal/kolom`,
+      desc: parseFloat(rataRata) >= 12
+        ? 'Kecepatan pengerjaan tinggi. Menunjukkan kemampuan pemrosesan yang cepat.'
+        : parseFloat(rataRata) >= 8
+        ? 'Kecepatan rata-rata. Sesuai dengan standar umumnya.'
+        : 'Kecepatan di bawah rata-rata. Perlu latihan kecepatan kalkulasi.'
+    }
+  ];
+
+  document.getElementById('interpGrid').innerHTML = interpItems.map(it => `
+    <div class="interp-item">
+      <div class="interp-icon">${it.icon}</div>
+      <div>
+        <div class="interp-title">${it.title}</div>
+        <div class="interp-desc">${it.desc}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+loadData();
+</script>
+</body>
+</html>

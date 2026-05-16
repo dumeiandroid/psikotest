@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tes Psikologi — Masuk</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --border: #2a2d3a;
+    --accent: #e8c97a;
+    --accent2: #7ab8e8;
+    --text: #e8e6e0;
+    --muted: #7a7a8a;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow-x: hidden;
+  }
+  .bg-grid {
+    position: fixed; inset: 0; z-index: 0;
+    background-image:
+      linear-gradient(rgba(232,201,122,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(232,201,122,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+  .bg-glow {
+    position: fixed; top: -20%; left: 50%; transform: translateX(-50%);
+    width: 600px; height: 400px;
+    background: radial-gradient(ellipse, rgba(232,201,122,0.08) 0%, transparent 70%);
+    z-index: 0;
+  }
+
+  /* ── SCREENS ── */
+  .screen {
+    position: relative; z-index: 1;
+    width: 100%; max-width: 520px;
+    padding: 16px;
+    display: none;
+  }
+  .screen.active { display: block; }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 48px;
+    box-shadow: 0 32px 80px rgba(0,0,0,0.5);
+    animation: fadeUp 0.5s ease both;
+  }
+  /* keterangan card lebih lebar */
+  #screenKeterangan .card { max-width: 520px; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .logo {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 32px;
+  }
+  .logo-icon {
+    width: 36px; height: 36px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .logo-text {
+    font-family: 'DM Serif Display', serif;
+    font-size: 18px; color: var(--text);
+  }
+  h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 26px; line-height: 1.2;
+    margin-bottom: 8px;
+  }
+  .subtitle {
+    font-size: 14px; color: var(--muted);
+    margin-bottom: 28px; line-height: 1.6;
+  }
+  label {
+    display: block;
+    font-size: 12px; font-weight: 500;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 7px;
+  }
+  .field { margin-bottom: 16px; }
+  input[type=text], input[type=number], select {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 13px 15px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px; color: var(--text);
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+    appearance: none; -webkit-appearance: none;
+  }
+  input[type=text]:focus, input[type=number]:focus, select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(232,201,122,0.12);
+  }
+  input::placeholder { color: var(--muted); }
+  select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237a7a8a' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 14px center;
+    padding-right: 36px; cursor: pointer;
+  }
+  select option { background: #1a1d27; }
+
+  .btn {
+    width: 100%; padding: 15px;
+    background: linear-gradient(135deg, var(--accent), #d4a842);
+    color: #1a1200;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500; font-size: 15px;
+    border: none; border-radius: 10px; cursor: pointer;
+    transition: opacity 0.2s, transform 0.15s;
+  }
+  .btn:hover { opacity: 0.92; transform: translateY(-1px); }
+  .btn:active { transform: translateY(0); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  .error-msg {
+    display: none; margin-top: 14px;
+    padding: 12px 14px;
+    background: rgba(220,60,60,0.12);
+    border: 1px solid rgba(220,60,60,0.3);
+    border-radius: 8px; font-size: 13px;
+    color: #f08080; text-align: center;
+  }
+  .error-msg.show { display: block; animation: fadeUp 0.3s ease; }
+  .spinner {
+    display: none; width: 18px; height: 18px;
+    border: 2px solid rgba(26,18,0,0.3);
+    border-top-color: #1a1200;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    margin: 0 auto;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .admin-link {
+    display: block; text-align: center;
+    margin-top: 24px; font-size: 13px;
+    color: var(--muted); text-decoration: none;
+    transition: color 0.2s;
+  }
+  .admin-link:hover { color: var(--accent2); }
+
+  .step-tag {
+    display: inline-block;
+    font-size: 11px; font-weight: 500;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--accent);
+    background: rgba(232,201,122,0.1);
+    border: 1px solid rgba(232,201,122,0.2);
+    border-radius: 20px; padding: 4px 12px;
+    margin-bottom: 20px;
+  }
+
+  /* ── KETERANGAN SOAL ── */
+  .instruksi-box {
+    background: rgba(122,184,232,0.1);
+    border: 1px solid rgba(122,184,232,0.25);
+    border-radius: 12px;
+    padding: 16px 18px;
+    font-size: 14px;
+    line-height: 1.6;
+    margin-bottom: 20px;
+    color: var(--text);
+  }
+  .instruksi-box b { color: var(--accent2); }
+
+  .penjelasan-box {
+    background: rgba(232,201,122,0.06);
+    border: 1px solid rgba(232,201,122,0.15);
+    border-radius: 12px;
+    padding: 16px 18px;
+    font-size: 13.5px;
+    line-height: 1.7;
+    color: #ccc;
+    margin-bottom: 24px;
+  }
+  .penjelasan-box b { color: var(--accent); }
+
+  .section-label {
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+    display: block;
+  }
+
+  .nama-peserta {
+    font-size: 13px; color: var(--muted);
+    margin-top: 16px; text-align: center;
+  }
+  .nama-peserta span { color: var(--accent); font-weight: 500; }
+
+  /* ── TES KRAEPELIN ── */
+  #screenTes {
+    max-width: 100%;
+    padding: 0;
+  }
+  #screenTes .card {
+    border-radius: 0;
+    min-height: 100vh;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    box-shadow: none;
+    animation: fadeUp 0.4s ease both;
+  }
+  .tes-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 28px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    position: sticky; top: 0; z-index: 10;
+    flex-shrink: 0;
+  }
+  .tes-info { display: flex; align-items: center; gap: 16px; }
+  .tes-kolom { font-family: 'DM Serif Display', serif; font-size: 14px; color: var(--muted); }
+  .tes-kolom span { color: var(--accent); font-weight: 600; }
+  .timer-ring { position: relative; width: 52px; height: 52px; visibility: hidden; width: 0; overflow: hidden; }
+  .timer-ring svg { transform: rotate(-90deg); }
+  .timer-ring circle { fill: none; stroke-width: 3; }
+  .timer-track { stroke: var(--border); }
+  .timer-fill {
+    stroke: var(--accent);
+    stroke-dasharray: 138;
+    stroke-dashoffset: 0;
+    transition: stroke-dashoffset 1s linear, stroke 0.3s;
+    stroke-linecap: round;
+  }
+  .timer-fill.urgent { stroke: #ff6b6b; }
+  .timer-text {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'DM Serif Display', serif;
+    font-size: 15px; color: var(--text);
+  }
+  .progress-bar-wrap { height: 3px; background: var(--border); }
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent2), var(--accent));
+    transition: width 0.3s ease;
+  }
+  .tes-body {
+    flex: 1; display: flex;
+    flex-direction: column; align-items: center; justify-content: center;
+    padding: 32px 20px; gap: 28px;
+  }
+  .soal-num { font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+  .soal-q {
+    font-family: 'DM Serif Display', serif;
+    font-size: 52px; color: var(--text);
+    letter-spacing: 0.04em;
+    animation: popIn 0.2s ease;
+  }
+  @keyframes popIn {
+    from { opacity: 0; transform: scale(0.85); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+  .soal-hint { font-size: 13px; color: var(--muted); }
+  .options-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px; width: 100%; max-width: 360px;
+  }
+  .opt-btn {
+    aspect-ratio: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px; color: var(--text);
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, transform 0.1s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .opt-btn:hover { background: rgba(232,201,122,0.1); border-color: var(--accent); }
+  .opt-btn:active { transform: scale(0.93); }
+  .opt-btn.correct { background: rgba(0,200,100,0.15); border-color: #00c864; color: #00c864; pointer-events: none; }
+  .opt-btn.wrong   { background: rgba(255,80,80,0.15);  border-color: #ff5050; color: #ff5050; pointer-events: none; }
+  .tes-footer { display: none; }
+  .score-pill { display: flex; gap: 16px; }
+  .score-pill span { display: flex; align-items: center; gap: 5px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+  .dot-green { background: #00c864; }
+  .dot-red   { background: #ff5050; }
+  .sesi-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(15,17,23,0.92);
+    z-index: 50; align-items: center; justify-content: center;
+  }
+  .sesi-overlay.show { display: flex; animation: fadeUp 0.3s ease; }
+  .sesi-box {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 20px; padding: 40px 44px;
+    text-align: center; max-width: 360px; width: 90%;
+  }
+  .sesi-box h2 { display: none; }
+  .sesi-box p  { display: none; }
+  .sesi-stats  { display: none; }
+  .sesi-stat { text-align: center; }
+  .sesi-stat .v { font-family: 'DM Serif Display', serif; font-size: 32px; line-height: 1; }
+  .sesi-stat .l { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-top: 4px; }
+  .sesi-stat.green .v { color: #00c864; }
+  .sesi-stat.red   .v { color: #ff5050; }
+  .sesi-stat.blue  .v { color: var(--accent2); }
+
+  /* ── TERIMAKASIH ── */
+  .thanks-icon {
+    font-size: 52px; margin-bottom: 20px; display: block;
+    animation: bounceIn 0.6s ease;
+  }
+  @keyframes bounceIn {
+    0%   { transform: scale(0.3); opacity: 0; }
+    60%  { transform: scale(1.1); }
+    100% { transform: scale(1);   opacity: 1; }
+  }
+  .thanks-divider {
+    width: 48px; height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 2px;
+    margin: 20px auto;
+  }
+  #screenTerimakasih .card { text-align: center; }
+</style>
+</head>
+<body>
+<div class="bg-grid"></div>
+<div class="bg-glow"></div>
+
+<!-- ── SCREEN 1: LOGIN TOKEN ── -->
+<div class="screen active" id="screenLogin">
+  <div class="card">
+    <div class="logo">
+      <div class="logo-icon">🧠</div>
+      <span class="logo-text">PsikoTest</span>
+    </div>
+    <h1>Selamat Datang</h1>
+    <p class="subtitle">Masukkan token yang telah diberikan untuk memulai sesi tes Anda.</p>
+    <div class="field">
+      <label for="token">Token Peserta</label>
+      <input type="text" id="token" placeholder="Contoh: TK-20240001" autocomplete="off" autofocus>
+    </div>
+    <button class="btn" id="btnMasuk" onclick="masuk()">
+      <span id="btnText">Mulai Tes</span>
+      <div class="spinner" id="spinner"></div>
+    </button>
+    <div class="error-msg" id="errMsg"></div>
+    <a href="index_admin.html" class="admin-link">→ Masuk sebagai Admin</a>
+  </div>
+</div>
+
+<!-- ── SCREEN 2: FORM BIODATA ── -->
+<div class="screen" id="screenBiodata">
+  <div class="card">
+    <div class="logo">
+      <div class="logo-icon">🧠</div>
+      <span class="logo-text">PsikoTest</span>
+    </div>
+    <div class="step-tag">Langkah 1 — Data Diri</div>
+    <h1>Isi Biodata</h1>
+    <p class="subtitle">Lengkapi data diri Anda sebelum memulai tes.</p>
+    <div class="field">
+      <label for="bioNama">Nama Lengkap</label>
+      <input type="text" id="bioNama" placeholder="Nama sesuai KTP" autocomplete="off">
+    </div>
+    <div class="field">
+      <label for="bioUsia">Usia</label>
+      <input type="number" id="bioUsia" placeholder="Contoh: 25" min="10" max="99">
+    </div>
+    <div class="field">
+      <label for="bioGender">Jenis Kelamin</label>
+      <select id="bioGender">
+        <option value="">Pilih...</option>
+        <option value="Laki-laki">Laki-laki</option>
+        <option value="Perempuan">Perempuan</option>
+      </select>
+    </div>
+    <button class="btn" id="btnSimpan" onclick="simpanBiodata()">
+      <span id="btnSimpanText">Simpan &amp; Lanjutkan</span>
+      <div class="spinner" id="spinnerBio"></div>
+    </button>
+    <div class="error-msg" id="errBio"></div>
+  </div>
+</div>
+
+<!-- ── SCREEN 3: KETERANGAN SOAL ── -->
+<div class="screen" id="screenKeterangan">
+  <div class="card">
+    <div class="logo">
+      <div class="logo-icon">🧠</div>
+      <span class="logo-text">PsikoTest</span>
+    </div>
+    <div class="step-tag" id="ketStep">Tes Kraepelin</div>
+    <h1>Keterangan Soal</h1>
+
+    <span class="section-label">Instruksi</span>
+    <div class="instruksi-box" id="ketInstruksi">—</div>
+
+    <span class="section-label">Penjelasan</span>
+    <div class="penjelasan-box" id="ketPenjelasan">—</div>
+
+    <button class="btn" id="btnMulai" onclick="mulaiTes()">Mulai</button>
+    <p class="nama-peserta">Peserta: <span id="ketNama">—</span></p>
+  </div>
+</div>
+
+<script>
+const API   = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis6';
+const TABLE = 'kreplin';
+const LS_KEY     = 'kreplin_peserta'; // localStorage key
+const LS_KEY_KET  = 'kreplin_ket_done';  // sudah lihat keterangan
+const LS_KEY_SESI = 'kreplin_sesi';      // state sesi berjalan
+
+// Konten keterangan per subtes (dari index.php asli)
+const KETERANGAN = [
+  {
+    step: 'Subtes 1',
+    instruksi: 'Instruksi Tes: <b>Pilih Angka Satuan dari Hasil Penjumlahan</b>',
+    penjelasan: 'Dalam tes ini, Anda akan melihat dua angka yang harus dijumlahkan. Namun, tugas Anda bukan menuliskan hasil penjumlahannya secara lengkap, melainkan memilih hanya angka satuannya (angka paling belakang) dari hasil tersebut.<br><b>Contoh:</b><br>Jika muncul 8 + 9, maka hasilnya adalah 17.<br>Angka satuan dari 17 adalah 7.<br>Jadi, Anda harus memilih/klik angka 7.',
+    tujuan: 'form1.html'
+  },
+  {
+    step: 'Subtes 2',
+    instruksi: 'Pada setiap soal, Anda akan menemukan 5 buah gambar. Tugas Anda ialah menemukan 2 gambar yang memiliki karakteristik yang serupa.',
+    penjelasan: '<b>Contoh pertama</b><br>Dalam subtes ini, Anda diminta untuk memilih dua bentuk yang berbeda dari tiga bentuk lainnya. Gambar B dan D adalah segi empat, sedangkan yang lainnya adalah segitiga. Oleh karena itu, jawaban yang benar adalah B dan D.<br><b>Contoh kedua</b><br>Gambar C dan E memiliki bentuk lingkaran dengan pola polkadot/titik-titik hitam, berbeda dari lingkaran kosong lainnya. Jawaban yang benar adalah C dan E.',
+    tujuan: 'form2.html'
+  }
+];
+
+let pesertaData = null;
+let urutSubtes  = 0;
+
+// ── INIT: cek localStorage saat halaman dimuat ──
+window.addEventListener('DOMContentLoaded', () => {
+  const saved = localStorage.getItem(LS_KEY);
+  if (saved) {
+    try {
+      pesertaData = JSON.parse(saved);
+      // Langsung lanjutkan tanpa harus login ulang
+      afterLogin();
+    } catch(e) {
+      localStorage.removeItem(LS_KEY);
+    }
+  }
+});
+
+// ── SCREEN SWITCHER ──
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  const card = document.querySelector('#' + id + ' .card');
+  card.style.animation = 'none';
+  card.offsetHeight;
+  card.style.animation = '';
+}
+
+// ── CEK BIODATA LENGKAP ──
+function biodataLengkap(x_02) {
+  // Cek tiap field: trim dulu, kosong/spasi/newline dianggap belum diisi
+  const raw = (x_02 || '').split('|')[0];
+  const parts = raw.split(';').map(s => s.replace(/[\s\n\r]+/g, ''));
+  // index 0=Nama, 2=Usia, 4=JenisKelamin
+  return !!(parts[0] && parts[2] && parts[4]);
+}
+
+// ── LOGIN TOKEN ──
+async function masuk() {
+  const token = document.getElementById('token').value.trim();
+  if (!token) { showErr('errMsg', 'Token tidak boleh kosong.'); return; }
+
+  setLoading('btnMasuk', 'btnText', 'spinner', true);
+  try {
+    const res  = await fetch(`${API}?table=${TABLE}&x_01_eq=${encodeURIComponent(token)}`);
+    const json = await res.json();
+
+    if (!json.success || json.count === 0) {
+      showErr('errMsg', 'Token tidak ditemukan. Periksa kembali token Anda.');
+      return;
+    }
+
+    pesertaData = json.data[0];
+    // Simpan ke localStorage agar bertahan walau refresh
+    localStorage.setItem(LS_KEY, JSON.stringify(pesertaData));
+
+    afterLogin();
+
+  } catch(e) {
+    showErr('errMsg', 'Gagal terhubung ke server. Coba lagi.');
+  } finally {
+    setLoading('btnMasuk', 'btnText', 'spinner', false);
+  }
+}
+
+// ── SETELAH LOGIN (dari form ATAU dari localStorage) ──
+function afterLogin() {
+  if (!biodataLengkap(pesertaData.x_02)) {
+    showScreen('screenBiodata');
+    return;
+  }
+  lanjutkan();
+}
+
+// Cek apakah tes sudah pernah dimulai (ada data x_05)
+function tesSudahDimulai() {
+  const x05 = (pesertaData.x_05 || '').split('|');
+  return x05.some(v => v !== '' && v !== undefined);
+}
+
+// ── SIMPAN BIODATA ──
+async function simpanBiodata() {
+  const nama   = document.getElementById('bioNama').value.trim();
+  const usia   = document.getElementById('bioUsia').value.trim();
+  const gender = document.getElementById('bioGender').value;
+
+  if (!nama)   { showErr('errBio', 'Nama tidak boleh kosong.'); return; }
+  if (!usia)   { showErr('errBio', 'Usia tidak boleh kosong.'); return; }
+  if (!gender) { showErr('errBio', 'Pilih jenis kelamin terlebih dahulu.'); return; }
+
+  const x_02 = nama + ';;' + usia + ';;' + gender + '||||||||||||';
+
+  setLoading('btnSimpan', 'btnSimpanText', 'spinnerBio', true);
+  try {
+    const res = await fetch(`${API}?table=${TABLE}&id_x=${pesertaData.id_x}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ x_02 })
+    });
+    const json = await res.json();
+
+    if (!json.success) { showErr('errBio', 'Gagal menyimpan data. Coba lagi.'); return; }
+
+    pesertaData.x_02 = x_02;
+    localStorage.setItem(LS_KEY, JSON.stringify(pesertaData));
+    // Biodata baru diisi → selalu tampil keterangan dulu sebelum tes
+    urutSubtes = 0;
+    tampilkanKeterangan(urutSubtes);
+
+  } catch(e) {
+    showErr('errBio', 'Gagal terhubung ke server. Coba lagi.');
+  } finally {
+    setLoading('btnSimpan', 'btnSimpanText', 'spinnerBio', false);
+  }
+}
+
+// ── ROUTING: tentukan subtes mana yang harus dikerjakan ──
+// Cek apakah nilai string dianggap kosong (spasi, enter, tab, dll)
+function isKosong(val) {
+  return !val || val.replace(/[\s\r\n\t]+/g, '') === '';
+}
+
+function lanjutkan() {
+  const explode05 = (pesertaData.x_05 || '').split('|');
+  const totalKolom = 45;
+
+  // Cari kolom pertama yang belum dikerjakan (isKosong = spasi/enter/dll dianggap kosong)
+  let nextKolom = -1;
+  for (let i = 0; i < totalKolom; i++) {
+    if (isKosong(explode05[i])) {
+      nextKolom = i;
+      break;
+    }
+  }
+
+  if (nextKolom === -1) {
+    // Semua 45 kolom selesai
+    localStorage.removeItem(LS_KEY);
+    localStorage.removeItem(LS_KEY_KET);
+    localStorage.removeItem(LS_KEY_SESI);
+    showScreen('screenTerimakasih');
+    return;
+  }
+
+  const sudahLihatKet = localStorage.getItem(LS_KEY_KET) === '1';
+
+  if (nextKolom === 0 && !sudahLihatKet) {
+    // Belum pernah lihat keterangan sama sekali → tampilkan dulu
+    urutSubtes = 0;
+    tampilkanKeterangan(urutSubtes);
+  } else {
+    // Sudah pernah lihat keterangan ATAU sudah di tengah tes → langsung ke kolom yang tepat
+    initTesData();
+    mulaiSesiKolom(nextKolom);
+  }
+}
+
+// ── TAMPILKAN KETERANGAN ──
+function tampilkanKeterangan(urut) {
+  const ket = KETERANGAN[urut] || KETERANGAN[0];
+  const nama = (pesertaData.x_02 || '').split(';')[0] || pesertaData.x_01;
+
+  document.getElementById('ketStep').textContent       = ket.step;
+  document.getElementById('ketInstruksi').innerHTML    = ket.instruksi;
+  document.getElementById('ketPenjelasan').innerHTML   = ket.penjelasan;
+  document.getElementById('ketNama').textContent       = nama;
+
+  showScreen('screenKeterangan');
+}
+
+// ── MULAI TES ──
+function mulaiTes() {
+  const ket = KETERANGAN[urutSubtes] || KETERANGAN[0];
+  window.location.href = ket.tujuan;
+}
+
+// ── HELPERS ──
+function showErr(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.classList.add('show');
+}
+
+function setLoading(btnId, textId, spinnerId, state) {
+  document.getElementById(textId).style.display    = state ? 'none'  : 'block';
+  document.getElementById(spinnerId).style.display = state ? 'block' : 'none';
+  document.getElementById(btnId).disabled = state;
+  if (!state) ['errMsg','errBio'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('show');
+  });
+}
+
+document.getElementById('token').addEventListener('keydown', e => {
+  if (e.key === 'Enter') masuk();
+});
+
+// ══════════════════════════════════════════
+// TES KRAEPELIN — SCREEN 4
+// ══════════════════════════════════════════
+const QUESTIONS = [
+  { q:"2+3",a:"5"},{ q:"4+5",a:"9"},{ q:"3+6",a:"9"},{ q:"5+2",a:"7"},{ q:"6+3",a:"9"},
+  { q:"4+6",a:"0"},{ q:"2+7",a:"9"},{ q:"3+5",a:"8"},{ q:"5+4",a:"9"},{ q:"2+8",a:"0"},
+  { q:"7+2",a:"9"},{ q:"8+3",a:"1"},{ q:"3+7",a:"0"},{ q:"6+4",a:"0"},{ q:"5+5",a:"0"},
+  { q:"7+3",a:"0"},{ q:"3+9",a:"2"},{ q:"6+5",a:"1"},{ q:"4+7",a:"1"},{ q:"2+6",a:"8"},
+  { q:"5+6",a:"1"},{ q:"8+1",a:"9"},{ q:"7+4",a:"1"},{ q:"9+2",a:"1"},{ q:"3+8",a:"1"},
+  { q:"6+2",a:"8"},{ q:"5+3",a:"8"},{ q:"4+8",a:"2"},{ q:"6+9",a:"5"},{ q:"7+1",a:"8"},
+  { q:"2+5",a:"7"},{ q:"1+3",a:"4"},{ q:"2+4",a:"6"},{ q:"3+4",a:"7"},{ q:"8+2",a:"0"},
+  { q:"5+9",a:"4"},{ q:"1+9",a:"0"},{ q:"2+3",a:"5"},{ q:"4+4",a:"8"},{ q:"3+3",a:"6"},
+  { q:"5+8",a:"3"},{ q:"7+5",a:"2"},{ q:"1+8",a:"9"},{ q:"3+2",a:"5"},{ q:"2+5",a:"7"},
+  { q:"4+3",a:"7"},{ q:"6+7",a:"3"},{ q:"5+6",a:"1"},{ q:"2+2",a:"4"},{ q:"9+1",a:"0"},
+  { q:"8+4",a:"2"},{ q:"4+2",a:"6"},{ q:"1+1",a:"2"},{ q:"3+5",a:"8"},{ q:"6+6",a:"2"},
+  { q:"5+7",a:"2"},{ q:"8+5",a:"3"},{ q:"7+8",a:"5"},{ q:"6+1",a:"7"},{ q:"3+4",a:"7"},
+  { q:"9+7",a:"6"},{ q:"4+5",a:"9"},{ q:"2+9",a:"1"},{ q:"5+1",a:"6"},{ q:"7+5",a:"2"},
+  { q:"3+6",a:"9"},{ q:"1+9",a:"0"},{ q:"2+2",a:"4"},{ q:"2+5",a:"7"},{ q:"3+4",a:"7"},
+  { q:"5+3",a:"8"},{ q:"6+2",a:"8"},{ q:"7+2",a:"9"},{ q:"8+1",a:"9"},{ q:"4+6",a:"0"},
+  { q:"5+5",a:"0"},{ q:"1+2",a:"3"},{ q:"3+7",a:"0"},{ q:"6+1",a:"7"},{ q:"8+2",a:"0"},
+  { q:"7+1",a:"8"},{ q:"8+3",a:"1"},{ q:"2+6",a:"8"},{ q:"3+8",a:"1"},{ q:"5+9",a:"4"},
+  { q:"4+4",a:"8"},{ q:"3+5",a:"8"},{ q:"6+2",a:"8"},{ q:"9+6",a:"5"},{ q:"8+8",a:"6"},
+  { q:"5+5",a:"0"},{ q:"1+3",a:"4"},{ q:"2+4",a:"6"},{ q:"3+6",a:"9"},{ q:"4+8",a:"2"},
+  { q:"5+6",a:"1"},{ q:"6+3",a:"9"}
+];
+
+const OPTS = ["1","2","3","4","5","6","7","8","9","0"];
+const TOTAL_KOLOM = 45;
+const TIMER_DETIK = 30;
+
+let tesKolom      = 0;  // 0-based index kolom saat ini
+
+function saveSesiState() {
+  localStorage.setItem(LS_KEY_SESI, JSON.stringify({
+    kolom:       tesKolom,
+    soalIdx:     tesSoalIdx,
+    benar:       tesBenar,
+    salah:       tesSalah,
+    dikerjakan:  tesDikerjakan,
+    timeLeft:    tesTimeLeft,
+    soalAcak:    tesSoalAcak
+  }));
+}
+let tesSoalIdx    = 0;  // index soal dalam sesi ini
+let tesBenar      = 0;
+let tesSalah      = 0;
+let tesDikerjakan = 0;
+let tesTimer      = null;
+let tesTimeLeft   = TIMER_DETIK;
+let tesSoalAcak   = [];
+let tesSesiSelesai = false;
+
+// Ambil data semua skor yang sudah ada dari pesertaData
+let skorDikerjakan = []; // array 45 elemen
+let skorSalah      = []; // array 45 elemen
+let skorBenar      = []; // array 45 elemen
+
+function initTesData() {
+  const x05 = (pesertaData.x_05 || '').split('|');
+  const x06 = (pesertaData.x_06 || '').split('|');
+  const x07 = (pesertaData.x_07 || '').split('|');
+  for (let i = 0; i < TOTAL_KOLOM; i++) {
+    skorDikerjakan[i] = !isKosong(x05[i]) ? x05[i].trim() : '';
+    skorBenar[i]      = !isKosong(x06[i]) ? x06[i].trim() : '';
+    skorSalah[i]      = !isKosong(x07[i]) ? x07[i].trim() : '';
+  }
+}
+
+// Acak array soal dengan jaminan tidak ada dua soal berturutan yang sama pertanyaannya
+function shuffleNoRepeat(arr) {
+  // Fisher-Yates shuffle dulu
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  // Perbaiki pasangan berurutan yang sama
+  for (let i = 0; i < arr.length - 1; i++) {
+    if (arr[i].q === arr[i + 1].q) {
+      // Cari posisi lain yang berbeda untuk ditukar
+      let swapped = false;
+      for (let j = i + 2; j < arr.length; j++) {
+        if (arr[j].q !== arr[i].q && (i === 0 || arr[j].q !== arr[i - 1].q)) {
+          [arr[i + 1], arr[j]] = [arr[j], arr[i + 1]];
+          swapped = true;
+          break;
+        }
+      }
+      // Jika tidak ketemu posisi ideal, tukar dengan posisi sebelumnya yang aman
+      if (!swapped && i + 2 < arr.length) {
+        [arr[i + 1], arr[i + 2]] = [arr[i + 2], arr[i + 1]];
+      }
+    }
+  }
+  return arr;
+}
+
+function mulaiSesiKolom(kolom) {
+  tesKolom      = kolom;
+  tesSesiSelesai = false;
+
+  // Coba resume state sesi tersimpan untuk kolom ini
+  const savedSesi = localStorage.getItem(LS_KEY_SESI);
+  let resumed = false;
+  if (savedSesi) {
+    try {
+      const s = JSON.parse(savedSesi);
+      if (s.kolom === kolom) {
+        tesSoalIdx    = s.soalIdx    || 0;
+        tesBenar      = s.benar      || 0;
+        tesSalah      = s.salah      || 0;
+        tesDikerjakan = s.dikerjakan || 0;
+        tesTimeLeft   = s.timeLeft   || TIMER_DETIK;
+        tesSoalAcak   = s.soalAcak   || [...QUESTIONS].sort(() => Math.random() - 0.5);
+        resumed = true;
+      }
+    } catch(e) {}
+  }
+
+  if (!resumed) {
+    tesSoalIdx    = 0;
+    tesBenar      = 0;
+    tesSalah      = 0;
+    tesDikerjakan = 0;
+    tesTimeLeft   = TIMER_DETIK;
+    // Acak soal dengan seed stabil per kolom agar konsisten jika di-resume
+    tesSoalAcak = shuffleNoRepeat([...QUESTIONS]);
+    saveSesiState();
+  }
+
+  // Update UI
+  document.getElementById('tesKolom').textContent  = kolom + 1;
+  document.getElementById('scoreBenar').textContent = 0;
+  document.getElementById('scoreSalah').textContent = 0;
+  const nama = (pesertaData.x_02 || '').split(';')[0] || pesertaData.x_01;
+  document.getElementById('tesPesertaInfo').textContent = nama;
+
+  showScreen('screenTes');
+  tampilSoal();
+  mulaiTimer();
+}
+
+function tampilSoal() {
+  if (tesSoalIdx >= tesSoalAcak.length) {
+    sesiHabis();
+    return;
+  }
+  const soal = tesSoalAcak[tesSoalIdx];
+  document.getElementById('soalNum').textContent  = `Soal ${tesSoalIdx + 1}`;
+  document.getElementById('soalQ').textContent    = soal.q;
+
+  // Progress bar dalam sesi (per jumlah soal)
+  const pct = (tesSoalIdx / tesSoalAcak.length) * 100;
+  document.getElementById('progressBar').style.width = pct + '%';
+
+  // Buat tombol pilihan
+  const grid = document.getElementById('optionsGrid');
+  grid.innerHTML = '';
+  OPTS.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.className = 'opt-btn';
+    btn.textContent = opt;
+    btn.addEventListener('click', () => pilihJawaban(opt, soal.a, btn));
+    grid.appendChild(btn);
+  });
+
+  // Re-trigger animasi soal
+  const qEl = document.getElementById('soalQ');
+  qEl.style.animation = 'none';
+  qEl.offsetHeight;
+  qEl.style.animation = '';
+}
+
+function pilihJawaban(pilihan, benar, btnEl) {
+  if (tesSesiSelesai) return;
+  tesDikerjakan++;
+
+  if (pilihan === benar) {
+    tesBenar++;
+    btnEl.classList.add('correct');
+  } else {
+    tesSalah++;
+    btnEl.classList.add('wrong');
+    // Tandai yang benar
+    document.querySelectorAll('.opt-btn').forEach(b => {
+      if (b.textContent === benar) b.classList.add('correct');
+    });
+  }
+
+  document.getElementById('scoreBenar').textContent = tesBenar;
+  document.getElementById('scoreSalah').textContent = tesSalah;
+
+  // Nonaktifkan semua tombol
+  document.querySelectorAll('.opt-btn').forEach(b => b.style.pointerEvents = 'none');
+
+  tesSoalIdx++;
+  saveSesiState();
+  setTimeout(() => tampilSoal(), 300);
+}
+
+// ── TIMER ──
+function mulaiTimer() {
+  clearInterval(tesTimer);
+  updateTimerUI(TIMER_DETIK);
+
+  tesTimer = setInterval(() => {
+    tesTimeLeft--;
+    updateTimerUI(tesTimeLeft);
+    if (tesTimeLeft <= 0) {
+      clearInterval(tesTimer);
+      sesiHabis();
+    }
+  }, 1000);
+}
+
+function updateTimerUI(sisa) {
+  document.getElementById('timerText').textContent = sisa;
+  console.log(`[TIMER] Kolom ${tesKolom + 1} — sisa waktu: ${sisa} detik`);
+  // Simpan sisa waktu setiap detik
+  if (tesTimeLeft !== sisa) { tesTimeLeft = sisa; saveSesiState(); }
+  const circle = document.getElementById('timerCircle');
+  const circumference = 138; // 2 * PI * 22
+  const offset = circumference - (sisa / TIMER_DETIK) * circumference;
+  circle.style.strokeDashoffset = offset;
+  if (sisa <= 8) {
+    circle.classList.add('urgent');
+  } else {
+    circle.classList.remove('urgent');
+  }
+}
+
+// ── SESI HABIS (waktu / soal habis) ──
+function sesiHabis() {
+  if (tesSesiSelesai) return;
+  tesSesiSelesai = true;
+  clearInterval(tesTimer);
+
+  // Nonaktifkan tombol
+  document.querySelectorAll('.opt-btn').forEach(b => b.style.pointerEvents = 'none');
+
+  // Tampilkan overlay hasil sesi
+  const isLast = tesKolom >= TOTAL_KOLOM - 1;
+  document.getElementById('sesiTitle').textContent = isLast ? 'Tes Selesai!' : 'Sesi Selesai!';
+  document.getElementById('sesiDesc').textContent  = `Kolom ke-${tesKolom + 1} telah diselesaikan.`;
+  document.getElementById('sesiDikerjakan').textContent = tesDikerjakan;
+  document.getElementById('sesiBenar').textContent      = tesBenar;
+  document.getElementById('sesiSalah').textContent      = tesSalah;
+  document.getElementById('btnLanjutText').textContent  = isLast ? 'Lihat Hasil' : 'Lanjut Kolom Berikutnya';
+
+  document.getElementById('sesiOverlay').classList.add('show');
+
+  // Auto lanjut setelah 500ms
+  setTimeout(() => {
+    document.getElementById('sesiOverlay').classList.remove('show');
+    lanjutSesi();
+  }, 500);
+}
+
+// ── SIMPAN SKOR & LANJUT ──
+async function lanjutSesi() {
+  setLoading('btnLanjutSesi', 'btnLanjutText', 'spinnerSesi', true);
+
+  // Update array skor lokal
+  skorDikerjakan[tesKolom] = tesDikerjakan;
+  skorBenar[tesKolom]      = tesBenar;
+  skorSalah[tesKolom]      = tesSalah;
+
+  const x_05 = skorDikerjakan.join('|');
+  const x_06 = skorBenar.join('|');
+  const x_07 = skorSalah.join('|');
+
+  try {
+    await fetch(`${API}?table=${TABLE}&id_x=${pesertaData.id_x}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ x_05, x_06, x_07 })
+    });
+
+    // Update local
+    pesertaData.x_05 = x_05;
+    pesertaData.x_06 = x_06;
+    pesertaData.x_07 = x_07;
+    localStorage.setItem(LS_KEY, JSON.stringify(pesertaData));
+    localStorage.removeItem(LS_KEY_SESI); // hapus state sesi kolom yang baru selesai
+
+  } catch(e) {
+    console.error('Gagal simpan skor:', e);
+  }
+
+  document.getElementById('sesiOverlay').classList.remove('show');
+  setLoading('btnLanjutSesi', 'btnLanjutText', 'spinnerSesi', false);
+
+  const nextKolom = tesKolom + 1;
+  if (nextKolom >= TOTAL_KOLOM) {
+    // Semua selesai
+    localStorage.removeItem(LS_KEY);
+    localStorage.removeItem(LS_KEY);
+    localStorage.removeItem(LS_KEY_KET);
+    localStorage.removeItem(LS_KEY_SESI);
+    showScreen('screenTerimakasih');
+  } else {
+    mulaiSesiKolom(nextKolom);
+  }
+}
+
+// Override fungsi mulaiTes dari screen keterangan
+function mulaiTes() {
+  localStorage.setItem(LS_KEY_KET, '1');
+  initTesData();
+  // Cari kolom pertama yang belum dikerjakan
+  let startKolom = 0;
+  for (let i = 0; i < TOTAL_KOLOM; i++) {
+    if (skorDikerjakan[i] === '' || skorDikerjakan[i] === undefined) {
+      startKolom = i;
+      break;
+    }
+  }
+  mulaiSesiKolom(startKolom);
+}
+
+</script>
+
+<!-- ── SCREEN 4: TES KRAEPELIN ── -->
+<div class="screen" id="screenTes">
+  <div class="card">
+    <div class="tes-header">
+      <div class="tes-info">
+        <div class="tes-kolom">Kolom <span id="tesKolom">1</span> / 45</div>
+        <div class="tes-kolom" id="tesSoalInfo">Soal <span id="tesSoalNo">1</span></div>
+      </div>
+      <div class="timer-ring">
+        <svg width="52" height="52" viewBox="0 0 52 52">
+          <circle class="timer-track" cx="26" cy="26" r="22"/>
+          <circle class="timer-fill" id="timerCircle" cx="26" cy="26" r="22"/>
+        </svg>
+        <div class="timer-text" id="timerText">30</div>
+      </div>
+    </div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-fill" id="progressBar" style="width:0%"></div>
+    </div>
+    <div class="tes-body">
+      <div class="soal-num" id="soalNum">Soal 1 dari 100</div>
+      <div class="soal-q" id="soalQ">? + ?</div>
+      <div class="soal-hint">Pilih <b>angka satuan</b> dari hasil penjumlahan</div>
+      <div class="options-grid" id="optionsGrid"></div>
+    </div>
+    <div class="tes-footer">
+      <div class="score-pill">
+        <span><span class="dot dot-green"></span><span id="scoreBenar">0</span> Benar</span>
+        <span><span class="dot dot-red"></span><span id="scoreSalah">0</span> Salah</span>
+      </div>
+      <div id="tesPesertaInfo" style="font-size:12px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Overlay sesi selesai -->
+<div class="sesi-overlay" id="sesiOverlay">
+  <div class="sesi-box">
+    <h2 id="sesiTitle">Sesi Selesai!</h2>
+    <p id="sesiDesc">Kolom ke-1 telah diselesaikan.</p>
+    <div class="sesi-stats">
+      <div class="sesi-stat blue"><div class="v" id="sesiDikerjakan">0</div><div class="l">Dikerjakan</div></div>
+      <div class="sesi-stat green"><div class="v" id="sesiBenar">0</div><div class="l">Benar</div></div>
+      <div class="sesi-stat red"><div class="v" id="sesiSalah">0</div><div class="l">Salah</div></div>
+    </div>
+    <button class="btn" id="btnLanjutSesi" onclick="lanjutSesi()" style="display:none;">
+      <span id="btnLanjutText">Lanjut Kolom Berikutnya</span>
+      <div class="spinner" id="spinnerSesi"></div>
+    </button>
+  </div>
+</div>
+
+
+<!-- ── SCREEN 5: TERIMAKASIH ── -->
+<div class="screen" id="screenTerimakasih">
+  <div class="card">
+    <span class="thanks-icon">🎉</span>
+    <div class="step-tag">Selesai</div>
+    <h1>Terima Kasih!</h1>
+    <div class="thanks-divider"></div>
+    <p class="subtitle" style="margin-bottom:0;">Semua soal telah selesai dikerjakan.<br>Hasil Anda telah tersimpan.</p>
+  </div>
+</div>
+
+</body>
+</html>
