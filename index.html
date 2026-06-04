@@ -1,1866 +1,287 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Tes</title>
-    <style>
-        :root {
-            --primary: #2563eb;
-            --primary-dark: #1d4ed8;
-            --success: #16a34a;
-            --danger: #dc2626;
-            --warning: #d97706;
-            --bg: #f1f5f9;
-            --card: #ffffff;
-            --text: #1e293b;
-            --muted: #64748b;
-            --border: #e2e8f0;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: 'Segoe UI', system-ui, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            min-height: 100vh;
-            padding: 24px 16px;
-        }
-
-        /* ===== LOADER ===== */
-        #globalLoader {
-            position: fixed; inset: 0;
-            background: rgba(255,255,255,0.96);
-            display: flex; flex-direction: column;
-            justify-content: center; align-items: center;
-            z-index: 9999; gap: 14px;
-        }
-        .spinner {
-            width: 42px; height: 42px;
-            border: 4px solid #e2e8f0;
-            border-top-color: var(--primary);
-            border-radius: 50%;
-            animation: spin 0.75s linear infinite;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        #loaderText { color: var(--muted); font-size: 0.9em; }
-
-        /* ===== SCREENS ===== */
-        .screen { display: none; }
-        .screen.active { display: block; }
-
-        /* ===== CARD ===== */
-        .card {
-            background: var(--card);
-            border-radius: 16px;
-            box-shadow: 0 4px 24px rgba(0,0,0,0.07);
-            padding: 32px;
-            max-width: 480px;
-            margin: 0 auto;
-        }
-        .card-wide  { max-width: 920px;  }
-        .card-xl    { max-width: 1160px; }
-
-        /* ===== TYPOGRAPHY ===== */
-        .page-title { font-size: 1.5em; font-weight: 700; color: var(--primary); margin-bottom: 6px; }
-        .page-sub   { color: var(--muted); font-size: 0.9em; line-height: 1.6; margin-bottom: 20px; }
-        h3 { font-size: 1em; font-weight: 600; margin-bottom: 14px; }
-
-        /* ===== FORM ===== */
-        .form-group { margin-bottom: 14px; }
-        .form-group label { display: block; font-size: 0.85em; font-weight: 600; color: var(--muted); margin-bottom: 5px; }
-        .form-group input {
-            width: 100%; padding: 11px 14px;
-            border: 2px solid var(--border); border-radius: 10px;
-            font-size: 0.95em; outline: none; transition: border 0.2s;
-            background: var(--bg);
-        }
-        .form-group input:focus { border-color: var(--primary); background: white; }
-
-        /* ===== BUTTONS ===== */
-        .btn {
-            display: inline-flex; align-items: center; justify-content: center;
-            gap: 8px; padding: 11px 24px;
-            border: none; border-radius: 10px;
-            font-size: 0.95em; font-weight: 600;
-            cursor: pointer; transition: all 0.2s;
-            width: 100%;
-        }
-        .btn + .btn { margin-top: 10px; }
-        .btn:disabled { opacity: 0.45; cursor: not-allowed; }
-        .btn-primary  { background: var(--primary); color: white; }
-        .btn-primary:hover:not(:disabled)  { background: var(--primary-dark); transform: translateY(-1px); }
-        .btn-success  { background: var(--success); color: white; }
-        .btn-success:hover:not(:disabled)  { background: #15803d; }
-        .btn-danger   { background: var(--danger);  color: white; }
-        .btn-danger:hover:not(:disabled)   { background: #b91c1c; }
-        .btn-outline  { background: white; color: var(--muted); border: 2px solid var(--border); }
-        .btn-outline:hover:not(:disabled)  { border-color: var(--primary); color: var(--primary); }
-        .btn-sm { padding: 8px 18px; font-size: 0.85em; width: auto; }
-
-        /* ===== STATUS BOX ===== */
-        .status-box {
-            background: var(--bg); border-left: 4px solid var(--primary);
-            padding: 14px 18px; border-radius: 8px; margin-bottom: 18px;
-        }
-        .status-box .label { font-size: 0.8em; color: var(--muted); margin-bottom: 4px; }
-        .status-box .value { font-weight: 700; font-size: 1.05em; color: var(--text); }
-        .status-done { border-color: var(--success); }
-        .status-done .value { color: var(--success); }
-
-        /* ===== DASHBOARD TASK LIST ===== */
-        .task-grid { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
-        .task-item {
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 12px 16px; border-radius: 10px;
-            border: 2px solid var(--border); background: white;
-            transition: all 0.2s;
-        }
-        .task-item.current { border-color: var(--primary); background: #eff6ff; cursor: pointer; }
-        .task-item.current:hover { background: #dbeafe; box-shadow: 0 4px 12px rgba(37,99,235,0.15); transform: translateY(-1px); transition: all 0.2s; }
-        .task-item.done    { border-color: #bbf7d0; background: #f0fdf4; }
-        .task-item.locked  { opacity: 0.45; }
-        .task-item .task-num  { width: 28px; height: 28px; border-radius: 50%; background: var(--border); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85em; flex-shrink: 0; }
-        .task-item.current .task-num { background: var(--primary); color: white; }
-        .task-item.done    .task-num { background: var(--success); color: white; }
-        .task-item .task-name { flex: 1; margin: 0 12px; font-size: 0.9em; font-weight: 500; }
-        .task-item .task-badge { font-size: 0.75em; padding: 3px 8px; border-radius: 99px; font-weight: 600; }
-        .badge-done    { background: #dcfce7; color: var(--success); }
-        .badge-current { background: #dbeafe; color: var(--primary); }
-        .badge-locked  { background: #f1f5f9; color: var(--muted); }
-
-        /* ===== TEST ENGINE ===== */
-        #topBar {
-            display: flex; align-items: center; justify-content: space-between;
-            margin-bottom: 20px; gap: 12px; flex-wrap: wrap;
-        }
-        .top-title { font-weight: 700; color: var(--primary); font-size: 1em; }
-        #progressInfo { color: var(--muted); font-size: 0.85em; }
-        #timerDisplay {
-            padding: 6px 14px; background: var(--bg);
-            border: 2px solid var(--border); border-radius: 8px;
-            font-weight: 700; font-size: 1em; transition: all 0.3s;
-        }
-        #timerDisplay.warning { color: var(--danger); border-color: var(--danger); animation: pulse 1s infinite; }
-        @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.6; } }
-
-        .progress-wrap { background: var(--border); border-radius: 99px; height: 5px; margin-bottom: 24px; }
-        #progressBar   { height: 100%; background: var(--primary); border-radius: 99px; transition: width 0.4s; }
-
-        /* question area */
-        #questionContent { min-height: 120px; }
-
-        .q-label { font-size: 0.8em; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-bottom: 8px; }
-        .q-text  { font-size: 1em; line-height: 1.65; color: var(--text); margin-bottom: 20px; }
-        .q-image { display: block; max-width: 300px; margin: 0 auto 20px; border-radius: 8px; border: 2px solid var(--border); }
-
-        /* options */
-        .options-img { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-bottom: 16px; }
-        .options-img img {
-            width: 105px; cursor: pointer; border: 3px solid var(--border);
-            border-radius: 10px; transition: all 0.2s;
-        }
-        .options-img img:hover { border-color: var(--primary); transform: translateY(-3px); box-shadow: 0 6px 16px rgba(37,99,235,0.2); }
-
-        .opt-check-wrap input { display: none; }
-        .opt-check-wrap label img {
-            width: 115px; cursor: pointer; border: 3px solid var(--border);
-            border-radius: 10px; transition: all 0.2s; display: block;
-        }
-        .opt-check-wrap input:checked + label img { border-color: var(--primary); transform: translateY(-4px); box-shadow: 0 6px 18px rgba(37,99,235,0.3); }
-
-        .options-text { display: flex; flex-direction: column; gap: 9px; margin-bottom: 16px; }
-        .opt-text {
-            padding: 13px 16px; text-align: left; background: white;
-            border: 2px solid var(--border); border-radius: 10px;
-            cursor: pointer; transition: all 0.2s; font-size: 0.9em; line-height: 1.5; width: 100%;
-        }
-        .opt-text:hover { border-color: var(--primary); background: #eff6ff; transform: translateX(4px); }
-
-        .options-ab { display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; }
-        .opt-ab {
-            padding: 16px 18px; text-align: left; background: white;
-            border: 2px solid var(--border); border-radius: 12px;
-            cursor: pointer; transition: all 0.2s; font-size: 0.9em; line-height: 1.6; width: 100%;
-        }
-        .opt-ab:hover { border-color: var(--primary); background: #eff6ff; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(37,99,235,0.12); }
-
-        .input-wrap { display: flex; flex-direction: column; align-items: center; gap: 14px; margin-bottom: 16px; }
-        #userAnswer {
-            padding: 13px 18px; font-size: 1.05em; width: 100%; max-width: 320px;
-            text-align: center; border: 2px solid var(--border); border-radius: 10px;
-            outline: none; transition: border 0.2s;
-        }
-        #userAnswer:focus { border-color: var(--primary); }
-
-        /* ── NUMPAD (Deret Angka) ── */
-        .numpad-wrap {
-            display: flex; flex-direction: column; align-items: center; gap: 8px;
-            margin-top: 4px;
-        }
-        .numpad-row { display: flex; gap: 8px; justify-content: center; }
-        .numpad-btn {
-            width: 54px; height: 54px;
-            border: 2px solid var(--border); border-radius: 12px;
-            background: white; color: var(--text);
-            font-size: 1.2em; font-weight: 700;
-            cursor: pointer; transition: all 0.15s;
-            display: flex; align-items: center; justify-content: center;
-            font-family: inherit;
-            -webkit-tap-highlight-color: transparent;
-            user-select: none;
-        }
-        .numpad-btn:active { background: var(--primary); color: white; border-color: var(--primary); transform: scale(0.93); }
-        .numpad-btn.btn-space { width: 90px; font-size: 0.9em; }
-        .numpad-btn.btn-del   { background: #fff1f2; border-color: #fecdd3; color: #e11d48; }
-        .numpad-btn.btn-del:active { background: #e11d48; color: white; border-color: #e11d48; }
-        @media (max-width: 600px) {
-            .numpad-btn { width: 46px; height: 46px; font-size: 1.05em; border-radius: 10px; }
-            .numpad-btn.btn-space { width: 80px; }
-        }
-
-        /* action bar */
-        .action-bar { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 12px; }
-        .action-bar .btn { width: auto; }
-
-        /* ranking */
-        #deskripsiBox {
-            margin-bottom: 18px; padding: 14px 18px;
-            background: #f8fafc; border-left: 4px solid var(--primary);
-            border-radius: 4px; line-height: 1.6; color: var(--muted); font-size: 0.88em;
-        }
-        .ranking-table { width: 100%; border-collapse: collapse; }
-        .ranking-table th, .ranking-table td { border: 1px solid var(--border); padding: 9px 12px; text-align: left; font-size: 0.88em; }
-        .ranking-table th { background: var(--primary); color: white; font-weight: 600; }
-        .ranking-table tr:nth-child(even) td { background: #f8fafc; }
-        .btn-container { display: flex; flex-wrap: wrap; gap: 4px; }
-        .btn-rank {
-            width: 34px; height: 34px; cursor: pointer;
-            border: 1px solid var(--border); background: white;
-            border-radius: 6px; font-weight: 600; font-size: 0.82em;
-            transition: all 0.15s; display: inline-flex; align-items: center; justify-content: center;
-        }
-        .btn-rank:hover  { background: #eff6ff; border-color: var(--primary); }
-        .btn-rank.sel    { background: var(--success); color: white; border-color: #15803d; }
-        .btn-rank.gone   { display: none !important; }
-
-        /* done */
-        #screenDone { text-align: center; }
-        .done-icon { font-size: 3.5em; margin-bottom: 12px; }
-
-        /* ===== START SCREEN ===== */
-        .instr-section {
-            background: #eff6ff; border-left: 4px solid var(--primary);
-            border-radius: 8px; padding: 16px 20px; margin-bottom: 24px;
-        }
-        .instr-section .instr-heading {
-            font-size: 0.75em; font-weight: 700; text-transform: uppercase;
-            letter-spacing: 0.08em; color: var(--primary); margin-bottom: 8px;
-        }
-        .instr-section p {
-            font-size: 0.93em; line-height: 1.75; color: var(--text);
-            white-space: pre-line;
-        }
-        .example-block { margin-bottom: 24px; }
-        .example-block .ex-heading {
-            font-size: 0.75em; font-weight: 700; text-transform: uppercase;
-            letter-spacing: 0.08em; color: var(--muted); margin-bottom: 12px;
-        }
-        .example-images {
-            display: flex; flex-direction: column; gap: 12px; align-items: center;
-        }
-        .example-images img {
-            max-width: 100%; border-radius: 10px;
-            border: 2px solid var(--border);
-            box-shadow: 0 2px 10px rgba(0,0,0,0.07);
-        }
-
-        /* ── PROTEKSI GAMBAR: tidak bisa diklik kanan / drag / save ── */
-        /* pointer-events tetap AUTO — proteksi via JS (contextmenu+touchstart) */
-        .q-image,
-        .options-img img,
-        .opt-check-wrap label img,
-        .example-images img {
-            -webkit-user-drag: none;
-            user-drag: none;
-            -webkit-user-select: none;
-            user-select: none;
-        }
-        .ex-note {
-            margin-top: 16px; padding: 14px 18px;
-            background: #f8fafc; border-radius: 8px;
-            font-size: 0.88em; line-height: 1.75; color: var(--muted);
-            white-space: pre-line;
-        }
-        .start-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
-        .timer-note { font-size: 0.78em; color: var(--muted); text-align: center; margin-top: 4px; }
-
-        /* welcome name */
-        .welcome { font-size: 1.1em; font-weight: 700; margin-bottom: 4px; }
-        .welcome-sub { font-size: 0.85em; color: var(--muted); margin-bottom: 20px; }
-
-        .hidden { display: none !important; }
-
-        /* ═══════════════════════════════════════
-           MOBILE RESPONSIVE — max 600px
-        ═══════════════════════════════════════ */
-        @media (max-width: 600px) {
-
-            /* ── Global: rapatkan kiri-kanan ── */
-            body { padding: 8px 4px; }
-
-            .card {
-                padding: 16px 12px;
-                border-radius: 12px;
-            }
-
-            /* ── Progress bar ── */
-            .progress-wrap { margin-bottom: 8px; }
-
-            /* Beri ruang bawah agar konten tidak tertutup sticky footer */
-            #testCard { padding-bottom: 70px; }
-
-            /* ── topBar: kompak, tombol logout disembunyikan ── */
-            #topBar {
-                margin-bottom: 6px;
-                gap: 6px;
-                flex-wrap: nowrap;
-                align-items: center;
-            }
-            .top-title    { font-size: 0.82em; }
-            #progressInfo { font-size: 0.78em; white-space: nowrap; }
-
-            /* Sembunyikan logout di topBar — pindah ke bottomBar */
-            #topBar > .btn { display: none; }
-
-            /* ── bottomBar: sticky footer ── */
-            #bottomBar {
-                position: fixed;
-                bottom: 0; left: 0; right: 0;
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                gap: 8px;
-                padding: 10px 12px;
-                padding-bottom: calc(10px + env(safe-area-inset-bottom));
-                background: white;
-                border-top: 1px solid var(--border);
-                box-shadow: 0 -2px 12px rgba(0,0,0,0.08);
-                z-index: 100;
-            }
-            .bb-info {
-                display: flex; flex-direction: column; gap: 2px; flex: 1;
-            }
-            .bb-title    { font-size: 0.8em; font-weight: 700; color: var(--primary); }
-            .bb-progress { font-size: 0.72em; color: var(--muted); }
-
-            #timerDisplay { display: none !important; } /* timer hanya di console */
-            .btn-logout-bottom {
-                padding: 7px 14px; font-size: 0.8em;
-                width: auto; border-radius: 8px;
-                background: white; color: var(--muted);
-                border: 2px solid var(--border);
-                cursor: pointer; font-weight: 600;
-                display: inline-flex; align-items: center; gap: 4px;
-                font-family: inherit;
-            }
-            .btn-logout-bottom:active { opacity: 0.7; }
-
-            /* ── Gambar soal: full lebar ── */
-            .q-image {
-                max-width: 100%;
-                width: 100%;
-                margin-bottom: 10px;
-            }
-
-            /* ── image_single: pilihan 5 per baris ── */
-            .options-img {
-                gap: 6px;
-                margin-bottom: 8px;
-            }
-            .options-img img {
-                width: calc(20% - 5px);
-                min-width: 52px;
-            }
-
-            /* ── image_multi: pertahankan tampilan asli ── */
-            .opt-check-wrap label img {
-                width: 115px;
-            }
-
-            /* ── Action bar ── */
-            .action-bar { gap: 8px; margin-top: 6px; }
-            .action-bar .btn { padding: 9px 16px; font-size: 0.85em; }
-
-            /* ── Text choice ── */
-            .opt-text { padding: 10px 12px; font-size: 0.88em; }
-
-            /* ── AB Choice ── */
-            .opt-ab { padding: 13px 14px; font-size: 0.88em; }
-
-            /* ── RANKING: sembunyikan kolom No ── */
-            .ranking-table th:first-child,
-            .ranking-table td:first-child { display: none; }
-
-            .btn-rank {
-                width: 27px; height: 27px;
-                font-size: 0.74em; border-radius: 5px;
-            }
-            .btn-container { gap: 3px; }
-            .ranking-table th,
-            .ranking-table td { padding: 7px 7px; font-size: 0.82em; }
-
-            #deskripsiBox {
-                padding: 10px 12px; font-size: 0.82em;
-                margin-bottom: 12px;
-            }
-
-            /* ── Start screen ── */
-            .instr-section { padding: 12px 14px; margin-bottom: 14px; }
-            .ex-note       { padding: 10px 13px; font-size: 0.84em; }
-            .page-title    { font-size: 1.25em; }
-            .page-sub      { font-size: 0.85em; }
-        }
-
-        /* Desktop: bottomBar tidak tampil */
-        @media (min-width: 601px) {
-            #bottomBar { display: none !important; }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Psikotes Online – Lidan Psikologi</title>
+<meta name="description" content="Ikuti tes IQ online resmi bersama Lidan Psikologi. Ukur kemampuan kognitif, penalaran, dan kecerdasan Anda secara profesional. Hasil laporan ditandatangani psikolog berlisensi.">
+<meta name="keywords" content="tes IQ online, tes kecerdasan, tes psikologi, IQ test Indonesia, Lidan Psikologi, tes kemampuan kognitif, laporan IQ, psikotes online">
+<meta name="author" content="PT. Lidan Indah Abadi – Lidan Psikologi">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://lidan.co.id/test/tes-iq">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://lidan.co.id/test/tes-iq">
+<meta property="og:title" content="Tes IQ Online Profesional – Lidan Psikologi">
+<meta property="og:description" content="Ukur tingkat kecerdasan Anda secara akurat melalui tes IQ online resmi. Didampingi psikolog berlisensi. Dapatkan laporan lengkap dengan interpretasi hasil.">
+<meta property="og:image" content="https://lidan.co.id/gambar/tes-iq-online.jpeg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Tes IQ Online – Lidan Psikologi">
+<meta property="og:site_name" content="Lidan Psikologi">
+<meta property="og:locale" content="id_ID">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:url" content="https://lidan.co.id/gambar/tes-iq-online.jpeg">
+<meta name="twitter:title" content="Tes IQ Online Profesional – Lidan Psikologi">
+<meta name="twitter:description" content="Ukur tingkat kecerdasan Anda secara akurat melalui tes IQ online resmi. Didampingi psikolog berlisensi.">
+<meta name="twitter:image" content="https://lidan.co.id/gambar/tes-iq-online.jpeg">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "name": "Tes IQ Online Profesional – Lidan Psikologi",
+  "description": "Ikuti tes IQ online resmi bersama Lidan Psikologi. Ukur kemampuan kognitif, penalaran, dan kecerdasan Anda secara profesional.",
+  "url": "https://lidan.co.id/test/tes-iq",
+  "publisher": {
+    "@type": "Organization",
+    "name": "PT. Lidan Indah Abadi – Lidan Psikologi",
+    "url": "https://lidan.co.id",
+    "logo": "https://psikogram.lidan.co.id/gambar/logo1.png"
+  }
+}
+</script>
+<link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
-<!-- LOADER -->
-<div id="globalLoader" class="hidden">
-    <div class="spinner"></div>
-    <p id="loaderText">Memuat...</p>
-</div>
-
-<!-- ══════════════════════════════════════════
-     SCREEN: LOGIN
-══════════════════════════════════════════ -->
-<div id="screenLogin" class="screen">
-    <div class="card">
-        <div class="page-title">Portal Tes</div>
-        <p class="page-sub">Masukkan nomor token Anda untuk memulai.</p>
-        <div class="form-group">
-            <label>Token</label>
-            <input type="text" id="tokenInput" placeholder="Contoh: TKN-001">
-        </div>
-        <button class="btn btn-primary" id="btnLogin" onclick="handleLogin()">Masuk</button>
-    </div>
-</div>
-
-<!-- ══════════════════════════════════════════
-     SCREEN: BIODATA
-══════════════════════════════════════════ -->
-<div id="screenBio" class="screen">
-    <div class="card">
-        <div class="page-title">Biodata Peserta</div>
-        <p class="page-sub">Lengkapi data diri sebelum memulai tes.</p>
-        <div id="bioFormFields"></div>
-        <button class="btn btn-primary" id="btnBio" onclick="saveBiodata()">Simpan &amp; Lanjutkan</button>
-        <button class="btn btn-outline" style="margin-top:10px" onclick="logout()">Logout</button>
-    </div>
-</div>
-
-<!-- ══════════════════════════════════════════
-     SCREEN: DASHBOARD
-══════════════════════════════════════════ -->
-<div id="screenDash" class="screen">
-    <div class="card">
-        <div class="welcome" id="welcomeName">Halo!</div>
-        <div class="welcome-sub" id="welcomeSub">Selesaikan semua tes berikut secara berurutan.</div>
-        <div class="task-grid" id="taskGrid"></div>
-        <button class="btn btn-danger" style="margin-top:10px" onclick="logout()">Logout</button>
-    </div>
-</div>
-
-<!-- ══════════════════════════════════════════
-     SCREEN: START (intro sebelum tes)
-══════════════════════════════════════════ -->
-<div id="screenStart" class="screen">
-    <div class="card card-wide">
-
-        <!-- Judul tes -->
-        <div class="page-title" id="startTitle" style="margin-bottom:20px"></div>
-
-        <!-- Instruksi Pengerjaan -->
-        <div class="instr-section">
-            <div class="instr-heading">📋 Instruksi Pengerjaan</div>
-            <p id="startInstructions"></p>
-        </div>
-
-        <!-- Contoh Soal & Jawaban -->
-        <div class="example-block" id="exampleBlock">
-            <div class="ex-heading">📖 Contoh Soal &amp; Jawaban</div>
-            <div class="example-images">
-                <img id="exImgTop"    src="" alt="Contoh Soal"    oncontextmenu="return false" ondragstart="return false">
-                <img id="exImgBottom" src="" alt="Contoh Jawaban" oncontextmenu="return false" ondragstart="return false">
-            </div>
-            <!-- Penjelasan contoh -->
-            <div class="ex-note" id="exNote"></div>
-        </div>
-
-        <!-- Tombol aksi -->
-        <div class="start-actions">
-            <button class="btn btn-primary" id="btnStart" onclick="startTest()">▶ Mulai Tes</button>
-            <!-- tombol kembali dihapus, alur satu arah -->
-            <div class="timer-note" id="timerNote"></div>
-            <button class="btn btn-outline btn-sm" style="margin-top:6px;width:auto;align-self:center" onclick="logout()">⏻ Logout</button>
-        </div>
-
-    </div>
-</div>
-
-<!-- ══════════════════════════════════════════
-     SCREEN: TEST ENGINE
-══════════════════════════════════════════ -->
-<div id="screenTest" class="screen">
-    <div class="card card-wide card-xl" id="testCard">
-        <div id="topBar">
-            <span class="top-title" id="testTitle"></span>
-            <span id="progressInfo"></span>
-            <span id="timerDisplay" class="hidden"></span>
-            <button class="btn btn-outline btn-sm" style="width:auto;padding:5px 14px;font-size:0.8em" onclick="confirmLogout()">⏻ Logout</button>
-        </div>
-        <div class="progress-wrap"><div id="progressBar" style="width:0%"></div></div>
-        <div id="questionContent"></div>
-        <div class="action-bar" id="actionBar"></div>
-        <!-- Bottom bar: tampil di HP saja -->
-        <div id="bottomBar">
-            <div class="bb-info">
-                <span class="bb-title" id="bbTitle"></span>
-                <span class="bb-progress" id="bbProgress"></span>
-            </div>
-            <button class="btn-logout-bottom" onclick="confirmLogout()">⏻ Logout</button>
-        </div>
-    </div>
-</div>
-
-<!-- ══════════════════════════════════════════
-     SCREEN: DONE
-══════════════════════════════════════════ -->
-<div id="screenDone" class="screen">
-    <div class="card" style="text-align:center">
-        <div class="done-icon" id="doneIcon">✅</div>
-        <div class="page-title" id="doneTitle" style="justify-content:center">Tes Selesai!</div>
-        <p class="page-sub" id="doneDesc" style="text-align:center;margin-top:8px"></p>
-        <button class="btn btn-primary" onclick="afterTest()">Lanjut</button>
-    </div>
-</div>
-
-<!-- ══════════════════════════════════════════
-     OVERLAY: PERINGATAN KELUAR TAB
-══════════════════════════════════════════ -->
-
+<!-- ═══════════════════════════════════════════
+     KONFIGURASI FRAGMENT
+     Ganti angka di akhir nama file untuk mengganti
+     varian biodata atau penutup yang digunakan.
+     Semua file diletakkan di: https://lidan.co.id/test/
+     ─────────────────────────────────────────────
+     biodata-1.html  → tanpa radio kesediaan (corporate)
+     biodata-2.html  → dengan radio kesediaan (free/premium)
+     penutup-1.html  → ucapan terima kasih + laporan diproses
+     penutup-2.html  → pilihan paket harga berbayar
+     ═══════════════════════════════════════════ -->
 <script>
-/* ╔═══════════════════════════════════════════════════════════════════╗
-   ║  KONFIGURASI — Edit bagian ini untuk mengatur semua tes          ║
-   ╚═══════════════════════════════════════════════════════════════════╝
-
-   FIELD CONFIG per tes:
-   ┌─────────────┬────────────────────────────────────────────────────┐
-   │ id          │ ID unik (string, tanpa spasi)                      │
-   │ title       │ Judul tes yang tampil                              │
-   │ desc        │ Instruksi singkat untuk peserta                    │
-   │ type        │ Tipe engine: "image_single" | "image_multi" |      │
-   │             │   "text_choice" | "text_input" | "ab_choice" |     │
-   │             │   "ranking"                                         │
-   │ dataUrl     │ URL file .txt (JSON) soal                          │
-   │ saveField   │ Kolom DB: "x_05" | "x_06" | "x_07"               │
-   │ saveIndex   │ Index pipe (0, 1, 2, …)                            │
-   │ logField    │ Kolom log jawaban, null = tidak disimpan           │
-   │ logIndex    │ Index pipe untuk log                               │
-   │ timer       │ Detik (0 / null = tanpa timer)                     │
-   │ kolom       │ Khusus type "ranking": nomor kolom di JSON (1–8)  │
-   └─────────────┴────────────────────────────────────────────────────┘
-*/
-/* ╔═══════════════════════════════════════════════════════════════════╗
-   ║  BIODATA CONFIG — Atur field biodata peserta di sini            ║
-   ╚═══════════════════════════════════════════════════════════════════╝
-
-   FIELD per item:
-   ┌──────────┬──────────────────────────────────────────────────────────┐
-   │ id       │ ID unik elemen HTML                                      │
-   │ label    │ Label yang tampil di form                                │
-   │ type     │ "text" | "number" | "select"                             │
-   │ placeholder │ Teks placeholder (untuk text/number)                 │
-   │ options  │ Array {value, label} — hanya untuk type "select"        │
-   │ index    │ Posisi penyimpanan di x_02 (pipe-separated), mulai 0    │
-   │ required │ true = wajib diisi                                       │
-   └──────────┴──────────────────────────────────────────────────────────┘
-*/
-const BIODATA_CONFIG = [
-    {
-        id: 'bioNama', label: 'Nama Lengkap', type: 'text',
-        placeholder: 'Nama Lengkap', index: 0, required: true
-    },
-    {
-        id: 'bioUsia', label: 'Usia', type: 'number',
-        placeholder: 'Usia', index: 4, required: true
-    },
-    {
-        id: 'bioPend', label: 'Pendidikan Terakhir', type: 'text',
-        placeholder: 'S1, SMA, dll', index: 7, required: true
-    },
-    {
-        id: 'bioGender', label: 'Jenis Kelamin', type: 'select',
-        index: 8, required: true,
-        options: [
-            { value: 'L', label: 'Laki-laki' },
-            { value: 'P', label: 'Perempuan' }
-        ]
-    }
-    /* ── Tambah field baru di sini ──────────────────────────────── */
-];
-
-const CONFIG = [
-    {
-        "id": "cfit1",
-        "title": "Subtes 1 — CFIT",
-        "desc": "Tes ini terdiri dari 4 subtes. Pada subtes pertama, lengkapi kotak keempat pada tiap soal.",
-        "type": "image_single",
-        "dataUrl": "https://cipta.my.id/psikotest/cfit1.txt",
-        "saveField": "x_05", "saveIndex": 0,
-        "logField": "x_08", "logIndex": 0,
-        "timer": 240,
-        "instructions": "Tes ini terdiri dari 4 subtes yang masing-masing memiliki durasi waktu tersendiri, jadi harap anda mengerjakannya secepat dan setepat mungkin.\n\nPada subtes pertama ini anda diminta untuk **MELENGKAPI KOTAK KEEMPAT** pada tiap soal. Di contoh pertama ini, Anda akan menemukan sederet kotak yang berisi urutan gambar. Namun kotak terakhir belum ada isinya.\n\nIngat bahwa kotak tersebut adalah pola yang berkesinambungan. Tugas Anda memilih jawaban yang sesuai dari 6 pilihan jawaban.",
-        "exImgTop": "https://assets.lidan.co.id/gambar_tes/cfit1a.png",
-        "exImgBottom": "https://assets.lidan.co.id/gambar_tes/cfit1b.png",
-        "exNote": "**CONTOH PERTAMA**\nPerhatikan dengan seksama pola yang ada dalam kotak-kotak di atas. Setiap gambar menunjukkan sebuah ranting dengan cabang-cabang kecil. Jika diamati, ada perubahan bertahap dari satu gambar ke gambar berikutnya.\n\nPada kotak pertama, ranting memiliki dua cabang yang mengarah sedikit ke atas, pada kotak kedua, posisi cabang mulai sedikit lebih miring ke bawah. Dan pada kotak ketiga, cabang semakin turun lebih jauh dibandingkan gambar sebelumnya.\n\nDari pola ini, kita bisa menyimpulkan bahwa semakin ke kanan, cabang kecil pada ranting semakin menunduk atau mengarah ke bawah. Jawaban **C** adalah yang paling sesuai karena posisi cabangnya lebih turun.\n\n**CONTOH KEDUA**\nBayangkan bahwa bagian berwarna dalam gambar ini adalah tirai yang sedang diturunkan secara bertahap. Jika kita memperhatikan gambar dari kiri ke kanan, kita bisa melihat bahwa tirai semakin lama semakin turun menutupi bagian bawah kotak.\n\nJawaban yang benar harus mengikuti pola ini, yaitu tirai semakin turun lebih jauh lagi. Jawaban **E** adalah yang paling sesuai, karena tirai sudah hampir sepenuhnya turun."
-    },
-    {
-        "id": "cfit2",
-        "title": "Subtes 2 — CFIT",
-        "desc": "Temukan dan pilih tepat 2 gambar yang BERBEDA dari 3 gambar lainnya.",
-        "type": "image_multi",
-        "dataUrl": "https://cipta.my.id/psikotest/cfit2_a.txt",
-        "saveField": "x_05", "saveIndex": 1,
-        "logField": "x_08", "logIndex": 1,
-        "timer": 300,
-        "instructions": "Pada setiap soal, Anda akan menemukan 5 buah gambar. Tugas Anda ialah menemukan **2 GAMBAR** yang memiliki karakteristik yang serupa. Tiga gambar lainnya berfungsi sebagai pengecoh Anda, sehingga telitilah dalam menentukan pilihan.",
-        "exImgTop": "https://assets.lidan.co.id/gambar_tes/cfit2a.png",
-        "exImgBottom": "https://assets.lidan.co.id/gambar_tes/cfit2b.png",
-        "exNote": "**CONTOH PERTAMA**\nDalam subtes ini, Anda diminta untuk memilih dua bentuk yang berbeda dari tiga bentuk lainnya. Jika dianalisa, gambar A, C, dan E memiliki bentuk segitiga sedangkan gambar B dan D memiliki bentuk segi empat.\n\nKarena sebagian besar gambar adalah segitiga, maka dua gambar yang berbeda harus memiliki bentuk yang bukan segitiga. Jawaban yang benar adalah **B DAN D**.\n\n**CONTOH KEDUA**\nPerhatikan contoh kedua ini. Gambar A, B, dan D memiliki bentuk lingkaran kosong, sedangkan gambar C dan E memiliki pola titik-titik hitam di dalamnya.\n\nOleh karena itu, jawaban yang benar adalah **C DAN E**, karena mereka berbeda dari pola mayoritas."
-    },
-    {
-        "id": "cfit3",
-        "title": "Subtes 3 — CFIT",
-        "desc": "Lengkapi kotak kecil yang masih kosong dengan pola yang sesuai.",
-        "type": "image_single",
-        "dataUrl": "https://cipta.my.id/psikotest/cfit3.txt",
-        "saveField": "x_05", "saveIndex": 2,
-        "logField": "x_08", "logIndex": 2,
-        "timer": 180,
-        "instructions": "Pada subtes ini, Anda akan menemukan sebuah kotak yang di dalamnya terdapat kotak-kotak kecil bergambar dengan pola tertentu. Tugas Anda adalah **MELENGKAPI BAGIAN KOSONG** tersebut dengan salah satu pilihan jawaban yang tersedia di sebelah kanan.",
-        "exImgTop": "https://assets.lidan.co.id/gambar_tes/cfit3a.png",
-        "exImgBottom": "https://assets.lidan.co.id/gambar_tes/cfit3b.png",
-        "exNote": "**CONTOH PERTAMA**\nKetiga kotak kecil lainnya memiliki pola garis miring yang ditarik dari kanan atas ke kiri bawah. Untuk mengisi kotak kosong, kita harus mengikuti pola tersebut. Jawaban **B** adalah yang paling sesuai.\n\n**CONTOH KEDUA**\nDua kotak kecil di atas memperlihatkan anak ayam yang posisinya saling berlawanan. Untuk mengisi kotak yang kosong, kita lihat anak ayam corak hitam mengarah ke kiri, maka pasangannya harus mencari anak ayam corak hitam yang mengarah ke kanan. Jawaban **C** adalah yang paling sesuai."
-    },
-    {
-        "id": "cfit4",
-        "title": "Subtes 4 — CFIT",
-        "desc": "Pilih gambar yang memiliki komposisi posisi titik yang serupa.",
-        "type": "image_single",
-        "dataUrl": "https://cipta.my.id/psikotest/cfit4.txt",
-        "saveField": "x_05", "saveIndex": 3,
-        "logField": "x_08", "logIndex": 3,
-        "timer": 150,
-        "instructions": "Pada subtes 4 ini, perhatikan kotak di sebelah kiri yang berisi **TITIK** dan 2 bentuk lainnya. Tugas anda adalah memilih gambar jawaban di mana anda dapat meletakkan posisi titik dengan **KOMPOSISI YANG SAMA** seperti gambar contoh.",
-        "exImgTop": "https://assets.lidan.co.id/gambar_tes/cfit4a.png",
-        "exImgBottom": "https://assets.lidan.co.id/gambar_tes/cfit4b.png",
-        "exNote": "**CONTOH PERTAMA**\nPada gambar stimulus (kiri), titik terletak di dalam perpotongan persegi dan lingkaran. Cari gambar jawaban yang memiliki area di mana persegi dan lingkaran saling berpotongan sehingga titik bisa diletakkan di sana. Jawaban **C** adalah yang benar.\n\n**CONTOH KEDUA**\nTitik pada stimulus berada di dalam segitiga tetapi di luar persegi panjang. Cari gambar jawaban yang memiliki bagian segitiga yang tidak tertutup oleh persegi panjang. Jawaban **D** adalah yang benar."
-    },
-    {
-        "id": "tkd5",
-        "title": "Subtes 5 — TKD",
-        "desc": "Analogi kata. Cari hubungan antara kata ke-1 dan ke-2.",
-        "type": "text_choice",
-        "dataUrl": "https://cipta.my.id/psikotest/tkd3.txt",
-        "saveField": "x_05", "saveIndex": 15,
-        "logField": "x_08", "logIndex": 15,
-        "timer": 360,
-        "instructions": "Ini adalah persoalan bahasa. Anda akan disediakan 3 kata dan diminta mencari **KATA KE-4**. Kata ke-4 itu mempunyai hubungan tertentu dengan kata ke-3, seperti hubungan antara kata ke-1 dan kata ke-2.",
-        "exImgTop": "https://assets.lidan.co.id/gambar_tes/tkd3_1a.png",
-        "exImgBottom": "https://assets.lidan.co.id/gambar_tes/tkd3_1b.png",
-        "exNote": "**CONTOH PERTAMA**\nHubungan Nuri dan Burung: Nuri adalah jenis burung. Maka Sepat adalah? Sepat merupakan jenis ikan. Jawaban yang tepat adalah **B. IKAN**\n\n**CONTOH KEDUA**\nPanas lawan katanya dingin. Maka untuk Suka lawan katanya adalah? Jawaban yang benar adalah **C. DUKA**"
-    },
-    {
-        "id": "deret6",
-        "title": "Subtes 6 — Deret Angka",
-        "desc": "Cari dua angka berikutnya sesuai pola deret.",
-        "type": "text_input",
-        "dataUrl": "https://cipta.my.id/psikotest/tkd6_a.txt",
-        "saveField": "x_05", "saveIndex": 17,
-        "logField": "x_08", "logIndex": 17,
-        "timer": 660,
-        "instructions": "Setiap deret angka mempunyai pola tertentu. Tugas Anda adalah mencari **DUA ANGKA BERIKUTNYA** sesuai dengan irama deret tersebut.",
-        "exImgTop": "https://assets.lidan.co.id/gambar_tes/tkd6_1a.png",
-        "exImgBottom": "https://assets.lidan.co.id/gambar_tes/tkd6_1b.png",
-        "exNote": "**CONTOH PERTAMA**\nSetiap angka didapat dengan menambah 4 pada angka sebelumnya (20+4=24, 24+4=28, dst). Maka dua jawaban berikutnya adalah **28 32**\n\n**CONTOH KEDUA**\nSetiap angka didapat dengan menambah 5 pada angka sebelumnya. Maka dua jawaban berikutnya adalah **47 52**"
-    },
-    {
-        "id": "rmib",
-        "title": "RMIB — Minat Jabatan",
-        "desc": "Urutkan tugas dari yang paling Anda senangi (1) hingga paling tidak disenangi (12).",
-        "type": "ranking",
-        "dataUrl": "https://cipta.my.id/psikotest/rmib.txt",
-        "kolom": 1,
-        "totalKolom": 8,
-        "saveField": "x_06", "saveIndex": 2,
-        "timer": 0,
-        "showInstructionsOnce": true,
-        "instructions": "**BAYANGKAN ANDA** bergabung dalam tim proyek Wisma Kerja Nyata (WKN) yang bertujuan meningkatkan kesadaran Lingkungan Hidup.\n\nTugas Anda adalah mengurutkan daftar tugas berdasarkan minat:\n1. Berikan **NOMOR 1** pada tugas yang paling Anda sukai.\n2. Lanjutkan hingga **NOMOR 12** untuk yang paling tidak disukai.\n\nUrutkan berdasarkan **MINAT**, bukan kemampuan. Anda akan dilatih jika diperlukan.",
-        "exImgTop": "https://assets.lidan.co.id/gambar_tes/rmib_a.png",
-        "exImgBottom": "https://assets.lidan.co.id/gambar_tes/rmib_b.png",
-        "exNote": "**CATATAN PENTING**\nPastikan membaca setiap tugas dengan seksama. Ranking 1 adalah pekerjaan yang paling Anda sukai, hingga ranking 12 untuk yang paling tidak disukai."
-    },
-    {
-        "id": "epps",
-        "title": "Tes Kepribadian — EPPS",
-        "desc": "Pilih satu pernyataan dari pasangan yang paling menggambarkan diri Anda.",
-        "type": "ab_choice",
-        "dataUrl": "https://cipta.my.id/psikotest/epps.txt",
-        "saveField": "x_06", "saveIndex": 0,
-        "timer": 0,
-        "instructions": "Pilih salah satu pernyataan dari setiap pasangan yang **PALING SESUAI** dengan kepribadian Anda.\n\n1. Pilih **A ATAU B**.\n2. Tidak ada jawaban benar atau salah.\n3. Jawab jujur sesuai diri sendiri, bukan apa yang dianggap benar secara sosial.\n4. Jawab secara **SPONTAN** sesuai perasaan pertama Anda.",
-        "exImgTop": "https://assets.lidan.co.id/gambar_tes/epps_a.png",
-        "exImgBottom": "https://assets.lidan.co.id/gambar_tes/epps_b.png",
-        "exNote": "Perhatikan penjelasan di atas dan pilihlah salah satu pernyataan **A ATAU B** yang paling menggambarkan diri Anda saat ini."
-    }
-];
-
-/* ╔═══════════════════════════════════════════════════════════════════╗
-   ║  API CONFIG                                                      ║
-   ╚═══════════════════════════════════════════════════════════════════╝ */
-const API_URL    = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis6';
-const API_READ   = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis7';
-const TABLE_NAME = 'nilai1';
-const AUTH_KEY   = 'admin';
-
-/* ══════════════════════════════════════════════════════════════════
-   STATE
-══════════════════════════════════════════════════════════════════ */
-let currentUser  = null;   // raw DB row
-let cfg          = null;   // active config item
-let questions    = [];
-let qIndex       = 0;
-let userAnswers  = [];
-let correctScore = 0;
-let timeLeft     = 0;
-let timerInterval= null;
-let rowSelections= [];
-let usedNumbers  = [];
-let rankingKolom = 1;      // kolom ranking aktif saat ini
-let skippedIndices = [];   // indeks soal yang dilewati (urutan antrian)
-let answeredIndices = [];  // indeks soal yang sudah dijawab (permanen)
-let timerSyncInterval = null; // interval sync timer ke server
-let timerForceCheckInterval = null; // interval cek FORCE_END dari admin
-let timerStarted     = false; // flag agar timer hanya dimulai sekali
-let violationCount   = 0;     // jumlah pelanggaran keluar tab/window
-
-/* ══════════════════════════════════════════════════════════════════
-   BOOT
-══════════════════════════════════════════════════════════════════ */
-window.onload = async () => {
-    // Cek apakah ada ?token= di URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const urlToken  = urlParams.get('token');
-
-    if (urlToken) {
-        // Simpan token dari URL ke localStorage lalu login otomatis
-        localStorage.setItem('token', urlToken);
-        // Bersihkan token dari URL agar tidak tampil di address bar
-        const cleanUrl = window.location.pathname;
-        window.history.replaceState({}, document.title, cleanUrl);
-        await fetchAndRoute(urlToken);
-        return;
-    }
-
-    const token = localStorage.getItem('token');
-    if (!token) {
-        hideLoader();
-        showScreen('screenLogin');
-        return;
-    }
-    await fetchAndRoute(token);
-};
-
-async function fetchAndRoute(token) {
-    showLoader('Memeriksa sesi...');
-    try {
-        const result = await apiFetch(`${API_READ}?table=${TABLE_NAME}&x_01_eq=${token}`,
-            { headers: { 'X-Custom-Auth': AUTH_KEY } });
-
-        if (!result.success || result.count === 0) { logout(); return; }
-
-        currentUser = result.data[0];
-        localStorage.setItem('db_id', currentUser.id_x);
-
-        const bioIncomplete = BIODATA_CONFIG.some(f => f.required && !getBio(f.id).trim());
-        if (bioIncomplete) {
-            renderBioForm();
-            showScreen('screenBio');
-        } else {
-            goToCurrentTest();
-        }
-    } catch(e) { logout(); }
-    finally { hideLoader(); }
-}
-
-/* ══════════════════════════════════════════════════════════════════
-   LOGIN
-══════════════════════════════════════════════════════════════════ */
-async function handleLogin() {
-    const token = document.getElementById('tokenInput').value.trim();
-    if (!token) return alert('Token tidak boleh kosong.');
-    const btn = document.getElementById('btnLogin');
-    setLoading(btn, true);
-    try {
-        const result = await apiFetch(`${API_READ}?table=${TABLE_NAME}&x_01_eq=${token}`,
-            { headers: { 'X-Custom-Auth': AUTH_KEY } });
-        if (result.success && result.count > 0) {
-            localStorage.setItem('token', token);
-            localStorage.setItem('db_id', result.data[0].id_x);
-            currentUser = result.data[0];
-            const bioIncomplete = BIODATA_CONFIG.some(f => f.required && !getBio(f.id).trim());
-            if (bioIncomplete) {
-                renderBioForm();
-                showScreen('screenBio');
-            } else {
-                goToCurrentTest();
-            }
-        } else {
-            alert('Token salah atau tidak terdaftar.');
-        }
-    } catch(e) { alert('Koneksi gagal.'); }
-    finally { setLoading(btn, false); }
-}
-
-/* ══════════════════════════════════════════════════════════════════
-   BIODATA
-══════════════════════════════════════════════════════════════════ */
-/* ── Biodata helper: baca nilai field dari x_02 pipe[0] + semicolon ── */
-function getBio(fieldId) {
-    const f = BIODATA_CONFIG.find(c => c.id === fieldId);
-    if (!f) return '';
-    const pipe0   = currentUser.x_02 ? currentUser.x_02.split('|')[0] : '';
-    const semiArr = pipe0 ? pipe0.split(';') : [];
-    return semiArr[f.index] || '';
-}
-function getAllBio() {
-    // Kembalikan object { id: value } untuk semua field
-    const result = {};
-    for (const f of BIODATA_CONFIG) result[f.id] = getBio(f.id);
-    return result;
-}
-
-function renderBioForm() {
-    const container = document.getElementById('bioFormFields');
-    container.innerHTML = '';
-    const sorted = [...BIODATA_CONFIG].sort((a, b) => a.index - b.index);
-    for (const f of sorted) {
-        const div = document.createElement('div');
-        div.className = 'form-group';
-        let input = '';
-        if (f.type === 'select') {
-            const opts = f.options.map(o => `<option value="${o.value}">${o.label}</option>`).join('');
-            input = `<select id="${f.id}" style="width:100%;padding:11px 14px;border:2px solid var(--border);border-radius:10px;font-size:0.95em;background:var(--bg)">
-                        <option value="">Pilih...</option>${opts}
-                     </select>`;
-        } else {
-            input = `<input type="${f.type}" id="${f.id}" placeholder="${f.placeholder||''}">`;
-        }
-        div.innerHTML = `<label>${f.label}</label>${input}`;
-        container.appendChild(div);
-    }
-}
-
-async function saveBiodata() {
-    // Baca x_02 existing, ambil pipe-nya
-    const pipes = currentUser.x_02 ? currentUser.x_02.split('|') : [];
-    // Pastikan minimal 4 pipe tersedia
-    while (pipes.length < 4) pipes.push('');
-
-    // Baca semicolon array dari pipe[0] yang sudah ada
-    const semiArr = pipes[0] ? pipes[0].split(';') : [];
-    const maxIndex = Math.max(...BIODATA_CONFIG.map(f => f.index));
-    while (semiArr.length <= maxIndex) semiArr.push('');
-
-    // Isi nilai dari form ke posisi index masing-masing
-    for (const f of BIODATA_CONFIG) {
-        const el  = document.getElementById(f.id);
-        const val = el ? el.value.trim() : '';
-        if (f.required && !val) return alert(`Mohon lengkapi field: ${f.label}`);
-        semiArr[f.index] = val;
-    }
-
-    // Tulis kembali ke pipe[0]
-    pipes[0] = semiArr.join(';');
-
-    // ── Simpan tanggal tes hari ini ke pipe ke-4 (index 4) ──
-    // Format: YYYY-MM-DD  — digunakan dashboard admin untuk filter "hari ini"
-    while (pipes.length < 5) pipes.push('');
-    // Hanya isi jika pipe tanggal belum ada (agar tidak overwrite jika peserta reload)
-    if (!pipes[4]) {
-        const now = new Date();
-        pipes[4] = now.getFullYear() + '-' +
-            String(now.getMonth()+1).padStart(2,'0') + '-' +
-            String(now.getDate()).padStart(2,'0');
-    }
-
-    const btn = document.getElementById('btnBio');
-    setLoading(btn, true);
-    try {
-        const idX = localStorage.getItem('db_id');
-        await apiFetch(`${API_URL}?table=${TABLE_NAME}&id_x=${idX}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json', 'X-Custom-Auth': AUTH_KEY },
-            body: JSON.stringify({ x_02: pipes.join('|') })
-        });
-        await fetchAndRoute(localStorage.getItem('token'));
-    } catch(e) { alert('Gagal menyimpan data.'); }
-    finally { setLoading(btn, false); }
-}
-
-/* ══════════════════════════════════════════════════════════════════
-   DASHBOARD
-══════════════════════════════════════════════════════════════════ */
-function buildTaskList() {
-    /* Expand ranking menjadi banyak task (1 per kolom) */
-    const list = [];
-    for (const c of CONFIG) {
-        if (c.type === 'ranking' && c.totalKolom) {
-            for (let k = 1; k <= c.totalKolom; k++) {
-                list.push({
-                    id:         c.id + '_k' + k,
-                    title:      c.title.replace('Minat Jabatan', 'Minat — Kolom ' + k),
-                    type:       c.type,
-                    _baseId:    c.id,
-                    _kolom:     k,
-                    saveField:  c.saveField,
-                    saveIndex:  c.saveIndex + (k - 1)   // saveIndex naik per kolom
-                });
-            }
-        } else {
-            list.push({ id: c.id, title: c.title, type: c.type, saveField: c.saveField, saveIndex: c.saveIndex });
-        }
-    }
-    return list;
-}
-
-function goToCurrentTest() {
-    // Cari tes pertama yang belum selesai dan langsung buka start screen-nya
-    const tasks = buildTaskList();
-    for (const task of tasks) {
-        const parts = (currentUser[task.saveField] || '').split('|');
-        const val   = parts[task.saveIndex] || '';
-        if (val.trim() === '') {
-            openTestById(task.id);
-            return;
-        }
-    }
-    // Semua selesai — tampilkan pesan selesai
-    showDoneAll();
-}
-
-function showDoneAll() {
-    document.getElementById('doneIcon').innerText  = '🎉';
-    document.getElementById('doneTitle').innerText = 'Semua Tes Selesai!';
-    document.getElementById('doneDesc').innerText  = 'Terima kasih sudah mengikuti tes. Hasil Anda telah tersimpan.';
-    // Sembunyikan tombol lanjut, ganti dengan logout
-    const btn = document.querySelector('#screenDone .btn-primary');
-    if (btn) { btn.innerText = 'Logout'; btn.onclick = logout; }
-    showScreen('screenDone');
-}
-
-function renderDashboard() {
-    showScreen('screenDash');
-    document.getElementById('welcomeName').innerText = 'Halo, ' + (getBio('bioNama') || 'Peserta') + '!';
-
-    const tasks = buildTaskList();
-    let firstPending = null;
-
-    const grid = document.getElementById('taskGrid');
-    grid.innerHTML = '';
-
-    tasks.forEach((task, i) => {
-        const parts = (currentUser[task.saveField] || '').split('|');
-        const val   = parts[task.saveIndex] || '';
-        const done  = val.trim() !== '';
-
-        if (!done && !firstPending) firstPending = task;
-
-        const isCurrent = (!done && firstPending && firstPending.id === task.id);
-        const isLocked  = (!done && !isCurrent);
-
-        const div = document.createElement('div');
-        div.className = 'task-item' + (done ? ' done' : isCurrent ? ' current' : ' locked');
-        div.innerHTML = `
-            <div class="task-num">${done ? '✓' : i+1}</div>
-            <div class="task-name">${task.title}</div>
-            <span class="task-badge ${done?'badge-done':isCurrent?'badge-current':'badge-locked'}">
-                ${done ? 'Selesai' : isCurrent ? '▶ Mulai' : 'Terkunci'}
-            </span>`;
-        if (isCurrent) {
-            div.style.cursor = 'pointer';
-            div.onclick = () => openTestById(task.id);
-        }
-        grid.appendChild(div);
-    });
-
-    if (firstPending) {
-        document.getElementById('welcomeSub').innerText = 'Klik tes yang bertanda ▶ Mulai untuk memulai.';
-    } else {
-        document.getElementById('welcomeSub').innerText = '🎉 Semua tes telah selesai. Terima kasih!';
-    }
-}
-
-function openTestById(taskId) {
-    // Cari apakah ini sub-task ranking
-    const isRankingSub = taskId.includes('_k');
-    let baseCfg, kolom;
-    if (isRankingSub) {
-        const base   = taskId.replace(/_k\d+$/, '');
-        kolom        = parseInt(taskId.split('_k')[1]);
-        baseCfg      = CONFIG.find(c => c.id === base);
-        cfg = { ...baseCfg, kolom, saveIndex: baseCfg.saveIndex + (kolom - 1), _taskId: taskId };
-    } else {
-        baseCfg = CONFIG.find(c => c.id === taskId);
-        cfg = { ...baseCfg, _taskId: taskId };
-    }
-    if (!cfg) return;
-
-    // Jika showInstructionsOnce=true dan kolom > 1, langsung startTest
-    if (cfg.showInstructionsOnce && cfg.kolom && cfg.kolom > 1) {
-        console.log('[RMIB] Kolom ' + cfg.kolom + ' - skip instruksi, langsung mulai');
-        showLoader('Memuat soal...');
-        setTimeout(() => startTest(), 100);
-        return;
-    }
-
-    // Tampilkan start screen
-    document.getElementById('startTitle').innerText       = cfg.title;
-    document.getElementById('startInstructions').innerText = cfg.instructions || cfg.desc || '';
-    document.getElementById('exNote').innerText           = cfg.exNote || '';
-
-    // Gambar contoh
-    const hasImg = cfg.exImgTop || cfg.exImgBottom;
-    document.getElementById('exampleBlock').style.display = hasImg ? '' : 'none';
-    if (cfg.exImgTop)    document.getElementById('exImgTop').src    = cfg.exImgTop;
-    if (cfg.exImgBottom) document.getElementById('exImgBottom').src = cfg.exImgBottom;
-
-    // Info waktu — tampil di console, teks kecil di bawah tombol
-    const timerNote = document.getElementById('timerNote');
-    if (cfg.timer > 0) {
-        const mnt = Math.floor(cfg.timer / 60);
-        const dtk = cfg.timer % 60;
-        const label = mnt > 0 ? mnt + ' menit ' + (dtk > 0 ? dtk + ' detik' : '') : dtk + ' detik';
-        console.log('[TES] ' + cfg.title + ' | Waktu: ' + cfg.timer + ' detik (' + label.trim() + ')');
-        timerNote.innerText = '⏱ Tes ini memiliki batas waktu';
-        timerNote.style.display = '';
-    } else {
-        console.log('[TES] ' + cfg.title + ' | Tanpa batas waktu');
-        timerNote.style.display = 'none';
-    }
-
-    showScreen('screenStart');
-}
-
-/* ══════════════════════════════════════════════════════════════════
-   START TEST
-══════════════════════════════════════════════════════════════════ */
-async function startTest() {
-    showLoader('Memuat soal...');
-    try {
-        await loadQuestions();
-        // Reset state
-        const saved = localStorage.getItem('_st_' + cfg._taskId);
-        if (saved) {
-            const s = JSON.parse(saved);
-            qIndex = s.qIndex || 0; userAnswers = s.userAnswers || [];
-            correctScore = s.correctScore || 0; timeLeft = s.timeLeft || cfg.timer;
-            rowSelections = s.rowSelections || Array(12).fill(null);
-            usedNumbers   = s.usedNumbers   || [];
-            skippedIndices  = s.skippedIndices  || [];
-            answeredIndices = s.answeredIndices || [];
-        } else {
-            qIndex = 0; userAnswers = []; correctScore = 0;
-            timeLeft = cfg.timer || 0;
-            rowSelections = Array(12).fill(null); usedNumbers = [];
-            skippedIndices  = [];
-            answeredIndices = [];
-        }
-        timerStarted = false;
-        resetViolation();
-
-        document.getElementById('testTitle').innerText = cfg.title;
-        showScreen('screenTest');
-
-        // Timer selalu tersembunyi di UI — hanya tampil di console (Inspect)
-        document.getElementById('timerDisplay').classList.add('hidden');
-
-        renderQuestion();
-    } catch(e) {
-        alert('Gagal memuat soal: ' + e.message);
-        showScreen('screenDash');
-    } finally { hideLoader(); }
-}
-
-async function loadQuestions() {
-    // Pilih URL berdasarkan gender untuk ranking
-    let url = cfg.dataUrl;
-    if (cfg.type === 'ranking' && cfg.dataUrlP) {
-        const gender = getBio('bioGender') || 'L';
-        if (gender === 'P') url = cfg.dataUrlP;
-        console.log('[RMIB] Gender: ' + gender + ' | URL: ' + (gender==='P' ? 'Perempuan' : 'Laki-laki'));
-    }
-    
-    const resp = await fetch(url + '?v=' + Date.now());
-    const data = await resp.json();
-    if (cfg.type === 'ranking') {
-        const kd = data.find(d => d.kolom === cfg.kolom);
-        if (!kd) throw new Error('Kolom ' + cfg.kolom + ' tidak ada');
-        cfg._pembuka = kd.pembuka;
-        questions = kd.soal.map((s, i) => ({ text: s, id: i }));
-    } else {
-        questions = data;
-    }
-}
-
-/* ══════════════════════════════════════════════════════════════════
-   TIMER
-══════════════════════════════════════════════════════════════════ */
-let stopwatchElapsed = 0; // detik yang sudah berjalan (tes tidak berwaktu)
-
-function startTimer() {
-    if (!timeLeft) timeLeft = cfg.timer;
-    timerInterval = setInterval(() => {
-        timeLeft--;
-        saveState();
-        if (timeLeft <= 0) {
-            clearInterval(timerInterval);
-            clearInterval(timerSyncInterval);
-            timerSyncInterval = null;
-            endTest(true);
-        }
-    }, 1000);
-
-    // Sync timer ke server setiap 5 detik — TANPA bergantung checkForceEnd
-    timerSyncInterval = setInterval(() => {
-        syncTimerToServer('COUNTDOWN:' + timeLeft);
-    }, 5000);
-
-    // Cek FORCE_END dari admin setiap 10 detik — interval terpisah
-    timerForceCheckInterval = setInterval(async () => {
-        await checkForceEnd();
-    }, 10000);
-
-    // Kirim langsung saat mulai
-    syncTimerToServer('COUNTDOWN:' + timeLeft);
-}
-
-function startStopwatch() {
-    // Tes tanpa timer (RMIB, EPPS) — tidak perlu sync ke server sama sekali
-    stopwatchElapsed = 0;
-    timerInterval = setInterval(() => {
-        stopwatchElapsed++;
-        saveState();
-    }, 1000);
-    // timerSyncInterval dan timerForceCheckInterval sengaja tidak dijalankan
-    // agar tidak ada request ke server yang bisa mengganggu alur penyimpanan
-}
-
-async function checkForceEnd() {
-    try {
-        const idX = localStorage.getItem('db_id');
-        // Gunakan dinamis7 (read endpoint) untuk cek status
-        const res = await fetch(`${API_READ}?table=${TABLE_NAME}&id_x=${idX}`,
-            { headers: { 'X-Custom-Auth': AUTH_KEY } });
-        const data = await res.json();
-        if (data && data.data && data.data.x_04 === 'FORCE_END') {
-            clearInterval(timerInterval);
-            clearInterval(timerSyncInterval);
-            clearInterval(timerForceCheckInterval);
-            timerSyncInterval = null;
-            timerForceCheckInterval = null;
-            endTest(true);
-        }
-    } catch(e) { /* silent fail */ }
-}
-
-async function syncTimerToServer(modeVal) {
-    const idX = localStorage.getItem('db_id');
-    if (!idX) return;
-    try {
-        // Format: "NamaTes|COUNTDOWN:sisa" atau "NamaTes|STOPWATCH:elapsed"
-        const val = cfg.title + '|' + modeVal;
-        await fetch(`${API_URL}?table=${TABLE_NAME}&id_x=${idX}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json', 'X-Custom-Auth': AUTH_KEY },
-            body: JSON.stringify({ x_04: val })
-        });
-    } catch(e) {
-        // Silent fail — jangan ganggu peserta
-    }
-}
-function updateTimerDisplay() {
-    const m = String(Math.floor(timeLeft/60)).padStart(2,'0');
-    const s = String(timeLeft%60).padStart(2,'0');
-    // Tampil di console saja — buka DevTools > Console untuk melihat
-    if (timeLeft % 10 === 0 || timeLeft <= 10) {
-        console.log('[TIMER] Sisa waktu: ' + m + ':' + s + ' (' + timeLeft + ' detik)');
-    }
-}
-
-/* ══════════════════════════════════════════════════════════════════
-   STATE SAVE/LOAD
-══════════════════════════════════════════════════════════════════ */
-function saveState() {
-    localStorage.setItem('_st_' + cfg._taskId, JSON.stringify(
-        { qIndex, userAnswers, correctScore, timeLeft, rowSelections, usedNumbers, skippedIndices, answeredIndices }
-    ));
-}
-
-/* ══════════════════════════════════════════════════════════════════
-   RENDER DISPATCHER
-══════════════════════════════════════════════════════════════════ */
-
-function dbg(label) {
-    console.log(
-        `[SKIP DEBUG] ${label}` +
-        ` | qIndex=${qIndex}` +
-        ` | answered=[${answeredIndices.join(',')}]` +
-        ` | skipped=[${skippedIndices.join(',')}]` +
-        ` | total=${questions.length}`
-    );
-}
-
-// Setelah menjawab soal, cari soal berikutnya yang belum dijawab.
-// Urutan pencarian: lanjut maju dari posisi sekarang, jika mentok akhir
-// ambil dari antrian skippedIndices (soal yang dilewati).
-function goNext() {
-    dbg('goNext MASUK');
-
-    // Cari soal berikutnya yang belum dijawab, mulai dari qIndex+1 maju ke depan
-    let found = -1;
-    for (let i = qIndex + 1; i < questions.length; i++) {
-        if (!answeredIndices.includes(i) && !skippedIndices.includes(i)) {
-            found = i;
-            break;
-        }
-    }
-
-    if (found !== -1) {
-        // Ada soal normal yang belum dijawab di depan
-        qIndex = found;
-        dbg(`goNext → soal normal index ${qIndex}`);
-    } else if (skippedIndices.length > 0) {
-        // Tidak ada soal normal tersisa → ambil soal pertama yang dilewati
-        qIndex = skippedIndices.shift();
-        dbg(`goNext → kembali ke soal dilewati index ${qIndex}`);
-    } else {
-        // Semua soal sudah dijawab
-        dbg('goNext → SEMUA SELESAI, endTest');
-        saveState();
-        endTest(false);
-        return;
-    }
-
-    saveState();
-    renderQuestion();
-}
-
-function renderQuestion() {
-    updateProgress();
-
-    // Mulai timer tepat saat soal pertama tampil di layar
-    if (!timerStarted) {
-        timerStarted = true;
-        if (cfg.timer > 0) {
-            updateTimerDisplay();
-            startTimer();
-        } else {
-            startStopwatch();
-        }
-    }
-
-    if (cfg.type === 'ranking') { renderRanking(); return; }
-
-    dbg('renderQuestion');
-
-    // Safety net
-    if (qIndex < 0 || qIndex >= questions.length) {
-        console.error('[SKIP DEBUG] qIndex di luar range!', qIndex);
-        if (skippedIndices.length > 0) {
-            qIndex = skippedIndices.shift();
-            saveState();
-        } else {
-            endTest(false);
-            return;
-        }
-    }
-
-    const q = questions[qIndex];
-    const map = {
-        image_single: renderImageSingle,
-        image_multi:  renderImageMulti,
-        text_choice:  renderTextChoice,
-        text_input:   renderTextInput,
-        ab_choice:    renderAbChoice
-    };
-    (map[cfg.type] || (() => {}))(q);
-}
-
-function updateProgress() {
-    const total = cfg.type === 'ranking' ? 8 : questions.length;
-    const curr  = cfg.type === 'ranking' ? (cfg.kolom||1) : qIndex + 1;
-    const pct   = total ? Math.round(((curr-1)/total)*100) : 0;
-    document.getElementById('progressBar').style.width = pct + '%';
-    let infoText = cfg.type === 'ranking'
-        ? `Kolom ${cfg.kolom} / ${cfg.totalKolom||8}`
-        : `Soal ${qIndex+1} / ${questions.length}`;
-    if (skippedIndices.length > 0 && cfg.type !== 'ranking') {
-        infoText += ` · ⟳ ${skippedIndices.length} soal dilewati`;
-    }
-    document.getElementById('progressInfo').innerText = infoText;
-
-    // Sync bottom bar (HP)
-    const bbTitle = document.getElementById('bbTitle');
-    const bbProg  = document.getElementById('bbProgress');
-    if (bbTitle)  bbTitle.innerText    = cfg.title || '';
-    if (bbProg)   bbProg.innerText     = infoText;
-}
-
-/* ── image_single ────────────────────────────────────────────── */
-function renderImageSingle(q) {
-    const parts = q.question.split(' ');
-    const skippedBadge = skippedIndices.includes(qIndex) ? ' <span style="background:#fef3c7;color:#92400e;font-size:0.75em;padding:2px 8px;border-radius:99px;font-weight:600;">⟳ Dilewati</span>' : '';
-    document.getElementById('questionContent').innerHTML =
-        `<div class="q-label">Soal ${parts[0]}${skippedBadge}</div>
-         <img class="q-image" src="${parts[1]}" alt="soal" oncontextmenu="return false" ondragstart="return false">
-         <div class="options-img" id="optArea"></div>`;
-    document.getElementById('actionBar').innerHTML =
-        `<button class="btn btn-outline btn-sm" onclick="skipQ()">Lewati</button>`;
-    const div = document.getElementById('optArea');
-    for (const k in q.options) {
-        if (!q.options[k]) continue;
-        // Onclick langsung di img — tidak perlu wrapper div
-        const img = Object.assign(document.createElement('img'), { src: q.options[k], title: k });
-        img.oncontextmenu = e => e.preventDefault();
-        img.ondragstart   = e => e.preventDefault();
-        img.onclick = () => { markAnswered(qIndex); userAnswers.push(`${qIndex+1}${k}${k===q.answer?'v':'x'}`); if(k===q.answer)correctScore++; saveState(); goNext(); };
-        div.appendChild(img);
-    }
-}
-
-/* ── image_multi ─────────────────────────────────────────────── */
-function renderImageMulti(q) {
-    document.getElementById('questionContent').innerHTML =
-        `<div class="q-label">Pilih 2 gambar yang BERBEDA dari lainnya</div>
-         <div class="options-img" id="optArea" style="gap:14px"></div>`;
-    document.getElementById('actionBar').innerHTML =
-        `<button class="btn btn-success btn-sm" id="btnJawab" onclick="submitImageMulti()" disabled>Jawab</button>
-         <button class="btn btn-outline btn-sm" onclick="skipQ()">Lewati</button>`;
-    const div = document.getElementById('optArea');
-    q.options.forEach((src, i) => {
-        const wrap = document.createElement('div');
-        wrap.className = 'opt-check-wrap';
-        wrap.innerHTML = `<input type="checkbox" id="mc${i}" value="${src}"><label for="mc${i}"><img src="${src}"></label>`;
-        wrap.querySelector('input').addEventListener('change', () => {
-            document.getElementById('btnJawab').disabled =
-                document.querySelectorAll('#optArea input:checked').length !== 2;
-        });
-        div.appendChild(wrap);
-    });
-}
-function submitImageMulti() {
-    const q   = questions[qIndex];
-    const sel = [...document.querySelectorAll('#optArea input:checked')].map(c => c.value);
-    const ok  = sel.length===2 && sel.every(v => q.correctAnswers.includes(v));
-    markAnswered(qIndex);
-    userAnswers.push(`${qIndex+1}SEL${ok?'v':'x'}`);
-    if(ok) correctScore++;
-    saveState(); goNext();
-}
-
-/* ── text_choice ─────────────────────────────────────────────── */
-function renderTextChoice(q) {
-    let opts = '';
-    for (const k in q.options) {
-        if (!q.options[k]) continue;
-        opts += `<button class="opt-text" onclick="submitTextChoice('${k}','${q.answer}')"><strong>${k}.</strong> ${q.options[k]}</button>`;
-    }
-    const skippedBadgeTC = skippedIndices.includes(qIndex) ? ' <span style="background:#fef3c7;color:#92400e;font-size:0.75em;padding:2px 8px;border-radius:99px;font-weight:600;">⟳ Dilewati</span>' : '';
-    document.getElementById('questionContent').innerHTML =
-        `<div class="q-label">Soal No. ${qIndex+1}${skippedBadgeTC}</div>
-         <div class="q-text">${q.question}</div>
-         <div class="options-text">${opts}</div>`;
-    document.getElementById('actionBar').innerHTML =
-        `<button class="btn btn-outline btn-sm" onclick="skipQ()">Lewati</button>`;
-}
-function submitTextChoice(k, ans) {
-    markAnswered(qIndex);
-    userAnswers.push(`${qIndex+1}${k}${k===ans?'v':'x'}`);
-    if(k===ans) correctScore++;
-    saveState(); goNext();
-}
-
-/* ── text_input ──────────────────────────────────────────────── */
-function numpadPress(val) {
-    const inp = document.getElementById('userAnswer');
-    if (!inp) return;
-
-    if (val === 'DEL') {
-        inp.value = inp.value.slice(0, -1);
-    } else if (val === ' ') {
-        // Spasi hanya boleh ditambah jika:
-        // - ada angka sebelumnya, dan
-        // - belum ada spasi di dalam nilai (hanya 1 spasi diperbolehkan)
-        const cur = inp.value;
-        if (cur.trim() !== '' && !cur.includes(' ')) {
-            inp.value = cur + ' ';
-        }
-        // jika sudah ada spasi, abaikan tombol spasi
-    } else {
-        // Angka: jika sudah ada spasi, angka ditambah di bagian kanan
-        // Batasi agar setiap bagian (kiri/kanan spasi) max 6 digit
-        const cur = inp.value;
-        const parts = cur.split(' ');
-        if (parts.length === 2 && parts[1].length >= 6) return; // batas digit kanan
-        if (parts.length === 1 && parts[0].length >= 6) return; // batas digit kiri
-        inp.value = cur + val;
-    }
-
-    // Validasi: tombol Jawab aktif jika ada konten sebelum spasi DAN setelah spasi
-    // Format yang didukung: "angka spasi angka", "2 1/4", "2 1,4", dsb.
-    const btn = document.getElementById('btnNext');
-    if (btn) {
-        const v = inp.value;
-        const parts = v.split(' ');
-        const valid = parts.length >= 2 && parts[0].trim() !== '' && parts.slice(1).join(' ').trim() !== '';
-        btn.disabled = !valid;
-    }
-}
-
-function numpadComma() { numpadPress(","); }
-function renderTextInput(q) {
-    const isDeret = cfg.id === 'deret6';
-    const skippedBadgeTI = skippedIndices.includes(qIndex) ? ' <span style="background:#fef3c7;color:#92400e;font-size:0.75em;padding:2px 8px;border-radius:99px;font-weight:600;">⟳ Dilewati</span>' : '';
-    const numpadHtml = isDeret ? `
-        <div class="numpad-wrap">
-            <div class="numpad-row">
-                <button class="numpad-btn" onclick="numpadPress('1')">1</button>
-                <button class="numpad-btn" onclick="numpadPress('2')">2</button>
-                <button class="numpad-btn" onclick="numpadPress('3')">3</button>
-                <button class="numpad-btn" onclick="numpadPress('4')">4</button>
-                <button class="numpad-btn" onclick="numpadPress('5')">5</button>
-            </div>
-            <div class="numpad-row">
-                <button class="numpad-btn" onclick="numpadPress('6')">6</button>
-                <button class="numpad-btn" onclick="numpadPress('7')">7</button>
-                <button class="numpad-btn" onclick="numpadPress('8')">8</button>
-                <button class="numpad-btn" onclick="numpadPress('9')">9</button>
-                <button class="numpad-btn" onclick="numpadPress('0')">0</button>
-            </div>
-            <div class="numpad-row">
-                <button class="numpad-btn btn-space" onclick="numpadPress(' ')">SPASI</button>
-                <button class="numpad-btn" onclick="numpadPress('/')">/</button>
-                <button class="numpad-btn" onclick="numpadComma()">,</button>
-                <button class="numpad-btn btn-del" onclick="numpadPress('DEL')">⌫</button>
-            </div>
-        </div>` : '';
-    document.getElementById('questionContent').innerHTML =
-        `<div class="q-label">Soal No. ${qIndex+1}${skippedBadgeTI}</div>
-         <div class="q-text">${q.question}</div>
-         <div class="input-wrap">
-             <input type="text" id="userAnswer" placeholder="Jawaban..."
-                    autocomplete="off"
-                    ${isDeret ? 'readonly' : ''}
-                    oninput="document.getElementById('btnNext').disabled=this.value.trim()===''">
-             ${numpadHtml}
-         </div>`;
-    document.getElementById('actionBar').innerHTML =
-        `<button class="btn btn-primary btn-sm" id="btnNext" onclick="submitTextInput()" disabled>Jawab</button>
-         <button class="btn btn-outline btn-sm" onclick="skipQ()">Lewati</button>`;
-    const inp = document.getElementById('userAnswer');
-    if (!isDeret) {
-        inp.focus();
-        inp.addEventListener('keyup', e => { if(e.key==='Enter'&&inp.value.trim()) submitTextInput(); });
-    }
-}
-function submitTextInput() {
-    const q   = questions[qIndex];
-    const ans = document.getElementById('userAnswer').value.trim().replace(/,/g,' ');
-    let ok    = false;
-    for (const ca of (q.correctAnswers||[])) {
-        if (ans.toLowerCase() === ca.answer.replace(/,/g,' ').trim().toLowerCase()) { ok=true; break; }
-    }
-    markAnswered(qIndex);
-    userAnswers.push(`${qIndex+1}${ans}${ok?'v':'x'}`);
-    if(ok) correctScore++;
-    saveState(); goNext();
-}
-
-/* ── ab_choice ───────────────────────────────────────────────── */
-function renderAbChoice(q) {
-    const tA = q.A||(q.options&&q.options.A)||'-';
-    const tB = q.B||(q.options&&q.options.B)||'-';
-    document.getElementById('questionContent').innerHTML =
-        `<div class="q-label">Pasangan Soal No. ${qIndex+1}</div>
-         <div class="options-ab">
-             <button class="opt-ab" onclick="submitAb('A')"><strong>A.</strong> ${tA}</button>
-             <button class="opt-ab" onclick="submitAb('B')"><strong>B.</strong> ${tB}</button>
-         </div>`;
-    document.getElementById('actionBar').innerHTML = '';
-}
-function submitAb(c) { userAnswers.push(c); saveState(); goNext(); }
-
-/* ── ranking ─────────────────────────────────────────────────── */
-function renderRanking() {
-    const rows = questions.map((q,r) => {
-        const nums = [1,2,3,4,5,6,7,8,9,10,11,12]
-            .map(n => `<button class="btn-rank" id="br-${r}-${n}" onclick="rankSel(${r},${n})">${n}</button>`)
-            .join('');
-        return `<tr><td class="col-no" style="width:36px">${r+1}</td><td>${q.text}</td><td><div class="btn-container">${nums}</div></td></tr>`;
-    }).join('');
-
-    document.getElementById('questionContent').innerHTML =
-        `<div id="deskripsiBox">${cfg._pembuka||''}</div>
-         <div style="overflow-x:auto">
-         <table class="ranking-table">
-           <thead><tr><th class="col-no" style="width:36px">No</th><th>Pernyataan</th><th style="width:480px">Pilihan Ranking</th></tr></thead>
-           <tbody>${rows}</tbody>
-         </table></div>`;
-    document.getElementById('actionBar').innerHTML = '';
-    updateRankingUI();
-}
-
-function rankSel(r, v) {
-    const prev = (rowSelections[r] !== undefined && rowSelections[r] !== null) ? rowSelections[r] : null;
-
-    if (prev === v) {
-        // Klik tombol yang sama → deselect
-        rowSelections[r] = null;
-    } else {
-        // Cek apakah nomor v sudah dipakai baris LAIN (bukan baris r sendiri)
-        const usedByOther = rowSelections.some((sel, idx) => idx !== r && sel === v);
-        if (usedByOther) return;
-        // Ganti pilihan baris r
-        rowSelections[r] = v;
-    }
-
-    // Selalu rebuild usedNumbers dari rowSelections agar tidak pernah korup
-    usedNumbers = rowSelections.filter(n => n !== null && n !== undefined);
-
-    updateRankingUI(); saveState();
-
-    const filled = rowSelections.filter(n => n !== null && n !== undefined).length;
-    if (filled === 12) saveRanking(rowSelections.join(';'));
-}
-
-function updateRankingUI() {
-    for (let r=0;r<12;r++) {
-        const sel=rowSelections[r];
-        for (let v=1;v<=12;v++) {
-            const b=document.getElementById(`br-${r}-${v}`);
-            if(!b) continue;
-            b.classList.remove('sel','gone');
-            if (sel!==null) { v===sel ? b.classList.add('sel') : b.classList.add('gone'); }
-            else { if(usedNumbers.includes(v)) b.classList.add('gone'); }
-        }
-    }
-}
-
-async function saveRanking(dataStr) {
-    // Hentikan timer lokal
-    clearInterval(timerInterval);
-    clearInterval(timerSyncInterval);
-    clearInterval(timerForceCheckInterval);
-    timerInterval = null;
-    timerSyncInterval = null;
-    timerForceCheckInterval = null;
-
-    showLoader('Menyimpan kolom ' + cfg.kolom + '...');
-    const idX = localStorage.getItem('db_id');
-
-    try {
-        // Fetch data terbaru dari server dulu agar tidak ada pipe yang tertimpa
-        const cur = await apiGet(idX);
-        let parts = (cur.data[cfg.saveField]||'').split('|');
-        while(parts.length<=cfg.saveIndex) parts.push('');
-        parts[cfg.saveIndex] = dataStr;
-        const newVal = parts.join('|');
-        // Satu PUT saja — tidak ada fire-and-forget terpisah
-        await apiPut(idX, { [cfg.saveField]: newVal });
-        // Update currentUser lokal
-        currentUser = cur.data;
-        currentUser[cfg.saveField] = newVal;
-        localStorage.removeItem('_st_' + cfg._taskId);
-        hideLoader();
-        afterTest();
-    } catch(e) { alert('Gagal menyimpan: ' + e.message); hideLoader(); }
-}
-
-/* ── skip ────────────────────────────────────────────────────── */
-function skipQ() {
-    dbg('skipQ MASUK');
-
-    // Tambahkan ke antrian skip jika belum ada
-    if (!skippedIndices.includes(qIndex) && !answeredIndices.includes(qIndex)) {
-        skippedIndices.push(qIndex);
-        userAnswers.push(`${qIndex+1}SKIPx`);
-    }
-
-    // Cari soal berikutnya yang belum dijawab dan bukan di antrian skip, mulai dari qIndex+1
-    let found = -1;
-    for (let i = qIndex + 1; i < questions.length; i++) {
-        if (!answeredIndices.includes(i) && !skippedIndices.includes(i)) {
-            found = i;
-            break;
-        }
-    }
-
-    if (found !== -1) {
-        qIndex = found;
-        dbg(`skipQ → soal normal index ${qIndex}`);
-    } else if (skippedIndices.length > 0) {
-        // Semua soal normal habis → kerjakan soal dilewati pertama
-        qIndex = skippedIndices.shift();
-        dbg(`skipQ → kembali ke soal dilewati index ${qIndex}`);
-    } else {
-        dbg('skipQ → SEMUA SELESAI, endTest');
-        saveState();
-        endTest(false);
-        return;
-    }
-
-    saveState();
-    renderQuestion();
-}
-
-// Tandai soal sebagai sudah dijawab (permanen)
-function markAnswered(idx) {
-    if (!answeredIndices.includes(idx)) {
-        answeredIndices.push(idx);
-    }
-    // Hapus dari antrian skipped jika ada
-    const pos = skippedIndices.indexOf(idx);
-    if (pos !== -1) {
-        skippedIndices.splice(pos, 1);
-        // Hapus entri SKIPx dari userAnswers
-        const skipTag = `${idx+1}SKIPx`;
-        const ua = userAnswers.indexOf(skipTag);
-        if (ua !== -1) userAnswers.splice(ua, 1);
-    }
-    dbg(`markAnswered idx=${idx}`);
-}
-
-/* ══════════════════════════════════════════════════════════════════
-   END TEST
-══════════════════════════════════════════════════════════════════ */
-async function endTest(timeout) {
-    clearInterval(timerInterval);
-    clearInterval(timerSyncInterval);
-    clearInterval(timerForceCheckInterval);
-    timerSyncInterval = null;
-    timerForceCheckInterval = null;
-
-    showLoader('Menyimpan hasil...');
-    const idX = localStorage.getItem('db_id');
-    try {
-        const cur = await apiGet(idX);
-        const upd = {};
-
-        // Skor / Jawaban
-        const sf = cfg.saveField;
-        let sp = (cur.data[sf]||'').split('|');
-        while(sp.length<=cfg.saveIndex) sp.push('');
-        // Untuk ab_choice (EPPS): simpan jawaban A/B dipisah titik koma
-        if (cfg.type === 'ab_choice') {
-            sp[cfg.saveIndex] = userAnswers.join(';') + ';';
-        } else {
-            sp[cfg.saveIndex] = correctScore.toString();
-        }
-        upd[sf] = sp.join('|');
-
-        // Log
-        if (cfg.logField) {
-            const lf = cfg.logField;
-            let lp = (cur.data[lf]||'').split('|');
-            while(lp.length<=cfg.logIndex) lp.push('');
-            lp[cfg.logIndex] = JSON.stringify(userAnswers);
-            upd[lf] = lp.join('|');
-        }
-
-        // Kosongkan x_04 hanya untuk tes berwaktu (CFIT, TKD, Deret)
-        if (cfg.timer > 0) upd.x_04 = '';
-
-        await apiPut(idX, upd);
-        localStorage.removeItem('_st_' + cfg._taskId);
-
-        // Update currentUser
-        currentUser = cur.data;
-        currentUser[sf] = upd[sf];
-        if (cfg.logField) currentUser[cfg.logField] = upd[cfg.logField];
-
-        // Log ke console
-        console.log('[TES SELESAI] ' + cfg.title + (cfg.type!=='ab_choice'&&cfg.type!=='ranking' ? ' | Skor: '+correctScore : ''));
-
-        // Langsung lanjut ke tes berikutnya tanpa tampilkan layar selesai
-        hideLoader();
-        afterTest();
-    } catch(e) {
-        alert('Gagal menyimpan: ' + e.message);
-        hideLoader();
-    }
-}
-
-function afterTest() {
-    // Refresh user data dari server lalu lanjut ke tes berikutnya
-    fetchAndRoute(localStorage.getItem('token'));
-}
-
-/* ══════════════════════════════════════════════════════════════════
-   API HELPERS
-══════════════════════════════════════════════════════════════════ */
-async function apiFetch(url, opts={}) {
-    const r = await fetch(url, opts);
-    return r.json();
-}
-async function apiGet(idX) {
-    return apiFetch(`${API_READ}?table=${TABLE_NAME}&id_x=${idX}`,
-        { headers: { 'X-Custom-Auth': AUTH_KEY } });
-}
-async function apiPut(idX, body) {
-    return fetch(`${API_URL}?table=${TABLE_NAME}&id_x=${idX}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'X-Custom-Auth': AUTH_KEY },
-        body: JSON.stringify(body)
-    });
-}
-
-/* ══════════════════════════════════════════════════════════════════
-   UI HELPERS
-══════════════════════════════════════════════════════════════════ */
-function showScreen(id) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
-}
-function showLoader(txt) {
-    document.getElementById('loaderText').innerText = txt||'Memuat...';
-    document.getElementById('globalLoader').classList.remove('hidden');
-}
-function hideLoader() { document.getElementById('globalLoader').classList.add('hidden'); }
-function setLoading(btn, on) {
-    btn.disabled = on;
-    if (on) { btn.dataset.txt=btn.innerHTML; btn.innerHTML='<span class="spinner" style="width:18px;height:18px;border-width:3px"></span>'; }
-    else btn.innerHTML = btn.dataset.txt;
-}
-function logout() { localStorage.clear(); location.reload(); }
-
-function confirmLogout() {
-    if (confirm('Yakin ingin logout? Progres soal yang sedang dikerjakan mungkin belum tersimpan.')) {
-        logout();
-    }
-}
-
-/* ══════════════════════════════════════════════════════════════════
-   DETEKSI KELUAR TAB / MINIMIZE / PINDAH APP
-══════════════════════════════════════════════════════════════════ */
-function isTestActive() {
-    // Hanya aktif saat peserta sedang mengerjakan soal (screenTest tampil)
-    const screen = document.getElementById('screenTest');
-    return screen && screen.classList.contains('active');
-}
-
-function handleVisibilityChange() {
-    // Hanya catat saat KELUAR (tab disembunyikan) — tanpa peringatan, tanpa logout
-    if (!document.hidden) return;
-    if (!isTestActive()) return;
-
-    violationCount++;
-    console.log('[MONITOR] keluar ke-' + violationCount + ' di subtes: ' + (cfg ? cfg.id : '?'));
-
-    // Kirim ke server setiap kali keluar
-    saveViolationToServer();
-}
-
-// Simpan log pelanggaran ke kolom x_09
-// Format: "subtesId:jumlah|subtesId:jumlah" misal "cfit1:1|deret6:2"
-async function saveViolationToServer() {
-    const idX = localStorage.getItem('db_id');
-    if (!idX || !cfg) return;
-    try {
-        // Baca x_09 yang sudah ada dulu
-        const cur = await apiFetch(`${API_READ}?table=${TABLE_NAME}&id_x=${idX}`,
-            { headers: { 'X-Custom-Auth': AUTH_KEY } });
-        const existing = (cur.data && cur.data.x_09) ? cur.data.x_09 : '';
-
-        // Parse format "subtesId:jumlah|subtesId:jumlah"
-        const map = {};
-        if (existing) {
-            existing.split('|').forEach(part => {
-                const [k, v] = part.split(':');
-                if (k) map[k] = parseInt(v) || 0;
-            });
-        }
-        // Update jumlah untuk subtes ini
-        const key = cfg._taskId || cfg.id;
-        map[key] = (map[key] || 0) + 1;
-
-        // Serialize kembali
-        const newVal = Object.entries(map).map(([k,v]) => k + ':' + v).join('|');
-        console.log('[VIOLATION] simpan x_09:', newVal);
-
-        await fetch(`${API_URL}?table=${TABLE_NAME}&id_x=${idX}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json', 'X-Custom-Auth': AUTH_KEY },
-            body: JSON.stringify({ x_09: newVal })
-        });
-    } catch(e) {
-        console.log('[VIOLATION] gagal simpan:', e.message);
-    }
-}
-
-// Reset violation count setiap kali mulai tes baru
-function resetViolation() {
-    violationCount = 0;
-}
-
-// Pasang listener satu kali saat halaman load
-document.addEventListener('visibilitychange', handleVisibilityChange);
-
-/* ── PROTEKSI GAMBAR SOAL ── */
-// 1. Blok klik kanan (desktop)
-document.addEventListener('contextmenu', function(e) {
-    if (e.target.tagName === 'IMG') { e.preventDefault(); return false; }
-});
-// 2. Blok drag & drop (desktop)
-document.addEventListener('dragstart', function(e) {
-    if (e.target.tagName === 'IMG') { e.preventDefault(); return false; }
-});
-// 3. Blok long-press di HP (Android/iOS — cegah menu "Simpan Gambar")
-(function() {
-    document.addEventListener('touchstart', function(e) {
-        if (e.target.tagName === 'IMG') {
-            e.target.addEventListener('contextmenu', function block(ev) {
-                ev.preventDefault(); ev.target.removeEventListener('contextmenu', block);
-            });
-        }
-    }, { passive: true });
-    document.addEventListener('pointerdown', function(e) {
-        if (e.target.tagName === 'IMG') {
-            e.target.addEventListener('contextmenu', function block(ev) {
-                ev.preventDefault(); ev.target.removeEventListener('contextmenu', block);
-            });
-        }
-    });
-})();
-// 4. Blok Ctrl+S
-document.addEventListener('keydown', function(e) {
-    if (e.ctrlKey && e.key === 's') { e.preventDefault(); return false; }
-});
+  const FRAGMENT_BASE  = 'https://lidan.co.id/test/';
+  const BIODATA_FILE   = 'biodata-2.html';   // ← ganti angka sesuai kebutuhan
+  const PENUTUP_FILE   = 'penutup-2.html';   // ← ganti angka sesuai kebutuhan
 </script>
+
+<div id="globalLoader"><div class="spinner"></div><p id="loaderText">Memuat...</p></div>
+
+<!-- ═══ SCREEN: TES DITUTUP ═══ -->
+<div id="screenTutup" class="screen">
+  <div class="card">
+    <div class="tutup-icon" id="tutupIcon">🔒</div>
+    <div class="tutup-title" id="tutupTitle">Tes Belum Dibuka</div>
+    <p class="tutup-sub" id="tutupSub">Sesi tes belum dimulai. Harap perhatikan instruksi dari tester dan tunggu hingga tes dibuka.</p>
+    <div id="tutupCountdown" style="display:none;">
+      <div class="countdown-card">
+        <div class="cd-header">
+          <div class="cd-label">📅 Tes akan dilaksanakan pada</div>
+          <div id="cdWaktuLabel" class="cd-waktu-label"></div>
+        </div>
+        <div class="cd-divider"></div>
+        <div class="cd-countdown-label">⏳ Dimulai dalam</div>
+        <div class="cd-boxes">
+          <div class="cd-unit">
+            <div id="cdHari" class="cd-unit-num">00</div>
+            <div class="cd-unit-label">Hari</div>
+          </div>
+          <div class="cd-unit">
+            <div id="cdJam" class="cd-unit-num">00</div>
+            <div class="cd-unit-label">Jam</div>
+          </div>
+          <div class="cd-separator"><span>:</span></div>
+          <div class="cd-unit">
+            <div id="cdMenit" class="cd-unit-num">00</div>
+            <div class="cd-unit-label">Menit</div>
+          </div>
+          <div class="cd-separator"><span>:</span></div>
+          <div class="cd-unit">
+            <div id="cdDetik" class="cd-unit-num detik">00</div>
+            <div class="cd-unit-label">Detik</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="tutupLinkWrap" style="display:none;margin-top:16px;">
+      <div class="warning-box">
+        <span class="warning-box-icon">⚠️</span>
+        <div class="warning-box-text">
+          Seluruh peserta <strong>wajib bergabung ke Zoom</strong> sebelum tes dimulai dan berlangsung di bawah pengawasan tester — pastikan <strong>kamera &amp; mikrofon aktif</strong>.
+        </div>
+      </div>
+      <a id="tutupLinkBtn" href="#" target="_blank" rel="noopener" class="btn-zoom">
+        🎥 Bergabung ke Zoom
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SCREEN: FORM BIODATA (diisi dari fetch) ═══ -->
+<div id="screenDaftar" class="screen">
+  <div class="card" style="max-width:520px" id="biodataContainer">
+    <!-- Konten di-inject dari BIODATA_FILE -->
+    <div style="text-align:center;padding:40px 0;color:var(--muted)"><div class="spinner" style="margin:0 auto 12px"></div>Memuat formulir...</div>
+  </div>
+</div>
+
+<!-- ═══ SCREEN: TUNGGU KONFIRMASI ═══ -->
+<div id="screenTunggu" class="screen">
+  <div class="card">
+    <div class="tunggu-icon">🕐</div>
+    <div class="tunggu-title">Pendaftaran Berhasil!</div>
+    <p class="tunggu-sub" id="tungguSubText">Perhatikan instruksi dari tester dan tunggu konfirmasi untuk memulai tes. Jangan tutup atau muat ulang halaman ini.</p>
+    <div id="tungguIqExtra" style="display:none;margin-top:18px;">
+      <div class="info-penting-box">
+        <div class="info-penting-label">📋 Informasi Penting</div>
+        <p class="info-penting-text">
+          Layanan Tes IQ ini merupakan <strong>layanan berbayar</strong>.<br>
+          Untuk mengetahui informasi biaya dan konfirmasi lebih lanjut, silakan hubungi admin Lidan Psikologi melalui tombol di bawah ini.
+        </p>
+      </div>
+      <div class="wa-contact-box">
+        <div class="wa-contact-label">Minta tester ke <strong>Lidan Psikologi</strong></div>
+        <a id="btnWaLidan"
+           href="https://wa.me/6285159601400?text=Halo%20Lidan%20Psikologi%2C%20saya%20sudah%20mengisi%20biodata%20dan%20siap%20untuk%20memulai%20Tes%20IQ.%20Mohon%20konfirmasi%20dari%20tester.%20Saya%20ingin%20tahu%20berapa%20biayanya%3F"
+           target="_blank" rel="noopener" class="btn-wa">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          Hubungi Lidan Psikologi
+        </a>
+      </div>
+    </div>
+    <div id="tungguIdBox" style="display:none;" class="id-peserta-box">
+      <div class="id-peserta-label">🪪 ID Peserta Anda</div>
+      <div class="id-peserta-num" id="tungguIdNum">—</div>
+      <div class="id-peserta-hint">Sebutkan ID ini kepada tester jika ada pertanyaan atau kendala</div>
+    </div>
+    <div class="tunggu-status" id="tungguStatus"><div class="tunggu-pulse"></div><span id="tungguStatusTxt">Menunggu konfirmasi tester...</span></div>
+    <div id="tungguZoomWrap" style="display:none;margin-top:20px;text-align:left;">
+      <div class="zoom-info-box">
+        <div class="zoom-info-content">
+          <span class="zoom-info-icon">🎥</span>
+          <div>
+            <div class="zoom-info-label">Sambil Menunggu</div>
+            <div class="zoom-info-text">
+              Silakan <strong>bergabung ke sesi Zoom</strong> terlebih dahulu dan informasikan kepada tester bahwa Anda telah siap. Tester akan segera mengonfirmasi keikutsertaan Anda.
+            </div>
+          </div>
+        </div>
+      </div>
+      <a id="tungguLinkBtn" href="#" target="_blank" rel="noopener" class="btn-zoom">
+        🎥 Bergabung ke Zoom
+      </a>
+    </div>
+    <button class="btn btn-primary" id="btnMulaiTes" onclick="mulaiTes()">▶ Mulai Tes</button>
+  </div>
+</div>
+
+<!-- ═══ SCREEN: DASHBOARD SUBTES ═══ -->
+<div id="screenDash" class="screen">
+  <div class="card">
+    <div class="welcome" id="welcomeName">Halo!</div>
+    <div class="welcome-sub" id="welcomeSub">Selesaikan semua tes berikut secara berurutan.</div>
+    <div class="task-grid" id="taskGrid"></div>
+  </div>
+</div>
+
+<!-- ═══ SCREEN: INSTRUKSI SUBTES ═══ -->
+<div id="screenStart" class="screen">
+  <div class="card card-wide">
+    <div class="page-title" id="startTitle" style="margin-bottom:20px"></div>
+    <div class="instr-section"><div class="instr-heading">📋 Instruksi Pengerjaan</div><p id="startInstructions"></p></div>
+    <div class="example-block" id="exampleBlock">
+      <div class="ex-heading">📖 Contoh Soal &amp; Jawaban</div>
+      <div class="example-images">
+        <img id="exImgTop" src="" alt="" oncontextmenu="return false" ondragstart="return false">
+        <img id="exImgBottom" src="" alt="" oncontextmenu="return false" ondragstart="return false">
+      </div>
+      <div class="ex-note" id="exNote"></div>
+    </div>
+    <div class="start-actions">
+      <button class="btn btn-primary" id="btnStart" onclick="startTest()">▶ Mulai Tes</button>
+      <div class="timer-note" id="timerNote"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SCREEN: KREPLIN ═══ -->
+<div id="screenKreplin" class="screen">
+  <div class="card card-wide">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:12px;flex-wrap:wrap">
+      <span class="top-title" id="krepTitle">Tes Kraepelin</span>
+      <span id="krepProgress" style="color:var(--muted);font-size:.85em"></span>
+      <span id="krepTimerDisplay" style="display:none"></span>
+    </div>
+    <div class="progress-wrap"><div id="krepProgressBar" style="height:100%;background:var(--primary);border-radius:99px;transition:width .4s;width:0%"></div></div>
+    <div id="krepContent" style="text-align:center;padding:24px 0">
+      <div style="font-size:2.8em;font-weight:800;color:var(--text);margin-bottom:24px;letter-spacing:.05em" id="krepSoalQ">? + ?</div>
+      <p style="font-size:.82em;color:var(--muted);margin-bottom:16px">Pilih <strong>angka satuan</strong> dari hasil penjumlahan</p>
+      <div id="krepOpts" style="display:flex;flex-wrap:wrap;justify-content:center;gap:10px;max-width:380px;margin:0 auto"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SCREEN: SOAL ═══ -->
+<div id="screenTest" class="screen">
+  <div class="card card-wide card-xl" id="testCard">
+    <div id="topBar"><span class="top-title" id="testTitle"></span><span id="progressInfo"></span><span id="timerDisplay" class="hidden"></span></div>
+    <div class="progress-wrap"><div id="progressBar" style="width:0%"></div></div>
+    <div id="questionContent"></div>
+    <div class="action-bar" id="actionBar"></div>
+    <div id="bottomBar"><div class="bb-info"><span class="bb-title" id="bbTitle"></span><span class="bb-progress" id="bbProgress"></span></div></div>
+  </div>
+</div>
+
+<!-- ═══ SCREEN: TES SELESAI (intermediate) ═══ -->
+<div id="screenDone" class="screen">
+  <div class="card" style="text-align:center">
+    <div class="done-icon" id="doneIcon">✅</div>
+    <div class="page-title" id="doneTitle" style="justify-content:center">Tes Selesai!</div>
+    <p class="page-sub" id="doneDesc" style="text-align:center;margin-top:8px"></p>
+  </div>
+</div>
+
+<!-- ═══ SCREEN: LAYAR PENUTUP (diisi dari fetch) ═══ -->
+<div id="screenUpgrade" class="screen">
+  <div id="penutupContainer">
+    <!-- Konten di-inject dari PENUTUP_FILE -->
+    <div style="text-align:center;padding:60px 0;color:var(--muted)"><div class="spinner" style="margin:0 auto 12px"></div>Memuat...</div>
+  </div>
+</div>
+
+<button id="btnTokenFloat" onclick="bukaPopupToken()" class="btn-token-float" style="display:none;">
+  🔑 Token
+</button>
+
+<!-- ══ POPUP INPUT TOKEN ══ -->
+<div id="popupToken" style="display:none;" class="popup-token">
+  <div class="popup-token-title">🔑 Login dengan Token</div>
+  <input id="inputToken" type="text" placeholder="Masukkan token..." autocomplete="off" spellcheck="false"
+    class="popup-token-input"
+    onfocus="this.style.borderColor='#6366f1'" onblur="this.style.borderColor='#c7d2fe'"
+    onkeydown="if(event.key==='Enter')loginDenganToken()">
+  <div id="tokenErrBox" class="token-err-box"></div>
+  <div class="popup-token-actions">
+    <button onclick="tutupPopupToken()" class="btn-token-batal">Batal</button>
+    <button id="btnLoginToken" onclick="loginDenganToken()" class="btn-token-masuk">Masuk →</button>
+  </div>
+</div>
+
+<button id="btnLogoutPeserta" style="display:none;" class="btn-logout-peserta" onclick="doLogout(localStorage.getItem('db_id'))">🔓 Ganti Peserta</button>
+<div id="topBarId" style="display:none;" class="top-bar-id">ID: —</div>
+
+<!-- ══ OVERLAY PERINGATAN REFRESH ══ -->
+<div id="refreshWarningOverlay" style="display:none;" class="refresh-warning-overlay" style="display:flex;">
+  <div class="refresh-warning-box">
+    <div class="refresh-warning-icon">🚫</div>
+    <div class="refresh-warning-title">Jangan Refresh!</div>
+    <p class="refresh-warning-text">Tes sedang berlangsung.<br>Waktu tetap berjalan meski halaman di-refresh.<br><strong style="color:#1e293b">Fokus dan selesaikan soal dengan baik.</strong></p>
+    <button onclick="document.getElementById('refreshWarningOverlay').style.display='none'" style="padding:10px 28px;background:#2563eb;color:#fff;border:none;border-radius:10px;font-size:.95em;font-weight:700;cursor:pointer;font-family:inherit">Oke, Lanjutkan</button>
+  </div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/renderers.js"></script>
+<script src="js/test-engine.js"></script>
+<script src="js/who-engine.js"></script>
+<script src="js/kreplin.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/app.js"></script>
 </body>
 </html>
