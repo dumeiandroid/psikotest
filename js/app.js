@@ -97,6 +97,45 @@ window.onload = async () => {
   const kontrol = await cekKontrol();
   if (!kontrol.aktif) { showScreenTutup(kontrol); return; }
 
+  // ── Auto-login dari URL ?token= ──
+  // Jika URL mengandung ?token=xxx, langsung verifikasi dan masuk tanpa aktivasi manual
+  const _urlParams = new URLSearchParams(window.location.search);
+  const _urlToken = _urlParams.get('token');
+  if (_urlToken) {
+    sl('Memeriksa token...');
+    try {
+      const _d = await aF(`${API_W}?table=${TBL}&x_01_eq=${encodeURIComponent(_urlToken)}`, { headers: { 'X-Custom-Auth': AUTH } });
+      if (_d.success && _d.count > 0) {
+        const _row = Array.isArray(_d.data) ? _d.data[0] : _d.data;
+
+        // Paksa status jadi 'aktif' di DB agar bisa langsung mengerjakan soal
+        let _bio = {}; try { _bio = JSON.parse(_row.x_02 || '{}'); } catch {}
+        if (_bio.status !== 'aktif') {
+          _bio.status = 'aktif';
+          await aP(_row.id_x, { x_02: JSON.stringify(_bio) });
+          _row.x_02 = JSON.stringify(_bio);
+        }
+
+        localStorage.setItem('token', _urlToken);
+        localStorage.setItem('db_id', String(_row.id_x));
+        localStorage.setItem('_p', AUTO_PAKET || '');
+        cu = _row;
+        vMap = {};
+        if (cu.x_09) {
+          try {
+            const v = JSON.parse(cu.x_09);
+            Object.entries(v).forEach(([k, vl]) => { if (k && /^[a-zA-Z0-9_]+$/.test(k)) vMap[k] = parseInt(vl) || 0; });
+          } catch {}
+        }
+        await loadAC();
+        hl(); startGlobalPolling(); await goNext2();
+        return;
+      }
+      // Token dari URL tidak ditemukan di DB → lanjut flow normal (form daftar)
+      console.warn('[URL TOKEN] Token tidak ditemukan:', _urlToken);
+    } catch(e) { console.warn('[URL TOKEN] Gagal:', e.message); }
+  }
+
   const tok = localStorage.getItem('token');
   if (tok) {
     const _pLama = localStorage.getItem('_p');
