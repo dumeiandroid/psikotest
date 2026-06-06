@@ -473,7 +473,7 @@
 
       /* ── TOMBOL MELAYANG TANYA PENGAWAS (FAB) ── */
       #lm-fab-tanya {
-        display: flex;
+        display: none;
         position: fixed;
         bottom: 12px; left: 12px;
         z-index: 2147483647;
@@ -1072,6 +1072,9 @@
         }
         hideLoadingScreen();
         showToast('✅ Terhubung ke ruang ujian.', 'success');
+        // Tampilkan tombol FAB setelah berhasil join
+        const fab = document.getElementById('lm-fab-tanya');
+        if (fab) fab.classList.add('lm-fab-visible');
         // Mic sudah mute saat join karena startWithAudioMuted:true — tidak perlu command tambahan
         // Tandai waktu join — pesan dalam 5 detik pertama diabaikan (history replay)
         _joinedAt = Date.now();
