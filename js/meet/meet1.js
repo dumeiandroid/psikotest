@@ -1,5 +1,5 @@
 /**
- * lidan-meet.js  — v1.5
+ * lidan-meet.js  — v1.6
  * Injectable script — sisipkan di <head> halaman soal manapun.
  * Otomatis inject UI lobby, Jitsi meeting, PiP kamera, dan sistem sinyal.
  *
@@ -20,6 +20,24 @@
 
 (function () {
   'use strict';
+
+  /* ══════════════════════════════════════════════════
+     SELF CACHE BUSTER
+     Setiap kali versi script berubah, halaman reload
+     otomatis agar user tidak perlu clear cache manual.
+  ══════════════════════════════════════════════════ */
+  const _SCRIPT_VERSION = '1.6';
+  const _CACHE_KEY      = 'lidan_meet_ver';
+  const _storedVer      = localStorage.getItem(_CACHE_KEY);
+  if (_storedVer && _storedVer !== _SCRIPT_VERSION) {
+    // Versi baru terdeteksi — reload sekali dengan cache-bust di URL
+    localStorage.setItem(_CACHE_KEY, _SCRIPT_VERSION);
+    const sep = location.search ? '&' : '?';
+    location.replace(location.href.replace(/[?&]_lmv=[^&]*/g, '') + sep + '_lmv=' + _SCRIPT_VERSION);
+    // Hentikan eksekusi script lama
+    throw new Error('[LidanMeet] Reloading untuk versi ' + _SCRIPT_VERSION);
+  }
+  localStorage.setItem(_CACHE_KEY, _SCRIPT_VERSION);
 
   /* ══════════════════════════════════════════════════
      AMBIL KONFIGURASI DARI SCRIPT TAG
@@ -494,14 +512,7 @@
       #lm-fab-tanya.lm-fab-visible { display: flex; }
       #lm-fab-tanya.lm-fab-hidden  { display: none !important; }
       #lm-fab-tanya:active { background: #c7d2fe; }
-      #lm-fab-tanya.lm-fab-idle {
-        background: #1e2a40;
-        border-color: #3d5170;
-        color: #6b7fa3;
-        cursor: not-allowed;
-        box-shadow: none;
-      }
-      #lm-fab-tanya.lm-fab-idle:active { background: #1e2a40; }
+
 
       /* ── POPUP FAB ── */
       #lm-fab-popup {
@@ -1080,15 +1091,8 @@
         }
         hideLoadingScreen();
         showToast('✅ Terhubung ke ruang ujian.', 'success');
-        // Tampilkan tombol FAB setelah berhasil join (default: idle sampai signal masuk)
-        const fab = document.getElementById('lm-fab-tanya');
-        if (fab) {
-          fab.classList.add('lm-fab-visible');
-          fab.classList.add('lm-fab-idle');
-          fab.style.pointerEvents = 'none';
-          fab.setAttribute('title', 'Pengawas belum aktif');
-          fab.innerHTML = '\u23F8\uFE0F Pengawas belum aktif';
-        }
+        // FAB akan muncul otomatis via signal. Burst poll agar tidak terlambat.
+        startSignalPollBurst();
         // Mic sudah mute saat join karena startWithAudioMuted:true — tidak perlu command tambahan
         // Tandai waktu join — pesan dalam 5 detik pertama diabaikan (history replay)
         _joinedAt = Date.now();
@@ -1515,21 +1519,34 @@
   }
 
   function startSignalPoll() {
+    if (pollInterval) clearInterval(pollInterval);
     pollInterval = setInterval(pollSignal, SIGNAL_POLL_MS);
     pollSignal();
+  }
+
+  // Burst poll saat baru join: coba 3x dengan jeda 1 detik agar FAB tidak terlambat muncul
+  function startSignalPollBurst() {
+    let attempts = 0;
+    const burst = setInterval(() => {
+      pollSignal();
+      attempts++;
+      if (attempts >= 3) clearInterval(burst);
+    }, 1000);
   }
 
   async function pollSignal() {
     if (!roomData) return;
     try {
       const res = await fetch(
-        `${API_SIGNAL}?room=${encodeURIComponent(roomData.room)}&participant=${encodeURIComponent(myName)}`
+        `${API_SIGNAL}?room=${encodeURIComponent(roomData.room)}&participant=${encodeURIComponent(myName)}`,
+        { signal: AbortSignal.timeout(4000) }
       );
-      if (!res.ok) return;
-      const data = await res.json();
-      if (!data.success) return;
+      // Tetap proses jika ada data meski status non-ok (misal 304, 5xx dengan body)
+      let data;
+      try { data = await res.json(); } catch { return; }
+      if (!data || !data.success) return;
       processSignal(data);
-    } catch {}
+    } catch {} // timeout / network error — abaikan, tunggu poll berikutnya
   }
 
   function processSignal(data) {
@@ -1595,20 +1612,15 @@
     if (fabDot)  { fabDot.className = 'lm-admin-dot'; fabDot.classList.add(s.cls); }
     if (fabText) fabText.textContent = s.label;
 
-    // FAB tampil selalu setelah join — disabled & label berubah saat idle
+    // FAB: tampil hanya saat pengawas aktif (bukan idle)
     const fab = document.getElementById('lm-fab-tanya');
-    if (fab && fab.classList.contains('lm-fab-visible')) {
-      if (status === 'idle') {
-        fab.classList.add('lm-fab-idle');
-        fab.style.pointerEvents = 'none';
-        fab.setAttribute('title', 'Pengawas belum aktif');
-        fab.innerHTML = '\u23F8\uFE0F Pengawas belum aktif';
-        closeFabPopup();
+    if (fab) {
+      if (status !== 'idle') {
+        fab.classList.add('lm-fab-visible');
+        closeFabPopup();  // tutup popup lama jika ada, biarkan user buka ulang
       } else {
-        fab.classList.remove('lm-fab-idle');
-        fab.style.pointerEvents = '';
-        fab.setAttribute('title', '');
-        fab.innerHTML = '\uD83D\uDD90\uFE0F Tanya Pengawas';
+        fab.classList.remove('lm-fab-visible');
+        closeFabPopup();
       }
     }
 
