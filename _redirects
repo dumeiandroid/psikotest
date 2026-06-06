@@ -1,2 +1,5 @@
-/*.html  /:splat.html  200
-/:slug   /?p=:slug     301
+/index2.html  /index1.html  200
+/index2.html  /index2.html  200
+/index3.html  /index3.html  200
+/index4.html  /index4.html  200
+/:slug        /?p=:slug     301
