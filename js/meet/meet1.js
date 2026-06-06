@@ -494,6 +494,14 @@
       #lm-fab-tanya.lm-fab-visible { display: flex; }
       #lm-fab-tanya.lm-fab-hidden  { display: none !important; }
       #lm-fab-tanya:active { background: #c7d2fe; }
+      #lm-fab-tanya.lm-fab-idle {
+        background: #1e2a40;
+        border-color: #3d5170;
+        color: #6b7fa3;
+        cursor: not-allowed;
+        box-shadow: none;
+      }
+      #lm-fab-tanya.lm-fab-idle:active { background: #1e2a40; }
 
       /* ── POPUP FAB ── */
       #lm-fab-popup {
@@ -1072,9 +1080,15 @@
         }
         hideLoadingScreen();
         showToast('✅ Terhubung ke ruang ujian.', 'success');
-        // Tampilkan tombol FAB setelah berhasil join
+        // Tampilkan tombol FAB setelah berhasil join (default: idle sampai signal masuk)
         const fab = document.getElementById('lm-fab-tanya');
-        if (fab) fab.classList.add('lm-fab-visible');
+        if (fab) {
+          fab.classList.add('lm-fab-visible');
+          fab.classList.add('lm-fab-idle');
+          fab.style.pointerEvents = 'none';
+          fab.setAttribute('title', 'Pengawas belum aktif');
+          fab.innerHTML = '\u23F8\uFE0F Pengawas belum aktif';
+        }
         // Mic sudah mute saat join karena startWithAudioMuted:true — tidak perlu command tambahan
         // Tandai waktu join — pesan dalam 5 detik pertama diabaikan (history replay)
         _joinedAt = Date.now();
@@ -1581,10 +1595,21 @@
     if (fabDot)  { fabDot.className = 'lm-admin-dot'; fabDot.classList.add(s.cls); }
     if (fabText) fabText.textContent = s.label;
 
-    // FAB selalu tampil, baik pengawas aktif maupun idle
+    // FAB tampil selalu setelah join — disabled & label berubah saat idle
     const fab = document.getElementById('lm-fab-tanya');
-    if (fab) {
-      fab.classList.add('lm-fab-visible');
+    if (fab && fab.classList.contains('lm-fab-visible')) {
+      if (status === 'idle') {
+        fab.classList.add('lm-fab-idle');
+        fab.style.pointerEvents = 'none';
+        fab.setAttribute('title', 'Pengawas belum aktif');
+        fab.innerHTML = '\u23F8\uFE0F Pengawas belum aktif';
+        closeFabPopup();
+      } else {
+        fab.classList.remove('lm-fab-idle');
+        fab.style.pointerEvents = '';
+        fab.setAttribute('title', '');
+        fab.innerHTML = '\uD83D\uDD90\uFE0F Tanya Pengawas';
+      }
     }
 
     if (status === 'broadcast' && prev !== 'broadcast') {
@@ -1596,6 +1621,8 @@
      FAB — tombol melayang Tanya Pengawas
   ══════════════════════════════════════════════════ */
   function toggleFabPopup() {
+    const fab = document.getElementById('lm-fab-tanya');
+    if (fab && fab.classList.contains('lm-fab-idle')) return; // block saat idle
     const popup = document.getElementById('lm-fab-popup');
     if (!popup) return;
     if (popup.classList.contains('lm-fab-open')) {
