@@ -1,1 +1,2 @@
-/:slug  /?p=:slug  301
+/*.html  /:splat.html  200
+/:slug   /?p=:slug     301
