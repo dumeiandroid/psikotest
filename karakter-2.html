@@ -553,9 +553,9 @@
     // ── 1. PAKET ──────────────────────────────────────────────
     paket: {
       // Paket aktif untuk file index.html ini (harus cocok dgn x_01 di tabel alat_tes)
-      aktif: 'eduxecla',
+      aktif: 'karakter',
       // Paket yang langsung aktif tanpa perlu admin klik "aktifkan" dulu
-      autoAktifList: ['asmara', 'eduxecla', 'potensi', 'karakter', 'karir', 'cpmi-sumut'],
+      autoAktifList: ['asmara', 'karakter', 'potensi', 'karakter', 'karir', 'cpmi-sumut'],
     },
 
     // ── 2. FRAGMENT (form biodata & layar penutup) ───────────────
@@ -608,7 +608,7 @@
 
     // ── 4. DATABASE (nama tabel & otorisasi backend) ─────────────
     database: {
-      tbl: 'nilai1_json',          // tabel data peserta (biodata + jawaban)
+      tbl: 'nilai2_json',          // tabel data peserta (biodata + jawaban)
       tblPaket: 'alat_tes',        // tabel master daftar paket tes
       tblKontrol: 'admin_kontrol', // tabel status aktif/nonaktif sistem
       auth: 'admin',               // header X-Custom-Auth, harus sama dgn backend
