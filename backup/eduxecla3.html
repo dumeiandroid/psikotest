@@ -1,4 +1,4 @@
-<!-- ss -->
+  <!-- ss -->
   <!DOCTYPE html>
   <html lang="id">
   <head>
@@ -287,9 +287,7 @@
 
   <!-- Konfigurasi fragment (FRAGMENT_BASE/BIODATA_FILE/PENUTUP_FILE) sekarang
        ada di dalam CONFIG, lihat bagian "KONFIGURASI UTAMA" pada script di bawah. -->
-  <div id="globalLoader"><div class="spinner"></div><p id="loaderText">Memuat...</p>
-    <button id="btnRetrySesi" type="button" style="display:none;padding:9px 20px;border-radius:8px;border:none;background:var(--primary,#2563eb);color:#fff;font-weight:700;cursor:pointer;font-size:.92em;" onclick="location.reload()">🔄 Coba Lagi</button>
-  </div>
+  <div id="globalLoader"><div class="spinner"></div><p id="loaderText">Memuat...</p></div>
 
   <!-- ═══ SCREEN: TES DITUTUP ═══ -->
   <div id="screenTutup" class="screen">
@@ -743,18 +741,8 @@
   let wBL=[],wBI=0,wQs=[],wQi=0,wUA=[],wSkip=[],wAns=[];
 
   const $=id=>document.getElementById(id);
-  const sl=t=>{$('loaderText').innerText=t||'Memuat...';$('globalLoader').classList.remove('hidden');const _btnR=$('btnRetrySesi');if(_btnR)_btnR.style.display='none'};
+  const sl=t=>{$('loaderText').innerText=t||'Memuat...';$('globalLoader').classList.remove('hidden')};
   const hl=()=>$('globalLoader').classList.add('hidden');
-  // Tampilkan layar "Coba Lagi" saat pengecekan sesi/token gagal karena masalah
-  // JARINGAN/SERVER (bukan karena token memang tidak ditemukan). Token & db_id di
-  // localStorage TIDAK disentuh di sini — jadi begitu peserta tekan "Coba Lagi"
-  // (location.reload()), pengecekan akan diulang dengan token yang SAMA, tanpa
-  // pernah membuat token baru atau mengarahkan ke form pendaftaran.
-  const tampilRetryKoneksi=(msg)=>{
-    $('loaderText').innerText = msg || 'Koneksi bermasalah saat memeriksa sesi Anda. Token Anda tetap aman — silakan coba lagi.';
-    $('globalLoader').classList.remove('hidden');
-    const btn=$('btnRetrySesi'); if(btn) btn.style.display='inline-block';
-  };
   const ss=id=>{
     // Jika meninggalkan screenSelfie, hentikan kamera
     const curSel=document.querySelector('.screen.active');
@@ -900,12 +888,12 @@
   }
 
   // Generate token final untuk mode checkpoint (MINTA_TOKEN_SETELAH>0):
-  // format [namaDepan][2 angka acak][id_x], contoh: "Budi Santoso" + id_x 245 -> "budi07245"
+  // format [namaDepan][2 huruf acak][id_x], contoh: "Budi Santoso" + id_x 245 -> "budixy245"
   function genTokenDariNama(nama, id_x){
     let depan = (nama||'').trim().split(/\s+/)[0] || 'peserta';
     depan = depan.toLowerCase().replace(/[^a-z0-9]/g,'') || 'peserta';
-    const angka2 = String(Math.floor(Math.random()*100)).padStart(2,'0'); // selalu 2 digit angka, "00"-"99"
-    return `${depan}${angka2}${id_x}`;
+    const huruf2 = rs(2).toLowerCase().replace(/[^a-z0-9]/g,'a').padEnd(2,'a').slice(0,2);
+    return `${depan}${huruf2}${id_x}`;
   }
 
   async function loadPaket(){
@@ -2866,30 +2854,9 @@
         localStorage.setItem('_p', AUTO_PAKET);
       }
       sl('Memeriksa sesi...');
-      let res;
       try {
-        res = await aF(`${API_R}?table=${TBL}&x_01_eq=${tok}`, { headers: { 'X-Custom-Auth': AUTH } });
-      } catch (e) {
-        // Gagal MURNI karena jaringan/koneksi (fetch melempar error) — ini BUKAN bukti
-        // token tidak valid. JANGAN localStorage.clear() di sini: itu yang selama ini
-        // menyebabkan peserta "kehilangan" token lamanya lalu (kalau lanjut isi biodata
-        // lagi) sistem membuatkan token baru. Token & db_id dibiarkan utuh; peserta
-        // tinggal tekan "Coba Lagi" untuk mengulang pengecekan dengan token yang sama.
-        tampilRetryKoneksi();
-        return;
-      }
-      try {
-        if (!res.success) {
-          // Respons API tidak sukses (error server sesaat) — perlakukan sama seperti
-          // gagal jaringan di atas: JANGAN hapus token, cukup minta coba lagi.
-          tampilRetryKoneksi();
-          return;
-        }
-        if (!res.count) {
-          // Ini baru kondisi token BENAR-BENAR tidak ditemukan di database —
-          // di sinilah wajar localStorage dibersihkan & kembali ke form token.
-          localStorage.clear(); hl(); ss('screenDaftar'); return;
-        }
+        const res = await aF(`${API_R}?table=${TBL}&x_01_eq=${tok}`, { headers: { 'X-Custom-Auth': AUTH } });
+        if (!res.success || !res.count) { localStorage.clear(); hl(); ss('screenDaftar'); return; }
         cu = res.data[0]; localStorage.setItem('db_id', cu.id_x);
 
         // ── FAILOVER pindah server (manual): record token ini di server aktif bisa
@@ -2929,13 +2896,7 @@
           // Token dari paket lain, atau status belum diaktifkan admin → wajib tunggu
           hl(); ss('screenTunggu'); showZoomTunggu(); startGlobalPolling();
         }
-      } catch (e) {
-        // Error di LANGKAH SETELAH token terverifikasi (mis. loadAC/goNext2 gagal
-        // karena koneksi putus di tengah). Token sudah terbukti valid barusan, jadi
-        // di sini pun token TIDAK dihapus — cukup tawarkan coba lagi.
-        console.error('[onload] gagal lanjut setelah token valid:', e);
-        tampilRetryKoneksi();
-      }
+      } catch (e) { localStorage.clear(); hl(); ss('screenDaftar'); }
       return;
     }
     hl(); ss('screenDaftar');

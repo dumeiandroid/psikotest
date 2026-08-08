@@ -555,9 +555,9 @@
     // ── 1. PAKET ──────────────────────────────────────────────
     paket: {
       // Paket aktif untuk file index.html ini (harus cocok dgn x_01 di tabel alat_tes)
-      aktif: 'eduxecla',
+      aktif: 'cpmi-sumut',
       // Paket yang langsung aktif tanpa perlu admin klik "aktifkan" dulu
-      autoAktifList: ['asmara', 'eduxecla', 'potensi', 'karakter', 'karir', 'cpmi-sumut'],
+      autoAktifList: ['asmara', 'cpmi-sumut', 'potensi', 'karakter', 'karir', 'cpmi-sumut'],
     },
 
     // ── 2. FRAGMENT (form biodata & layar penutup) ───────────────
@@ -637,7 +637,7 @@
       // selfie+seluruh subtes di paket), checkpoint TIDAK PERNAH ke-trigger — tes
       // berjalan terus sampai selesai tanpa minta token di tengah, karena token
       // sudah otomatis tersimpan di localStorage sejak biodata pertama disimpan.
-      mintaSetelah: 0,
+      mintaSetelah: 3,
       chars: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789',
     },
 
